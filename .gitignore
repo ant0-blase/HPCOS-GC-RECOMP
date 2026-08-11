@@ -1,0 +1,91 @@
+# -----------------------------------------------------------------------------
+# HPCOS-GC-RECOMP
+# Local dependencies, generated output, game data and developer-only files
+# -----------------------------------------------------------------------------
+
+# Local dependency repositories
+/DolRecomp/
+/ModernGekko/
+
+# Generated recompilation/build output
+/build/
+/build-*/
+/cmake-build-*/
+/port-build*/
+/recomp/
+/runtime/
+/module/
+/out/
+/dist/
+/.cache/
+/.releases/
+/.build.lock
+/active-module.txt
+
+# CMake / Ninja / compiler artifacts
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+compile_commands.json
+build.ninja
+.ninja_deps
+.ninja_log
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.o.hash
+
+# User-supplied game data / extracted files
+/extracted/
+/iso/
+/game/
+/rom/
+*.iso
+*.gcm
+*.rvz
+*.wbfs
+*.wad
+*.dol
+
+# Emulator / runtime user state
+/user/
+
+# Logs, backups and temporary files
+*.log
+*.bak
+*.tmp
+*.orig
+*.rej
+*.old
+*~
+*.swp
+*.swo
+*.dmp
+core
+core.*
+vgcore.*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Editors / IDEs
+.vscode/
+.idea/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# One-off local maintenance helper
+/hpcos_repo_polish.py
