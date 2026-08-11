@@ -1,63 +1,53 @@
-# -----------------------------------------------------------------------------
 # HPCOS-GC-RECOMP
-# Local dependencies, generated output, game data and developer-only files
+# Keep everything required to build/run the project.
+# Ignore only reproducible build output, user/game data and temporary files.
+
 # -----------------------------------------------------------------------------
-
-# Local dependency repositories
-/DolRecomp/
-/ModernGekko/
-
-# Generated recompilation/build output
+# Reproducible build/intermediate output
+# -----------------------------------------------------------------------------
 /build/
-/build-*/
+/port-build/
+/port-build-*/
 /cmake-build-*/
-/port-build*/
-/recomp/
-/runtime/
-/module/
-/out/
-/dist/
 /.cache/
 /.releases/
+/.publish.*/
 /.build.lock
-/active-module.txt
 
-# CMake / Ninja / compiler artifacts
-CMakeFiles/
+# Generic CMake/Ninja state when created outside the directories above
 CMakeCache.txt
+CMakeFiles/
 cmake_install.cmake
 CTestTestfile.cmake
 compile_commands.json
-build.ninja
 .ninja_deps
 .ninja_log
-*.o
-*.obj
-*.a
-*.so
-*.dylib
-*.dll
-*.exe
-*.pdb
-*.ilk
-*.o.hash
 
-# User-supplied game data / extracted files
-/extracted/
-/iso/
-/game/
-/rom/
+# -----------------------------------------------------------------------------
+# User-owned original game data — never publish
+# -----------------------------------------------------------------------------
+/extracted/*
+!/extracted/README.md
+!/extracted/.gitkeep
+
+/iso/*
+!/iso/README.md
+!/iso/.gitkeep
+
 *.iso
 *.gcm
 *.rvz
 *.wbfs
 *.wad
-*.dol
 
-# Emulator / runtime user state
+# -----------------------------------------------------------------------------
+# Per-user runtime state / saves / dumps
+# -----------------------------------------------------------------------------
 /user/
 
-# Logs, backups and temporary files
+# -----------------------------------------------------------------------------
+# Temporary/editor files
+# -----------------------------------------------------------------------------
 *.log
 *.bak
 *.tmp
@@ -72,20 +62,27 @@ core
 core.*
 vgcore.*
 
-# Python
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 
-# Editors / IDEs
 .vscode/
 .idea/
-
-# OS metadata
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# One-off local maintenance helper
+# Local repository-maintenance helpers
 /hpcos_repo_polish.py
+/hpcos_repo_polish_v2.py
+/hpcos_repo_polish_v3.py
+
+# IMPORTANT: intentionally NOT ignored:
+#   /ModernGekko/  -> source used by build.sh
+#   /DolRecomp/    -> development dependency/source when present
+#   /recomp/       -> recompilation source/output that represents the port
+#   /runtime/      -> published runnable ModernGekko runtime
+#   /module/       -> published gGHSE69_recomp.so module
+#   /build.sh      -> reproducible build entry point
+#   /run.sh        -> launcher

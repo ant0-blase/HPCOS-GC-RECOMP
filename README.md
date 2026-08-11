@@ -1,23 +1,33 @@
 # Harry Potter and the Chamber of Secrets — GameCube Static Recompilation
 
 <p align="center">
-  <img src="docs/screenshots/01-title-screen.png" alt="Harry Potter and the Chamber of Secrets running through the HPCOS recompilation project" width="900">
+  <img src="docs/screenshots/01-title-screen.png" alt="Harry Potter and the Chamber of Secrets running through HPCOS GC" width="900">
+</p>
+
+<p align="center">
+  <strong>HPCOS GC</strong> — an experimental native static-recompilation project for
+  <em>Harry Potter and the Chamber of Secrets</em> on Nintendo GameCube.
 </p>
 
 > [!IMPORTANT]
-> This project is an **experimental work in progress**. It does not distribute the original game, disc image, extracted assets, or other copyrighted game data. You must provide your own legally obtained copy of the GameCube game.
+> **Work in progress.** No original disc image or extracted copyrighted game data is
+> distributed by this repository. You must supply your own legally obtained copy of
+> the game.
 
-## About
+## Overview
 
-**HPCOS GC** is an experimental static recompilation project for the GameCube version of **Harry Potter and the Chamber of Secrets** (`GHSE69`).
+**HPCOS GC** targets the North American GameCube release of
+**Harry Potter and the Chamber of Secrets** (`GHSE69`).
 
-The project uses **DolRecomp** for static recompilation together with **ModernGekko** as the runtime environment. The goal is to progressively run the original GameCube program through a native recompilation workflow rather than shipping or emulating the original disc image as part of this repository.
+The project uses the ExpansionPak GameCube/Wii recompilation stack, with
+**DolRecomp** for static PowerPC recompilation and **ModernGekko** for the runtime.
+The repository is intended to contain the actual HPCOS project state needed for
+building and running the port — not only screenshots or documentation.
 
 ## Current status
 
-The project is actively under development. The current build is far enough along to reach the title/menu flow, loading screens, and in-game scenes represented in the screenshots below.
-
-This repository intentionally keeps generated builds, local tool repositories, emulator/runtime state, and user-supplied game files out of Git.
+HPCOS is actively under development. The current project reaches the title/menu
+flow, loading and in-game scenes shown below.
 
 ## Screenshots
 
@@ -36,47 +46,116 @@ This repository intentionally keeps generated builds, local tool repositories, e
 </tr>
 </table>
 
-## Repository layout
+## Build layout
+
+The checked-in project deliberately keeps the files that are required to reproduce
+or run the current port:
 
 ```text
 .
-├── README.md
-├── LICENSE
-├── docs/
-│   ├── current-state.md
-│   └── screenshots/
-├── DolRecomp/          # local dependency repository — ignored
-├── ModernGekko/        # local runtime repository — ignored
-├── extracted/          # user-supplied extracted game data — ignored
-├── iso/                # local disc images — ignored
-├── port-build-*/       # generated recompilation/build output — ignored
-├── runtime/            # generated runtime output — ignored
-└── user/               # local emulator/runtime state — ignored
+├── build.sh                  # configures/builds ModernGekko + DolRecomp + the GHSE69 module
+├── run.sh                    # launches the published runtime/module
+├── ModernGekko/              # source tree consumed by build.sh
+├── DolRecomp/                # recompilation dependency/source when present locally
+├── recomp/                   # HPCOS recompilation source/output
+├── runtime/                  # published moderngekko-run + Sys runtime data
+├── module/                   # published gGHSE69_recomp.so + build info
+├── docs/screenshots/         # project screenshots
+├── build/                    # local CMake/Ninja build directory — ignored
+├── port-build/               # intermediate port build — ignored
+├── extracted/                # user-supplied original game files — ignored
+└── user/                     # local runtime profile/saves/configuration — ignored
 ```
 
-Not every local directory shown above is required to exist at all times.
+`build.sh` validates the `GHSE69` `main.dol`, configures ModernGekko with CMake/Ninja,
+builds `moderngekko-run`, `moderngekko-port` and `dolrecomp`, builds the recompilation
+module, then atomically publishes the runnable outputs into `runtime/` and `module/`.
 
-## Development notes
+`run.sh` launches:
 
-- **Target game:** Harry Potter and the Chamber of Secrets
-- **Platform:** Nintendo GameCube
-- **Game ID:** `GHSE69`
-- **Recompiler:** DolRecomp
-- **Runtime:** ModernGekko
-- **Status:** Work in progress
-
-Detailed implementation notes and known issues can live in [`docs/current-state.md`](docs/current-state.md).
+- `runtime/moderngekko-run`
+- `module/gGHSE69_recomp.so`
+- the user's local `extracted/` game directory
+- a local `user/` runtime directory
 
 ## Building
 
-The recompilation toolchain and runtime are maintained locally as separate repositories and are intentionally excluded from this repository. Build instructions will be documented here once the workflow is stable enough to be reproducible for other developers.
+Requirements include CMake, Ninja, a supported C/C++ toolchain and the dependencies
+required by ModernGekko/DolRecomp. The current build script supports the `c` and
+`llvm` recompilation backends and `clang`, `gcc` or automatic toolchain selection.
+
+```bash
+./build.sh
+```
+
+Examples:
+
+```bash
+BACKEND=c TOOLCHAIN=clang ./build.sh
+BACKEND=llvm TOOLCHAIN=clang ./build.sh
+```
+
+The build expects your legally obtained game extraction at:
+
+```text
+extracted/sys/main.dol
+```
+
+The expected target is `GHSE69`; `build.sh` verifies the DOL SHA-256 before building.
+
+## Running
+
+After a successful build:
+
+```bash
+./run.sh
+```
+
+The current launcher uses Vulkan and Wayland.
+
+## What is intentionally ignored
+
+The `.gitignore` is intentionally conservative. It ignores only things that should
+not be part of the repository: reproducible build directories, caches, release
+staging, user-specific Dolphin/ModernGekko state, logs/backups, and original game
+files supplied by the user.
+
+Notably, **`runtime/`, `module/`, `recomp/`, `ModernGekko/`, `DolRecomp/`, `build.sh`
+and `run.sh` are not ignored.**
+
+## Credits and acknowledgements
+
+HPCOS GC depends on open-source work from the GameCube/Wii recompilation and emulation
+communities.
+
+### ExpansionPak
+
+- **DolRecomp** — static PowerPC recompiler used by GameCube/Wii recompilation projects.
+  https://github.com/ExpansionPak/DolRecomp
+- **ModernGekko** — runtime and tooling used to execute recompiled GameCube/Wii code.
+  https://github.com/ExpansionPak/ModernGekko
+
+### Upstream acknowledgements
+
+ModernGekko credits and builds on work including:
+
+- **SpecialK / aharonahdoot** — RecompCore
+- **The Dolphin Team** — Dolphin and the GameCube/Wii hardware/runtime knowledge base
+- **Literally God / MrPoloGit** — recompilation template/macOS work credited upstream
+
+Please consult the upstream repositories, contributor histories and license files for
+complete and authoritative attribution.
 
 ## Legal
 
-This is an unofficial fan/research project and is not affiliated with or endorsed by Electronic Arts, Warner Bros., Nintendo, or the original developers/publishers.
+This is an unofficial research/fan project and is not affiliated with or endorsed by
+Electronic Arts, Warner Bros., Nintendo, ExpansionPak, or the original developers.
 
-No copyrighted game files are included. Users are responsible for supplying their own legally obtained game data.
+No original disc image or extracted copyrighted game assets should be committed to
+this repository. Users must provide their own legally obtained game data.
 
 ## License
 
-See [`LICENSE`](LICENSE) for the source-code license that applies to this repository.
+See [`LICENSE`](LICENSE) for HPCOS-specific repository content. Third-party components,
+including DolRecomp, ModernGekko and their dependencies, remain subject to their own
+licenses.
