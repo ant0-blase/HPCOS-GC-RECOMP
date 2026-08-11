@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/linux/HPCOS-GC-RECOMP/ModernGekko/vendor/dolphin/GXRuntime/build-tests/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

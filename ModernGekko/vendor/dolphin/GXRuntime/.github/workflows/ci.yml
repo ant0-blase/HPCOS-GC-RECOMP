@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  headless:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure (headless)
+        run: cmake -S . -B build -DGXRUNTIME_ENABLE_AURORA=OFF
+      - name: Build
+        run: cmake --build build -j3
+      - name: Test
+        run: |
+          ctest --test-dir build --output-on-failure 2>&1 | tee ctest.log
+          # Assert the exact clean-clone test count (7; nine further tests are
+          # gated on local trace fixtures that are not distributed) so a
+          # silently smaller suite fails CI instead of printing "100% passed".
+          grep -q "tests passed, 0 tests failed out of 7" ctest.log

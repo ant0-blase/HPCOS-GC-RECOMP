@@ -1,0 +1,33 @@
+Start testing: Aug 11 13:12 CEST
+----------------------------------------------------------
+2/42 Testing: moderngekko.frontend_config
+2/42 Test: moderngekko.frontend_config
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/moderngekko_frontend_config_test"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20
+"moderngekko.frontend_config" start time: Aug 11 13:12 CEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"moderngekko.frontend_config" end time: Aug 11 13:12 CEST
+"moderngekko.frontend_config" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/42 Testing: moderngekko.frontend_config_gamecube
+3/42 Test: moderngekko.frontend_config_gamecube
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/moderngekko_frontend_config_gamecube_test"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20
+"moderngekko.frontend_config_gamecube" start time: Aug 11 13:12 CEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"moderngekko.frontend_config_gamecube" end time: Aug 11 13:12 CEST
+"moderngekko.frontend_config_gamecube" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 11 13:12 CEST

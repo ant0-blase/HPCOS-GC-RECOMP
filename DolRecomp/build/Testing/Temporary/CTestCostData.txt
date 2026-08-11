@@ -1,0 +1,17 @@
+opcodes 1 0.00106537
+cross_check 1 0.000899703
+dol 1 0.000842492
+rel 1 0.000923621
+rpx 1 0.00081026
+disc_extract 1 0.00302749
+pc_reference 1 0.0183935
+jumptables 1 0.000945943
+dispatch 1 0.000781327
+c_cfg 1 0.000700222
+symbols 1 0.00129867
+codegen_compile 1 0.421469
+c_execute 1 0.000844149
+fpscr 1 0.000753771
+float_semantics 1 0.00256099
+dolir 1 0.000616535
+---

@@ -1,0 +1,18 @@
+llvm_backend 6 0.0787058
+llvm_execute 6 0.000693144
+llvm_pipeline 6 0.0065108
+opcodes 1 0.00170989
+cross_check 1 0.00159921
+dol 1 0.00149088
+rel 1 0.00152177
+rpx 1 0.00104694
+disc_extract 1 0.0182656
+pc_reference 1 0.0404816
+jumptables 1 0.000960509
+dispatch 1 0.000680768
+c_cfg 1 0.00063863
+symbols 1 0.000621084
+codegen_compile 1 0.463491
+c_execute 1 0.00148084
+dolir 1 0.000856087
+---

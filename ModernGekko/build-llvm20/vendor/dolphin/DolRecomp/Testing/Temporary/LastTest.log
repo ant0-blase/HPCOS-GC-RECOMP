@@ -1,0 +1,1369 @@
+Start testing: Aug 11 12:25 CEST
+----------------------------------------------------------
+1/17 Testing: opcodes
+1/17 Test: opcodes
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_opcodes"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"opcodes" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+running 10 opcode tests
+
+[ 1] sign_extend
+  sign_extend
+     PASS
+[ 2] current opcode count
+  current opcode count is 236
+     PASS
+[ 3] current opcode decode
+  decode every opcode in the current 236-opcode set
+     PASS
+[ 4] pseudo-ops and display
+  pseudo-ops and disasm forms
+     PASS
+[ 5] paired-single A-form variants
+  paired-single A-form variants from RPX code
+     PASS
+[ 6] field edges
+  field extraction edge cases
+     PASS
+[ 7] branch edges
+  branch target edge cases
+     PASS
+[ 8] unknown opcode
+  unknown opcode 63
+     PASS
+[ 9] invalid new forms
+  invalid forms stay unknown
+     PASS
+[10] unsupported optional forms
+  unsupported optional PPC forms stay unknown
+     PASS
+
+10/10 tests passed, 672/672 checks passed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"opcodes" end time: Aug 11 12:25 CEST
+"opcodes" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/17 Testing: cross_check
+2/17 Test: cross_check
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_cross_check"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"cross_check" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+cross-check: 236 opcodes against devkitPPC ground truth
+
+[00] 80000000  1C64FFF9  mulli    mulli   r3, r4, -7
+[01] 80000004  20850001  subfic   subfic  r4, r5, 1
+[02] 80000008  38610010  addi     addi    r3, r1, 16
+[03] 8000000C  3084FFFF  addic    addic   r4, r4, -1
+[04] 80000010  34A5FFFF  addic.   addic.  r5, r5, -1
+[05] 80000014  3CA01234  addis    lis     r5, 4660
+[06] 80000018  2C03FFFF  cmpi     cmpwi   r3, -1
+[07] 8000001C  28038000  cmpli    cmplwi  r3, 0x8000
+[08] 80000020  6064FF00  ori      ori     r4, r3, 0xFF00
+[09] 80000024  64851234  oris     oris    r5, r4, 0x1234
+[10] 80000028  68A6FFFF  xori     xori    r6, r5, 0xFFFF
+[11] 8000002C  6CC78000  xoris    xoris   r7, r6, 0x8000
+[12] 80000030  70E800FF  andi.    andi.   r8, r7, 0x00FF
+[13] 80000034  74E900FF  andis.   andis.  r9, r7, 0x00FF
+[14] 80000038  80610000  lwz      lwz     r3, 0(r1)
+[15] 8000003C  84810004  lwzu     lwzu     r4, 4(r1)
+[16] 80000040  88A10008  lbz      lbz     r5, 8(r1)
+[17] 80000044  8CC1000C  lbzu     lbzu     r6, 12(r1)
+[18] 80000048  A0E10010  lhz      lhz     r7, 16(r1)
+[19] 8000004C  A5010014  lhzu     lhzu     r8, 20(r1)
+[20] 80000050  A921FFFC  lha      lha     r9, -4(r1)
+[21] 80000054  AD410018  lhau     lhau     r10, 24(r1)
+[22] 80000058  9061001C  stw      stw     r3, 28(r1)
+[23] 8000005C  94810020  stwu     stwu     r4, 32(r1)
+[24] 80000060  98A10024  stb      stb     r5, 36(r1)
+[25] 80000064  9CC10028  stbu     stbu     r6, 40(r1)
+[26] 80000068  B0E1002C  sth      sth     r7, 44(r1)
+[27] 8000006C  B5010030  sthu     sthu     r8, 48(r1)
+[28] 80000070  BA810034  lmw      lmw     r20, 52(r1)
+[29] 80000074  BE810064  stmw     stmw     r20, 100(r1)
+[30] 80000078  480000C8  b        b       0x80000140
+[31] 8000007C  418200C4  bc       bc    12, 2, 0x80000140
+[32] 80000080  4E800020  bclr     blr
+[33] 80000084  4E800420  bcctr    bctr
+[34] 80000088  4C432202  crand    crand   2, 3, 4
+[35] 8000008C  4C432102  crandc   crandc  2, 3, 4
+[36] 80000090  4C432242  creqv    creqv   2, 3, 4
+[37] 80000094  4C4321C2  crnand   crnand  2, 3, 4
+[38] 80000098  4C432042  crnor    crnor   2, 3, 4
+[39] 8000009C  4C432382  cror     cror    2, 3, 4
+[40] 800000A0  4C432342  crorc    crorc   2, 3, 4
+[41] 800000A4  4C432182  crxor    crxor   2, 3, 4
+[42] 800000A8  4D0C0000  mcrf     mcrf    cr2, cr3
+[43] 800000AC  7D400026  mfcr     mfcr    r10
+[44] 800000B0  7D4FF120  mtcrf    mtcr    r10
+[45] 800000B4  7D4802A6  mfspr    mflr    r10
+[46] 800000B8  7D4803A6  mtspr    mtlr    r10
+[47] 800000BC  7C832000  cmp      cmpw    cr1, r3, r4
+[48] 800000C0  7D032040  cmpl     cmplw   cr2, r3, r4
+[49] 800000C4  7D4B6214  add      add   r10, r11, r12
+[50] 800000C8  7D6C6814  addc     addc   r11, r12, r13
+[51] 800000CC  7D8D7114  adde     adde   r12, r13, r14
+[52] 800000D0  7DAE0194  addze    addze  r13, r14
+[53] 800000D4  7DCF8050  subf     subf   r14, r15, r16
+[54] 800000D8  7DF08810  subfc    subfc   r15, r16, r17
+[55] 800000DC  7E119110  subfe    subfe   r16, r17, r18
+[56] 800000E0  7E320190  subfze   subfze  r17, r18
+[57] 800000E4  7E5300D0  neg      neg  r18, r19
+[58] 800000E8  7E93A838  and      and   r19, r20, r21
+[59] 800000EC  7EB4B078  andc     andc   r20, r21, r22
+[60] 800000F0  7ED5BB78  or       or   r21, r22, r23
+[61] 800000F4  7EF6C338  orc      orc   r22, r23, r24
+[62] 800000F8  7F17CA78  xor      xor   r23, r24, r25
+[63] 800000FC  7F38D3B8  nand     nand   r24, r25, r26
+[64] 80000100  7F59D8F8  nor      nor   r25, r26, r27
+[65] 80000104  7F7AE238  eqv      eqv   r26, r27, r28
+[66] 80000108  7F9B0034  cntlzw   cntlzw r27, r28
+[67] 8000010C  7FBC0774  extsb    extsb r28, r29
+[68] 80000110  7FDD0734  extsh    extsh r29, r30
+[69] 80000114  7FFE1830  slw      slw   r30, r31, r3
+[70] 80000118  7C7F2430  srw      srw   r31, r3, r4
+[71] 8000011C  7C832E30  sraw     sraw   r3, r4, r5
+[72] 80000120  7CA43E70  srawi    srawi r4, r5, 7
+[73] 80000124  54C52A2E  rlwinm   rlwinm r5, r6, 5, 8, 23
+[74] 80000128  5CE64136  rlwnm    rlwnm r6, r7, r8, 4, 27
+[75] 8000012C  5107421E  rlwimi   rlwimi r7, r8, 8, 8, 15
+[76] 80000130  7C64282E  lwzx     lwzx    r3, r4, r5
+[77] 80000134  7CC4286E  lwzux    lwzux    r6, r4, r5
+[78] 80000138  7CE428AE  lbzx     lbzx    r7, r4, r5
+[79] 8000013C  7D0428EE  lbzux    lbzux    r8, r4, r5
+[80] 80000140  7D242A2E  lhzx     lhzx    r9, r4, r5
+[81] 80000144  7D442A6E  lhzux    lhzux    r10, r4, r5
+[82] 80000148  7D642AAE  lhax     lhax    r11, r4, r5
+[83] 8000014C  7D842AEE  lhaux    lhaux    r12, r4, r5
+[84] 80000150  7C642C2C  lwbrx    lwbrx    r3, r4, r5
+[85] 80000154  7CC7462C  lhbrx    lhbrx    r6, r7, r8
+[86] 80000158  7C64292E  stwx     stwx    r3, r4, r5
+[87] 8000015C  7CC4296E  stwux    stwux    r6, r4, r5
+[88] 80000160  7CE429AE  stbx     stbx    r7, r4, r5
+[89] 80000164  7D0429EE  stbux    stbux    r8, r4, r5
+[90] 80000168  7D242B2E  sthx     sthx    r9, r4, r5
+[91] 8000016C  7D442B6E  sthux    sthux    r10, r4, r5
+[92] 80000170  7D2A5D2C  stwbrx   stwbrx    r9, r10, r11
+[93] 80000174  7D8D772C  sthbrx   sthbrx    r12, r13, r14
+[94] 80000178  7C0F87EC  dcbz     dcbz    r15, r16
+[95] 8000017C  C0240000  lfs      lfs     f1, 0(r4)
+[96] 80000180  C4440004  lfsu     lfsu     f2, 4(r4)
+[97] 80000184  C8640008  lfd      lfd     f3, 8(r4)
+[98] 80000188  CC840010  lfdu     lfdu     f4, 16(r4)
+[99] 8000018C  D0A40014  stfs     stfs     f5, 20(r4)
+[100] 80000190  D4C40018  stfsu    stfsu     f6, 24(r4)
+[101] 80000194  D8E40020  stfd     stfd     f7, 32(r4)
+[102] 80000198  DD040028  stfdu    stfdu     f8, 40(r4)
+[103] 8000019C  7D242C2E  lfsx     lfsx    f9, r4, r5
+[104] 800001A0  7D442C6E  lfsux    lfsux    f10, r4, r5
+[105] 800001A4  7D642CAE  lfdx     lfdx    f11, r4, r5
+[106] 800001A8  7D842CEE  lfdux    lfdux    f12, r4, r5
+[107] 800001AC  7DA42D2E  stfsx    stfsx    f13, r4, r5
+[108] 800001B0  7DC42D6E  stfsux   stfsux    f14, r4, r5
+[109] 800001B4  7DE42DAE  stfdx    stfdx    f15, r4, r5
+[110] 800001B8  7E042DEE  stfdux   stfdux    f16, r4, r5
+[111] 800001BC  EC22182A  fadds    fadds   f1, f2, f3
+[112] 800001C0  EC853028  fsubs    fsubs   f4, f5, f6
+[113] 800001C4  ECE80272  fmuls    fmuls   f7, f8, f9
+[114] 800001C8  ED4B6024  fdivs    fdivs   f10, f11, f12
+[115] 800001CC  FDAE782A  fadd     fadd   f13, f14, f15
+[116] 800001D0  FE119028  fsub     fsub   f16, f17, f18
+[117] 800001D4  FE740572  fmul     fmul   f19, f20, f21
+[118] 800001D8  FED7C024  fdiv     fdiv   f22, f23, f24
+[119] 800001DC  FF20D090  fmr      fmr    f25, f26
+[120] 800001E0  FF60E050  fneg     fneg    f27, f28
+[121] 800001E4  FFA0F210  fabs     fabs    f29, f30
+[122] 800001E8  FFE00110  fnabs    fnabs    f31, f0
+[123] 800001EC  FC201018  frsp     frsp    f1, f2
+[124] 800001F0  FC2220EE  fsel     fsel   f1, f2, f3, f4
+[125] 800001F4  FD032000  fcmpu    fcmpu   cr2, f3, f4
+[126] 800001F8  FD853040  fcmpo    fcmpo   cr3, f5, f6
+[127] 800001FC  FFE0008C  mtfsb0   mtfsb0  31
+[128] 80000200  FFE0004C  mtfsb1   mtfsb1  31
+[129] 80000204  E0240000  psq_l    psq_l   f1, 0(r4), 0, 0
+[130] 80000208  E4640008  psq_lu   psq_lu   f3, 8(r4), 0, 0
+[131] 8000020C  F0A40010  psq_st   psq_st   f5, 16(r4), 0, 0
+[132] 80000210  F4E40018  psq_stu  psq_stu   f7, 24(r4), 0, 0
+[133] 80000214  1124280C  psq_lx   psq_lx   f9, r4, r5, 0, 0
+[134] 80000218  1164284C  psq_lux  psq_lux   f11, r4, r5, 0, 0
+[135] 8000021C  11A4280E  psq_stx  psq_stx   f13, r4, r5, 0, 0
+[136] 80000220  11E4284E  psq_stux  psq_stux   f15, r4, r5, 0, 0
+[137] 80000224  1022182A  ps_add   ps_add  f1, f2, f3
+[138] 80000228  10853028  ps_sub   ps_sub  f4, f5, f6
+[139] 8000022C  10E80272  ps_mul   ps_mul  f7, f8, f9
+[140] 80000230  114B6024  ps_div   ps_div  f10, f11, f12
+[141] 80000234  11AE83FA  ps_madd  ps_madd  f13, f14, f15, f16
+[142] 80000238  1232A4F8  ps_msub  ps_msub  f17, f18, f19, f20
+[143] 8000023C  12B6C5FE  ps_nmadd  ps_nmadd  f21, f22, f23, f24
+[144] 80000240  133AE6FC  ps_nmsub  ps_nmsub  f25, f26, f27, f28
+[145] 80000244  10201050  ps_neg   ps_neg  f1, f2
+[146] 80000248  10602210  ps_abs   ps_abs  f3, f4
+[147] 8000024C  10A03110  ps_nabs  ps_nabs  f5, f6
+[148] 80000250  10E04090  ps_mr    ps_mr  f7, f8
+[149] 80000254  112A62D4  ps_sum0  ps_sum0  f9, f10, f11, f12
+[150] 80000258  11AE83D6  ps_sum1  ps_sum1  f13, f14, f15, f16
+[151] 8000025C  123204D8  ps_muls0  ps_muls0  f17, f18, f19
+[152] 80000260  1295059A  ps_muls1  ps_muls1  f20, f21, f22
+[153] 80000264  12F8D65C  ps_madds0  ps_madds0  f23, f24, f25, f26
+[154] 80000268  137CF75E  ps_madds1  ps_madds1  f27, f28, f29, f30
+[155] 8000026C  10221C20  ps_merge00  ps_merge00  f1, f2, f3
+[156] 80000270  10853460  ps_merge01  ps_merge01  f4, f5, f6
+[157] 80000274  10E84CA0  ps_merge10  ps_merge10  f7, f8, f9
+[158] 80000278  114B64E0  ps_merge11  ps_merge11  f10, f11, f12
+[159] 8000027C  110D7000  ps_cmpu0  ps_cmpu0 cr2, f13, f14
+[160] 80000280  118F8040  ps_cmpo0  ps_cmpo0 cr3, f15, f16
+[161] 80000284  12119080  ps_cmpu1  ps_cmpu1 cr4, f17, f18
+[162] 80000288  1293A0C0  ps_cmpo1  ps_cmpo1 cr5, f19, f20
+[163] 8000028C  12B6C5EE  ps_sel   ps_sel  f21, f22, f23, f24
+[164] 80000290  7C6429D6  mullw    mullw   r3, r4, r5
+[165] 80000294  7CC74096  mulhw    mulhw   r6, r7, r8
+[166] 80000298  7D2A5816  mulhwu   mulhwu   r9, r10, r11
+[167] 8000029C  7D8D73D6  divw     divw   r12, r13, r14
+[168] 800002A0  7DF08B96  divwu    divwu   r15, r16, r17
+[169] 800002A4  7C6401D4  addme    addme  r3, r4
+[170] 800002A8  7CA601D0  subfme   subfme  r5, r6
+[171] 800002AC  7CEC6CAA  lswi     lswi    r7, r12, 13
+[172] 800002B0  7D34AC2A  lswx     lswx    r9, r20, r21
+[173] 800002B4  7D8D8DAA  stswi    stswi   r12, r13, 17
+[174] 800002B8  7DCF852A  stswx    stswx    r14, r15, r16
+[175] 800002BC  7E329828  lwarx    lwarx    r17, r18, r19
+[176] 800002C0  7E95B12D  stwcx.   stwcx.    r20, r21, r22
+[177] 800002C4  7EF8CFAE  stfiwx   stfiwx    f23, r24, r25
+[178] 800002C8  EC201030  fres     fres    f1, f2
+[179] 800002CC  FC602034  frsqrte  frsqrte    f3, f4
+[180] 800002D0  10A03030  ps_res   ps_res f5, f6
+[181] 800002D4  10E04034  ps_rsqrte  ps_rsqrte f7, f8
+[182] 800002D8  FD20501C  fctiw    fctiw    f9, f10
+[183] 800002DC  FD60601E  fctiwz   fctiwz    f11, f12
+[184] 800002E0  FDAE83FA  fmadd    fmadd f13, f14, f15, f16
+[185] 800002E4  EE32A4FA  fmadds   fmadds f17, f18, f19, f20
+[186] 800002E8  FEB6C5F8  fmsub    fmsub f21, f22, f23, f24
+[187] 800002EC  EF3AE6F8  fmsubs   fmsubs f25, f26, f27, f28
+[188] 800002F0  FFBE07FE  fnmadd   fnmadd f29, f30, f31, f0
+[189] 800002F4  EC2220FE  fnmadds  fnmadds f1, f2, f3, f4
+[190] 800002F8  FCA641FC  fnmsub   fnmsub f5, f6, f7, f8
+[191] 800002FC  ED2A62FC  fnmsubs  fnmsubs f9, f10, f11, f12
+[192] 80000300  FDA0048E  mffs     mffs   f13
+[193] 80000304  FD0C0080  mcrfs    mcrfs   cr2, cr3
+[194] 80000308  FE00A10C  mtfsfi   mtfsfi 4, 10
+[195] 8000030C  FCB4758E  mtfsf    mtfsf  0x5A, f14
+[196] 80000310  7C0004AC  sync     sync
+[197] 80000314  7C0006AC  eieio    eieio
+[198] 80000318  4C00012C  isync    isync
+[199] 8000031C  7D4B6614  addo     addo   r10, r11, r12
+[200] 80000320  7D6C6C14  addco    addco   r11, r12, r13
+[201] 80000324  7D8D7514  addeo    addeo   r12, r13, r14
+[202] 80000328  7DAE05D4  addmeo   addmeo  r13, r14
+[203] 8000032C  7DCF0594  addzeo   addzeo  r14, r15
+[204] 80000330  7DF08C50  subfo    subfo   r15, r16, r17
+[205] 80000334  7E119410  subfco   subfco   r16, r17, r18
+[206] 80000338  7E329D10  subfeo   subfeo   r17, r18, r19
+[207] 8000033C  7E5305D0  subfmeo  subfmeo  r18, r19
+[208] 80000340  7E740590  subfzeo  subfzeo  r19, r20
+[209] 80000344  7E9504D0  nego     nego  r20, r21
+[210] 80000348  7EB6BDD6  mullwo   mullwo   r21, r22, r23
+[211] 8000034C  7ED7C7D6  divwo    divwo   r22, r23, r24
+[212] 80000350  7EF8CF96  divwuo   divwuo   r23, r24, r25
+[213] 80000354  0C85FFFE  twi      twi     4, r5, -2
+[214] 80000358  7CC74008  tw       tw      6, r7, r8
+[215] 8000035C  7D000400  mcrxr    mcrxr   cr2
+[216] 80000360  7D2000A6  mfmsr    mfmsr   r9
+[217] 80000364  7D400124  mtmsr    mtmsr   r10
+[218] 80000368  7D6304A6  mfsr     mfsr    r11, 3
+[219] 8000036C  7D806D26  mfsrin   mfsrin  r12, r13
+[220] 80000370  7DC401A4  mtsr     mtsr    4, r14
+[221] 80000374  7DE081E4  mtsrin   mtsrin  r15, r16
+[222] 80000378  7C11906C  dcbst    dcbst    r17, r18
+[223] 8000037C  7C13A0AC  dcbf     dcbf    r19, r20
+[224] 80000380  7C15B1EC  dcbtst   dcbtst    r21, r22
+[225] 80000384  7C17C22C  dcbt     dcbt    r23, r24
+[226] 80000388  7C19D3AC  dcbi     dcbi    r25, r26
+[227] 8000038C  7C1BE7AC  icbi     icbi    r27, r28
+[228] 80000390  7C00046C  tlbsync  tlbsync
+[229] 80000394  44000002  sc       sc
+[230] 80000398  4C000064  rfi      rfi
+[231] 8000039C  7C6C42E6  mftb     mftb    r3
+[232] 800003A0  100537EC  dcbz_l   dcbz_l    r5, r6
+[233] 800003A4  7C003A64  tlbie    tlbie   r7
+[234] 800003A8  7D09526C  eciwx    eciwx   r8, r9, r10
+[235] 800003AC  7D6C6B6C  ecowx    ecowx   r11, r12, r13
+
+927/927 checks passed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"cross_check" end time: Aug 11 12:25 CEST
+"cross_check" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/17 Testing: dol
+3/17 Test: dol
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_dol"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"dol" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+error: DOL entry point 0x80004000 is not inside a text section
+error: DOL entry point is not instruction-aligned
+error: DOL text section 0 is outside the file
+error: DOL text section 0 size is not instruction-aligned
+DOL frontend tests passed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"dol" end time: Aug 11 12:25 CEST
+"dol" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/17 Testing: rel
+4/17 Test: rel
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_rel"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"rel" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+error: REL imports module 2, but that module was not loaded
+error: REL executable section 1 is not instruction-aligned
+REL frontend tests passed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"rel" end time: Aug 11 12:25 CEST
+"rel" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/17 Testing: rpx
+5/17 Test: rpx
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_rpx"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"rpx" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+error: can't decompress RPX section '.text' (zlib error -3)
+error: RPX entry point 0x02001000 is not inside an executable section
+error: RPX entry point is not instruction-aligned
+RPX frontend tests passed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"rpx" end time: Aug 11 12:25 CEST
+"rpx" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/17 Testing: disc_extract
+6/17 Test: disc_extract
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_disc_extract" "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/dolrecomp" "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/disc_extract_test"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"disc_extract" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+format: GameCube ISO
+game id: GAFE01
+extracted to: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/disc_extract_test/out
+unsupported format: only .iso and .wbfs are supported
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"disc_extract" end time: Aug 11 12:25 CEST
+"disc_extract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/17 Testing: jumptables
+8/17 Test: jumptables
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_jumptables"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"jumptables" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+JUMPTABLE,rlwinm index scaling decodes,PASS
+JUMPTABLE,lwzx table load decodes,PASS
+JUMPTABLE,mtctr decodes (spr 9),PASS
+JUMPTABLE,bctr decodes as computed branch,PASS
+JUMPTABLE,no opcode falls back to interpreter,PASS
+JUMPTABLE,bctr lowers to a computed target from CTR,PASS
+JUMPTABLE,computed branch hands the target to the dispatcher,PASS
+JUMPTABLE,lwzx table load lowers to a memory read,PASS
+JUMPTABLE,mtctr loads the table entry into CTR,PASS
+JUMPTABLE,every case target is a dispatch re-entry point,PASS
+JUMPTABLE,computed index selects the right case target,PASS
+JUMPTABLE,total,11 passed 0 failed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"jumptables" end time: Aug 11 12:25 CEST
+"jumptables" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/17 Testing: dispatch
+9/17 Test: dispatch
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_dispatch"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"dispatch" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+DISPATCH,emits original lookup helper,PASS
+DISPATCH,emits original call helper,PASS
+DISPATCH,original lookup covers generated chunks,PASS
+DISPATCH,contiguous chunks use indexed dispatch,PASS
+DISPATCH,call helpers set the entry pc,PASS
+DISPATCH,public dispatcher supports module replacements,PASS
+DISPATCH,public dispatcher checks installed host replacements first,PASS
+DISPATCH,public dispatcher retries physical MEM1 aliases,PASS
+DISPATCH,public dispatcher can fall back to original code,PASS
+DISPATCH,total,9 passed 0 failed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"dispatch" end time: Aug 11 12:25 CEST
+"dispatch" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/17 Testing: c_cfg
+10/17 Test: c_cfg
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_c_cfg"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"c_cfg" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"c_cfg" end time: Aug 11 12:25 CEST
+"c_cfg" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/17 Testing: symbols
+11/17 Test: symbols
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_symbols" "/home/linux/HPCOS-GC-RECOMP/ModernGekko/vendor/dolphin/DolRecomp/tests/fixtures/codewarrior.map"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"symbols" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+SYMBOLS,loads CodeWarrior and simple rows,PASS
+SYMBOLS,deduplicates and rejects unaligned entries,PASS
+SYMBOLS,sorts symbols by address,PASS
+SYMBOLS,sanitizes C identifiers,PASS
+SYMBOLS,filters symbols to executable sections,PASS
+SYMBOLS,opens generated symbol stream,PASS
+SYMBOLS,emits symbol definitions,PASS
+SYMBOLS,reads generated symbol definitions,PASS
+SYMBOLS,emits guarded symbol header,PASS
+SYMBOLS,emits named address,PASS
+SYMBOLS,disambiguates sanitized names,PASS
+SYMBOLS,infers missing size,PASS
+SYMBOLS,total,12 passed 0 failed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"symbols" end time: Aug 11 12:25 CEST
+"symbols" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/17 Testing: pc_reference
+7/17 Test: pc_reference
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_pc_reference"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"pc_reference" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+PC CPU behavior checks
+
+--- immediate arithmetic ---
+PCREF,addi/li literal,0x0000002A,0x0000002A,PASS
+PCREF,addi negative SIMM,0x0000005A,0x0000005A,PASS
+PCREF,addis/lis shifted immediate,0x12340000,0x12340000,PASS
+PCREF,addis negative shifted immediate,0x00010000,0x00010000,PASS
+PCREF,mulli negative times negative,0x0000000E,0x0000000E,PASS
+PCREF,mulli keeps low 32 bits,0x00000000,0x00000000,PASS
+PCREF,subfic immediate minus register,0xFFFFFFFC,0xFFFFFFFC,PASS
+PCREF,subfic borrow clears CA,0x00000000,0x00000000,PASS
+PCREF,subfic equal result,0x00000000,0x00000000,PASS
+PCREF,subfic no borrow sets CA,0x20000000,0x20000000,PASS
+PCREF,addic 0 + -1 result,0xFFFFFFFF,0xFFFFFFFF,PASS
+PCREF,addic 0 + -1 clears CA,0x00000000,0x00000000,PASS
+PCREF,addic 1 + -1 result,0x00000000,0x00000000,PASS
+PCREF,addic 1 + -1 sets CA,0x20000000,0x20000000,PASS
+PCREF,addic. result,0x00000000,0x00000000,PASS
+PCREF,addic. records EQ with SO clear,0x00000002,0x00000002,PASS
+--- compare / bc ---
+PCREF,cmpwi equal then beq taken,0x80000078,0x80000078,PASS
+PCREF,cmplwi unsigned greater CR0,0x00000004,0x00000004,PASS
+PCREF,cmpw signed less in CR1,0x00000008,0x00000008,PASS
+PCREF,cmplw unsigned greater in CR2,0x00000004,0x00000004,PASS
+PCREF,bc decrements CTR when BO says so,0x00000000,0x00000000,PASS
+PCREF,bc not taken when CTR condition false,0x00000001,0x00000001,PASS
+--- register arithmetic ---
+PCREF,add,0x0000001E,0x0000001E,PASS
+PCREF,addc wraps,0x00000000,0x00000000,PASS
+PCREF,addc sets CA on carry,0x20000000,0x20000000,PASS
+PCREF,adde includes CA,0x00000000,0x00000000,PASS
+PCREF,adde keeps carry,0x20000000,0x20000000,PASS
+PCREF,addze includes CA,0x00000000,0x00000000,PASS
+PCREF,addze sets carry,0x20000000,0x20000000,PASS
+PCREF,subf rB-rA,0x00000004,0x00000004,PASS
+PCREF,subfc equal,0x00000000,0x00000000,PASS
+PCREF,subfc equal sets CA,0x20000000,0x20000000,PASS
+PCREF,subfe with borrow result,0xFFFFFFFE,0xFFFFFFFE,PASS
+PCREF,subfe borrow clears CA,0x00000000,0x00000000,PASS
+PCREF,subfze zero with CA,0x00000000,0x00000000,PASS
+PCREF,subfze zero sets CA,0x20000000,0x20000000,PASS
+PCREF,neg,0xFFFFFFFB,0xFFFFFFFB,PASS
+PCREF,mullw keeps low word,0x00000000,0x00000000,PASS
+PCREF,mulhw signed high word,0xFFFFFFFF,0xFFFFFFFF,PASS
+PCREF,mulhwu unsigned high word,0x00000001,0x00000001,PASS
+PCREF,divw truncates toward zero,0xFFFFFFFD,0xFFFFFFFD,PASS
+PCREF,divwu unsigned quotient,0x00000003,0x00000003,PASS
+PCREF,add. result,0x00000000,0x00000000,PASS
+PCREF,add. records EQ,0x00000002,0x00000002,PASS
+PCREF,addo result,0x80000000,0x80000000,PASS
+PCREF,addo sets OV SO,0xC0000000,0xC0000000,PASS
+PCREF,addco result,0x80000000,0x80000000,PASS
+PCREF,addco OV without carry,0xC0000000,0xC0000000,PASS
+PCREF,addeo result,0x80000000,0x80000000,PASS
+PCREF,addeo sets OV SO,0xC0000000,0xC0000000,PASS
+PCREF,addmeo result,0x7FFFFFFF,0x7FFFFFFF,PASS
+PCREF,addmeo sets OV SO CA,0xE0000000,0xE0000000,PASS
+PCREF,addzeo result,0x80000000,0x80000000,PASS
+PCREF,addzeo sets OV SO,0xC0000000,0xC0000000,PASS
+PCREF,subfo result,0x7FFFFFFF,0x7FFFFFFF,PASS
+PCREF,subfo sets OV SO,0xC0000000,0xC0000000,PASS
+PCREF,subfco result,0x7FFFFFFF,0x7FFFFFFF,PASS
+PCREF,subfco sets OV SO CA,0xE0000000,0xE0000000,PASS
+PCREF,subfeo result,0x7FFFFFFF,0x7FFFFFFF,PASS
+PCREF,subfeo sets OV SO CA,0xE0000000,0xE0000000,PASS
+PCREF,subfmeo result,0x7FFFFFFF,0x7FFFFFFF,PASS
+PCREF,subfmeo sets OV SO CA,0xE0000000,0xE0000000,PASS
+PCREF,subfzeo result,0x80000000,0x80000000,PASS
+PCREF,subfzeo sets OV SO,0xC0000000,0xC0000000,PASS
+PCREF,nego result,0x80000000,0x80000000,PASS
+PCREF,nego sets OV SO,0xC0000000,0xC0000000,PASS
+PCREF,mullwo result,0x80000000,0x80000000,PASS
+PCREF,mullwo sets OV SO,0xC0000000,0xC0000000,PASS
+PCREF,divwo negative divide by zero result,0xFFFFFFFF,0xFFFFFFFF,PASS
+PCREF,divwo sets OV SO,0xC0000000,0xC0000000,PASS
+PCREF,divwuo divide by zero result,0x00000000,0x00000000,PASS
+PCREF,divwuo sets OV SO,0xC0000000,0xC0000000,PASS
+--- immediate logical ---
+PCREF,ori low half,0x12345678,0x12345678,PASS
+PCREF,oris high half,0x12345678,0x12345678,PASS
+PCREF,xori low half,0xAAAAFFFF,0xAAAAFFFF,PASS
+PCREF,xoris high half,0xAAAA5555,0xAAAA5555,PASS
+PCREF,andi. result,0x000000F0,0x000000F0,PASS
+PCREF,andi. updates CR0 nonzero,0x00000004,0x00000004,PASS
+PCREF,andis. result,0x00FF0000,0x00FF0000,PASS
+PCREF,andis. updates CR0 nonzero,0x00000004,0x00000004,PASS
+--- logical / shift / rotate ---
+PCREF,and,0x00F000F0,0x00F000F0,PASS
+PCREF,andc,0x0F000F00,0x0F000F00,PASS
+PCREF,or,0x12345678,0x12345678,PASS
+PCREF,orc,0x0000FFFF,0x0000FFFF,PASS
+PCREF,xor,0x55555555,0x55555555,PASS
+PCREF,nand,0xF0F0F0F0,0xF0F0F0F0,PASS
+PCREF,nor,0x00FFFFFF,0x00FFFFFF,PASS
+PCREF,eqv,0xFF0000FF,0xFF0000FF,PASS
+PCREF,cntlzw zero,0x00000020,0x00000020,PASS
+PCREF,cntlzw leading zeros,0x00000008,0x00000008,PASS
+PCREF,extsb sign,0xFFFFFF80,0xFFFFFF80,PASS
+PCREF,extsh sign,0xFFFF8001,0xFFFF8001,PASS
+PCREF,slw shift 31,0x80000000,0x80000000,PASS
+PCREF,slw shift 32 clears,0x00000000,0x00000000,PASS
+PCREF,srw shift 31,0x00000001,0x00000001,PASS
+PCREF,srw shift 32 clears,0x00000000,0x00000000,PASS
+PCREF,sraw arithmetic shift,0xC0000000,0xC0000000,PASS
+PCREF,sraw sets CA when shifting out ones,0x20000000,0x20000000,PASS
+PCREF,sraw shift 32 sign fills,0xFFFFFFFF,0xFFFFFFFF,PASS
+PCREF,sraw shift 32 sets CA for negative,0x20000000,0x20000000,PASS
+PCREF,srawi positive,0x00000001,0x00000001,PASS
+PCREF,srawi positive clears CA,0x00000000,0x00000000,PASS
+PCREF,rlwinm mask,0x008ACF00,0x008ACF00,PASS
+PCREF,rlwnm masks variable rotate,0x0ABCDEF0,0x0ABCDEF0,PASS
+PCREF,rlwimi inserts masked rotate,0xAA56AA00,0xAA56AA00,PASS
+--- loads ---
+PCREF,lwz offset 0,0xDEADBEEF,0xDEADBEEF,PASS
+PCREF,lwzu loads updated address,0xCAFEBABE,0xCAFEBABE,PASS
+PCREF,lwzu updates rA,0x80001004,0x80001004,PASS
+PCREF,lbz zero-extends byte,0x000000A5,0x000000A5,PASS
+PCREF,lbzu loads updated address,0x0000007F,0x0000007F,PASS
+PCREF,lbzu updates rA,0x8000100C,0x8000100C,PASS
+PCREF,lhz zero-extends halfword,0x00001234,0x00001234,PASS
+PCREF,lhzu loads updated address,0x00007FFF,0x00007FFF,PASS
+PCREF,lhzu updates rA,0x80001014,0x80001014,PASS
+PCREF,lha sign-extends halfword,0xFFFF8001,0xFFFF8001,PASS
+PCREF,lhau sign-extends halfword,0xFFFF8001,0xFFFF8001,PASS
+PCREF,lhau updates rA,0x80001018,0x80001018,PASS
+PCREF,lmw first register,0xA0000014,0xA0000014,PASS
+PCREF,lmw last register,0xA000001F,0xA000001F,PASS
+PCREF,lmw r0 first register,0xC0000000,0xC0000000,PASS
+PCREF,lmw r0 can overwrite base register,0xC0000003,0xC0000003,PASS
+PCREF,lmw r0 last register,0xC000001F,0xC000001F,PASS
+--- stores ---
+PCREF,stw offset 28,0xAABBCCDD,0xAABBCCDD,PASS
+PCREF,stwu stores updated address,0x11223344,0x11223344,PASS
+PCREF,stwu updates rA,0x80002020,0x80002020,PASS
+PCREF,stb stores low byte,0x000000A5,0x000000A5,PASS
+PCREF,stbu stores updated address,0x0000007E,0x0000007E,PASS
+PCREF,stbu updates rA,0x80002028,0x80002028,PASS
+PCREF,sth stores low halfword,0x0000ABCD,0x0000ABCD,PASS
+PCREF,sthu stores updated address,0x00001234,0x00001234,PASS
+PCREF,sthu updates rA,0x80002030,0x80002030,PASS
+PCREF,stmw first register,0xB0000014,0xB0000014,PASS
+PCREF,stmw last register,0xB000001F,0xB000001F,PASS
+--- indexed memory ---
+PCREF,lwzx,0x01020304,0x01020304,PASS
+PCREF,lwzux,0x01020304,0x01020304,PASS
+PCREF,lwzux updates rA,0x80003020,0x80003020,PASS
+PCREF,lbzx,0x000000A5,0x000000A5,PASS
+PCREF,lbzux,0x000000A5,0x000000A5,PASS
+PCREF,lbzux updates rA,0x80003024,0x80003024,PASS
+PCREF,lhzx,0x00001234,0x00001234,PASS
+PCREF,lhzux,0x00001234,0x00001234,PASS
+PCREF,lhzux updates rA,0x80003028,0x80003028,PASS
+PCREF,lhax,0xFFFF8003,0xFFFF8003,PASS
+PCREF,lhaux,0xFFFF8003,0xFFFF8003,PASS
+PCREF,lhaux updates rA,0x8000302C,0x8000302C,PASS
+PCREF,stwx,0xAABBCCDD,0xAABBCCDD,PASS
+PCREF,stwux,0x11223344,0x11223344,PASS
+PCREF,stwux updates rA,0x80003024,0x80003024,PASS
+PCREF,stbx,0x0000005A,0x0000005A,PASS
+PCREF,stbux,0x0000006B,0x0000006B,PASS
+PCREF,stbux updates rA,0x8000302C,0x8000302C,PASS
+PCREF,sthx,0x0000CAFE,0x0000CAFE,PASS
+PCREF,sthux,0x0000FACE,0x0000FACE,PASS
+PCREF,sthux updates rA,0x80003034,0x80003034,PASS
+PCREF,lwbrx byte-reverses word,0x04030201,0x04030201,PASS
+PCREF,lwbrx uses zero base when rA is zero,0x44332211,0x44332211,PASS
+PCREF,lhbrx byte-reverses halfword,0x00003412,0x00003412,PASS
+PCREF,stwbrx byte-reverses word,0xD4C3B2A1,0xD4C3B2A1,PASS
+PCREF,sthbrx byte-reverses halfword,0x00003412,0x00003412,PASS
+PCREF,dcbz clears first word of cache block,0x00000000,0x00000000,PASS
+PCREF,dcbz clears last word of cache block,0x00000000,0x00000000,PASS
+PCREF,dcbz leaves previous block,0x11111111,0x11111111,PASS
+PCREF,dcbz leaves next block,0x22222222,0x22222222,PASS
+PCREF,dcbz uses zero base when rA is zero,0x00000000,0x00000000,PASS
+--- FPU memory ---
+PCREF,lfs loads single,0x3F800000,0x3F800000,PASS
+PCREF,lfs updates paired half,0x3F800000,0x3F800000,PASS
+PCREF,lfsu preserves negative zero,0x80000000,0x80000000,PASS
+PCREF,lfsu updates paired half,0x80000000,0x80000000,PASS
+PCREF,lfsu updates rA,0x80004004,0x80004004,PASS
+PCREF,lfd loads double hi,0x400921FB,0x400921FB,PASS
+PCREF,lfd loads double lo,0x54442D18,0x54442D18,PASS
+PCREF,lfdu preserves negative zero hi,0x80000000,0x80000000,PASS
+PCREF,lfdu preserves negative zero lo,0x00000000,0x00000000,PASS
+PCREF,lfdu updates rA,0x80004010,0x80004010,PASS
+PCREF,stfs stores single,0x3FC00000,0x3FC00000,PASS
+PCREF,stfsu stores single,0xBF800000,0xBF800000,PASS
+PCREF,stfsu updates rA,0x80004018,0x80004018,PASS
+PCREF,stfd stores double hi,0x40040000,0x40040000,PASS
+PCREF,stfd stores double lo,0x00000000,0x00000000,PASS
+PCREF,stfdu stores double hi,0xBFF00000,0xBFF00000,PASS
+PCREF,stfdu stores double lo,0x00000000,0x00000000,PASS
+PCREF,stfdu updates rA,0x80004028,0x80004028,PASS
+PCREF,lfsx loads single,0x40490FDB,0x40490FDB,PASS
+PCREF,lfsx updates paired half,0x40490FDB,0x40490FDB,PASS
+PCREF,lfsux loads single,0xC0200000,0xC0200000,PASS
+PCREF,lfsux updates paired half,0xC0200000,0xC0200000,PASS
+PCREF,lfsux updates rA,0x80004084,0x80004084,PASS
+PCREF,lfdx loads double hi,0x3FF80000,0x3FF80000,PASS
+PCREF,lfdx loads double lo,0x00000000,0x00000000,PASS
+PCREF,lfdux loads double hi,0xC0080000,0xC0080000,PASS
+PCREF,lfdux loads double lo,0x00000000,0x00000000,PASS
+PCREF,lfdux updates rA,0x80004090,0x80004090,PASS
+PCREF,stfsx stores single,0x41100000,0x41100000,PASS
+PCREF,stfsux stores single,0xC1200000,0xC1200000,PASS
+PCREF,stfsux updates rA,0x8000409C,0x8000409C,PASS
+PCREF,stfdx stores double hi,0x40140000,0x40140000,PASS
+PCREF,stfdx stores double lo,0x00000000,0x00000000,PASS
+PCREF,stfdux stores double hi,0xC0140000,0xC0140000,PASS
+PCREF,stfdux stores double lo,0x00000000,0x00000000,PASS
+PCREF,stfdux updates rA,0x800040A8,0x800040A8,PASS
+--- paired-single memory ---
+PCREF,psq_l w0 ps0,0x3F800000,0x3F800000,PASS
+PCREF,psq_l w0 ps1,0x40000000,0x40000000,PASS
+PCREF,psq_l w1 ps0,0x40400000,0x40400000,PASS
+PCREF,psq_l w1 ps1 one,0x3F800000,0x3F800000,PASS
+PCREF,psq_lu w0 ps0,0x40800000,0x40800000,PASS
+PCREF,psq_lu w0 ps1,0x40A00000,0x40A00000,PASS
+PCREF,psq_lu updates rA,0x80005008,0x80005008,PASS
+PCREF,psq_st w0 ps0,0x40C00000,0x40C00000,PASS
+PCREF,psq_st w0 ps1,0x40E00000,0x40E00000,PASS
+PCREF,psq_st w1 ps0,0x41000000,0x41000000,PASS
+PCREF,psq_st w1 leaves ps1 word,0xDEADBEEF,0xDEADBEEF,PASS
+PCREF,psq_stu w0 ps0,0x41200000,0x41200000,PASS
+PCREF,psq_stu w0 ps1,0x41300000,0x41300000,PASS
+PCREF,psq_stu updates rA,0x80005018,0x80005018,PASS
+PCREF,psq_lx w0 ps0,0x41400000,0x41400000,PASS
+PCREF,psq_lx w0 ps1,0x41500000,0x41500000,PASS
+PCREF,psq_lx w1 ps0,0x41600000,0x41600000,PASS
+PCREF,psq_lx w1 ps1 one,0x3F800000,0x3F800000,PASS
+PCREF,psq_lux w0 ps0,0x41700000,0x41700000,PASS
+PCREF,psq_lux w0 ps1,0x41800000,0x41800000,PASS
+PCREF,psq_lux updates rA,0x80005090,0x80005090,PASS
+PCREF,psq_stx w0 ps0,0x41880000,0x41880000,PASS
+PCREF,psq_stx w0 ps1,0x41900000,0x41900000,PASS
+PCREF,psq_stux w0 ps0,0x41980000,0x41980000,PASS
+PCREF,psq_stux w0 ps1,0x41A00000,0x41A00000,PASS
+PCREF,psq_stux updates rA,0x800050A0,0x800050A0,PASS
+PCREF,psq_l u8 scale ps0,0x40A00000,0x40A00000,PASS
+PCREF,psq_l u8 scale ps1,0x42F60000,0x42F60000,PASS
+PCREF,psq_st u8 truncates,0x0000000B,0x0000000B,PASS
+PCREF,psq_st u8 clamps high,0x000000FF,0x000000FF,PASS
+PCREF,psq_l u16 negative scale ps0,0x44160000,0x44160000,PASS
+PCREF,psq_l u16 negative scale ps1,0x44480000,0x44480000,PASS
+PCREF,psq_st u16 negative scale,0x00000064,0x00000064,PASS
+PCREF,psq_st u16 clamps high,0x0000FFFF,0x0000FFFF,PASS
+PCREF,psq_l s8 ps0,0xC0000000,0xC0000000,PASS
+PCREF,psq_l s8 ps1,0x42FE0000,0x42FE0000,PASS
+PCREF,psq_st s8 clamps low,0x00000080,0x00000080,PASS
+PCREF,psq_st s8 clamps high,0x0000007F,0x0000007F,PASS
+PCREF,psq_l s16 scaled ps0,0xC1C80000,0xC1C80000,PASS
+PCREF,psq_l s16 scaled ps1,0x41C80000,0x41C80000,PASS
+PCREF,psq_st s16 truncates,0x00000193,0x00000193,PASS
+PCREF,psq_st s16 clamps low,0x00008000,0x00008000,PASS
+PCREF,psq_st NaN becomes positive overflow,0x0000007F,0x0000007F,PASS
+PCREF,psq_st negative infinity clamps low,0x00000080,0x00000080,PASS
+PCREF,psq_st f32 denorm stores zero,0x00000000,0x00000000,PASS
+PCREF,psq_l without PSE raises program,0x00000001,0x00000001,PASS
+PCREF,psq_l without PSE is illegal,0x00080000,0x00080000,PASS
+PCREF,psq_l without LSQE raises program,0x00000001,0x00000001,PASS
+PCREF,psq_l f32 unaligned raises alignment,0x00000004,0x00000004,PASS
+PCREF,psq_l integer unaligned allowed,0x00000000,0x00000000,PASS
+--- paired-single arithmetic ---
+PCREF,ps_add ps0,0x40800000,0x40800000,PASS
+PCREF,ps_add ps1,0x40C00000,0x40C00000,PASS
+PCREF,ps_sub ps0,0x40B00000,0x40B00000,PASS
+PCREF,ps_sub ps1,0x40F00000,0x40F00000,PASS
+PCREF,ps_mul ps0,0x40C00000,0x40C00000,PASS
+PCREF,ps_mul ps1,0x41A00000,0x41A00000,PASS
+PCREF,ps_div ps0,0x40600000,0x40600000,PASS
+PCREF,ps_div ps1,0x40400000,0x40400000,PASS
+PCREF,ps_madd ps0,0x41100000,0x41100000,PASS
+PCREF,ps_madd ps1,0x41880000,0x41880000,PASS
+PCREF,ps_msub ps0,0x40E00000,0x40E00000,PASS
+PCREF,ps_msub ps1,0x41500000,0x41500000,PASS
+PCREF,ps_nmadd ps0,0xC1100000,0xC1100000,PASS
+PCREF,ps_nmadd ps1,0xC1880000,0xC1880000,PASS
+PCREF,ps_nmsub ps0,0xC0E00000,0xC0E00000,PASS
+PCREF,ps_nmsub ps1,0xC1500000,0xC1500000,PASS
+PCREF,ps_neg ps0,0x80000000,0x80000000,PASS
+PCREF,ps_neg ps1,0x40200000,0x40200000,PASS
+PCREF,ps_abs ps0,0x00000000,0x00000000,PASS
+PCREF,ps_abs ps1,0x40200000,0x40200000,PASS
+PCREF,ps_nabs ps0,0x80000000,0x80000000,PASS
+PCREF,ps_nabs ps1,0xC0200000,0xC0200000,PASS
+PCREF,ps_mr ps0,0x80000000,0x80000000,PASS
+PCREF,ps_mr ps1,0x40800000,0x40800000,PASS
+PCREF,ps_sum0 ps0,0x40E00000,0x40E00000,PASS
+PCREF,ps_sum0 ps1,0x40800000,0x40800000,PASS
+PCREF,ps_sum1 ps0,0x40400000,0x40400000,PASS
+PCREF,ps_sum1 ps1,0x40E00000,0x40E00000,PASS
+PCREF,ps_muls0 ps0,0x41000000,0x41000000,PASS
+PCREF,ps_muls0 ps1,0x41400000,0x41400000,PASS
+PCREF,ps_muls1 ps0,0x41200000,0x41200000,PASS
+PCREF,ps_muls1 ps1,0x41700000,0x41700000,PASS
+PCREF,ps_madds0 ps0,0x41100000,0x41100000,PASS
+PCREF,ps_madds0 ps1,0x41600000,0x41600000,PASS
+PCREF,ps_madds1 ps0,0x41300000,0x41300000,PASS
+PCREF,ps_madds1 ps1,0x41880000,0x41880000,PASS
+PCREF,ps_merge00 ps0,0x3F800000,0x3F800000,PASS
+PCREF,ps_merge00 ps1,0x40400000,0x40400000,PASS
+PCREF,ps_merge01 ps0,0x3F800000,0x3F800000,PASS
+PCREF,ps_merge01 ps1,0x40800000,0x40800000,PASS
+PCREF,ps_merge10 ps0,0x40000000,0x40000000,PASS
+PCREF,ps_merge10 ps1,0x40400000,0x40400000,PASS
+PCREF,ps_merge11 ps0,0x40000000,0x40000000,PASS
+PCREF,ps_merge11 ps1,0x40800000,0x40800000,PASS
+PCREF,ps_cmpu0 less,0x00000008,0x00000008,PASS
+PCREF,ps_cmpo0 greater,0x00000004,0x00000004,PASS
+PCREF,ps_cmpu1 unordered,0x00000001,0x00000001,PASS
+PCREF,ps_cmpo1 equal,0x00000002,0x00000002,PASS
+PCREF,ps_sel ps0,0x41F00000,0x41F00000,PASS
+PCREF,ps_sel ps1,0x41A00000,0x41A00000,PASS
+--- FPU arithmetic ---
+PCREF,fadds result,0x40700000,0x40700000,PASS
+PCREF,fsubs result,0x40B00000,0x40B00000,PASS
+PCREF,fmuls result,0x40C00000,0x40C00000,PASS
+PCREF,fdivs result,0x40600000,0x40600000,PASS
+PCREF,fadds rounds after double add,0x44200000,0x44200000,PASS
+PCREF,fsubs rounds after double subtract,0x44200000,0x44200000,PASS
+PCREF,fadd result hi,0x400E0000,0x400E0000,PASS
+PCREF,fadd result lo,0x00000000,0x00000000,PASS
+PCREF,fsub result hi,0x40160000,0x40160000,PASS
+PCREF,fsub result lo,0x00000000,0x00000000,PASS
+PCREF,fmul result hi,0x40180000,0x40180000,PASS
+PCREF,fmul result lo,0x00000000,0x00000000,PASS
+PCREF,fdiv result hi,0x400C0000,0x400C0000,PASS
+PCREF,fdiv result lo,0x00000000,0x00000000,PASS
+PCREF,fmr preserves negative zero hi,0x80000000,0x80000000,PASS
+PCREF,fmr preserves negative zero lo,0x00000000,0x00000000,PASS
+PCREF,fneg flips sign hi,0xC0040000,0xC0040000,PASS
+PCREF,fneg flips sign lo,0x00000000,0x00000000,PASS
+PCREF,fabs clears sign hi,0x40040000,0x40040000,PASS
+PCREF,fabs clears sign lo,0x00000000,0x00000000,PASS
+PCREF,fnabs sets sign hi,0xC0040000,0xC0040000,PASS
+PCREF,fnabs sets sign lo,0x00000000,0x00000000,PASS
+PCREF,frsp rounds to single,0x3F8CCCCD,0x3F8CCCCD,PASS
+PCREF,fsel negative selects fB hi,0x40100000,0x40100000,PASS
+PCREF,fsel negative selects fB lo,0x00000000,0x00000000,PASS
+PCREF,fsel negative zero selects fC hi,0x40080000,0x40080000,PASS
+PCREF,fsel negative zero selects fC lo,0x00000000,0x00000000,PASS
+PCREF,fsel NaN selects fB hi,0x40100000,0x40100000,PASS
+PCREF,fsel NaN selects fB lo,0x00000000,0x00000000,PASS
+PCREF,mtfsb1 sets selected bit,0x00000001,0x00000001,PASS
+PCREF,mtfsb0 clears selected bit,0x00000000,0x00000000,PASS
+PCREF,mtfsb1 sets FX bit,0x80000000,0x80000000,PASS
+PCREF,mtfsb0 clears FX,0x00000000,0x00000000,PASS
+PCREF,mtfsb1 leaves FEX unchanged,0x00000000,0x00000000,PASS
+PCREF,mtfsb1 leaves VX unchanged,0x00000000,0x00000000,PASS
+PCREF,fcmpu less,0x00000008,0x00000008,PASS
+PCREF,fcmpu greater,0x00000004,0x00000004,PASS
+PCREF,fcmpu equal,0x00000002,0x00000002,PASS
+PCREF,fcmpu unordered,0x00000001,0x00000001,PASS
+PCREF,fcmpo greater,0x00000004,0x00000004,PASS
+--- new opcode batch ---
+PCREF,addme CA clear,0x00000004,0x00000004,PASS
+PCREF,addme CA set,0x00000005,0x00000005,PASS
+PCREF,addmeo overflow result,0x7FFFFFFF,0x7FFFFFFF,PASS
+PCREF,addmeo sets OV SO,0xC0000000,0xC0000000,PASS
+PCREF,subfme CA clear,0xFFFFFFF9,0xFFFFFFF9,PASS
+PCREF,subfme CA set,0xFFFFFFFA,0xFFFFFFFA,PASS
+PCREF,subfmeo overflow result,0x7FFFFFFF,0x7FFFFFFF,PASS
+PCREF,subfmeo sets OV SO,0xC0000000,0xC0000000,PASS
+PCREF,lswi first word,0x80818283,0x80818283,PASS
+PCREF,lswi partial word,0x8C000000,0x8C000000,PASS
+PCREF,lswx first word,0x81828384,0x81828384,PASS
+PCREF,lswx partial word,0x85860000,0x85860000,PASS
+PCREF,lswx rA in range raises program,0x00000001,0x00000001,PASS
+PCREF,lswx rA in range is illegal,0x00080000,0x00080000,PASS
+PCREF,lswx rB in range raises program,0x00000001,0x00000001,PASS
+PCREF,lswx rB in range is illegal,0x00080000,0x00080000,PASS
+PCREF,stswi first word,0x11223344,0x11223344,PASS
+PCREF,stswi final partial byte,0x000000DD,0x000000DD,PASS
+PCREF,stswx first word,0xA1A2A3A4,0xA1A2A3A4,PASS
+PCREF,stswx next register,0x0000B1B2,0x0000B1B2,PASS
+PCREF,lwarx value,0x12345678,0x12345678,PASS
+PCREF,stwcx reserved store,0xCAFEBABE,0xCAFEBABE,PASS
+PCREF,stwcx success CR0,0x00000002,0x00000002,PASS
+PCREF,stwcx consumed reservation,0x00000000,0x00000000,PASS
+PCREF,stwcx Gekko ignores reserved address,0xCAFEBABE,0xCAFEBABE,PASS
+PCREF,stfiwx low word,0xDEADBEEF,0xDEADBEEF,PASS
+PCREF,fres estimate hi,0x3FD55500,0x3FD55500,PASS
+PCREF,fres estimate lo,0x00000000,0x00000000,PASS
+PCREF,frsqrte estimate hi,0x3FE27940,0x3FE27940,PASS
+PCREF,frsqrte estimate lo,0x00000000,0x00000000,PASS
+PCREF,fres positive zero hi,0x7FF00000,0x7FF00000,PASS
+PCREF,fres positive zero lo,0x00000000,0x00000000,PASS
+PCREF,fres zero FPSCR,0x84005000,0x84005000,PASS
+PCREF,fres negative zero hi,0xFFF00000,0xFFF00000,PASS
+PCREF,fres negative zero lo,0x00000000,0x00000000,PASS
+PCREF,fres ZE suppresses result hi,0x40220000,0x40220000,PASS
+PCREF,fres ZE suppresses result lo,0x00000000,0x00000000,PASS
+PCREF,fres repeated ZX keeps FX clear,0x04000000,0x04000000,PASS
+PCREF,frsqrte negative QNaN,0x7FF80000,0x7FF80000,PASS
+PCREF,frsqrte negative FPSCR,0xA0011200,0xA0011200,PASS
+PCREF,frsqrte VE suppresses result hi,0x40220000,0x40220000,PASS
+PCREF,frsqrte VE suppresses result lo,0x00000000,0x00000000,PASS
+PCREF,ps_res estimate ps0,0x3EAAA800,0x3EAAA800,PASS
+PCREF,ps_res estimate ps1,0x3E7FF800,0x3E7FF800,PASS
+PCREF,ps_rsqrte estimate ps0,0x3F13CA00,0x3F13CA00,PASS
+PCREF,ps_rsqrte estimate ps1,0x3EFFF400,0x3EFFF400,PASS
+PCREF,fctiw ties to even,0x00000002,0x00000002,PASS
+PCREF,fctiwz truncates,0xFFFFFFFE,0xFFFFFFFE,PASS
+PCREF,fctiw rounds positive infinity,0x00000003,0x00000003,PASS
+PCREF,fctiw positive overflow saturates,0x7FFFFFFF,0x7FFFFFFF,PASS
+PCREF,fctiw overflow FPSCR,0xA0000100,0xA0000100,PASS
+PCREF,fctiw VE suppresses result hi,0x40220000,0x40220000,PASS
+PCREF,fctiw VE suppresses result lo,0x00000000,0x00000000,PASS
+PCREF,fmadd hi,0x40240000,0x40240000,PASS
+PCREF,fmadd lo,0x00000000,0x00000000,PASS
+PCREF,fmadds,0x41200000,0x41200000,PASS
+PCREF,fmadds single-round tie,0xBF55BF17,0xBF55BF17,PASS
+PCREF,fmadd fused cancellation hi,0xB9700000,0xB9700000,PASS
+PCREF,fmadd fused cancellation lo,0x00000000,0x00000000,PASS
+PCREF,fmsub hi,0x40260000,0x40260000,PASS
+PCREF,fmsub lo,0x00000000,0x00000000,PASS
+PCREF,fmsubs,0x41300000,0x41300000,PASS
+PCREF,fnmadd hi,0xC0240000,0xC0240000,PASS
+PCREF,fnmadd lo,0x00000000,0x00000000,PASS
+PCREF,fnmadds,0xC1200000,0xC1200000,PASS
+PCREF,fnmsub hi,0xC0260000,0xC0260000,PASS
+PCREF,fnmsub lo,0x00000000,0x00000000,PASS
+PCREF,fnmsubs,0xC1300000,0xC1300000,PASS
+PCREF,fmadd QNaN operand order hi,0x7FF80000,0x7FF80000,PASS
+PCREF,fmadd QNaN operand order lo,0x000000A1,0x000000A1,PASS
+PCREF,fmadd VE suppresses result hi,0x40220000,0x40220000,PASS
+PCREF,fmadd VE suppresses result lo,0x00000000,0x00000000,PASS
+PCREF,fmadd VE invalid FPSCR,0x60100080,0x60100080,PASS
+PCREF,fmadd negative FPRF,0x00008000,0x00008000,PASS
+PCREF,mffs low word,0x72345678,0x72345678,PASS
+PCREF,mcrfs copies field,0x0000000A,0x0000000A,PASS
+PCREF,mtfsfi field,0x0000A000,0x0000A000,PASS
+PCREF,mtfsf masked fields,0x02045070,0x02045070,PASS
+PCREF,sync preserves state,0xA5A5A5A5,0xA5A5A5A5,PASS
+PCREF,eieio preserves state,0xA5A5A5A5,0xA5A5A5A5,PASS
+PCREF,isync preserves state,0xA5A5A5A5,0xA5A5A5A5,PASS
+PCREF,twi false does not trap,0x00000000,0x00000000,PASS
+PCREF,tw false does not trap,0x00000000,0x00000000,PASS
+PCREF,mcrxr copies XER field,0x0000000E,0x0000000E,PASS
+PCREF,mcrxr clears XER SO OV CA,0x00000000,0x00000000,PASS
+PCREF,mfmsr reads MSR,0x00003040,0x00003040,PASS
+PCREF,mtmsr writes MSR,0x00001000,0x00001000,PASS
+PCREF,mtspr writes GQR,0x01040104,0x01040104,PASS
+PCREF,mfspr reads GQR,0x01040104,0x01040104,PASS
+PCREF,mfsr reads SR,0x33330003,0x33330003,PASS
+PCREF,mfsrin reads indexed SR,0xDDDD000D,0xDDDD000D,PASS
+PCREF,mtsr writes SR,0x44440004,0x44440004,PASS
+PCREF,mtsrin writes indexed SR,0xEEEE000E,0xEEEE000E,PASS
+PCREF,dcbst preserves state,0x5A5A5A5A,0x5A5A5A5A,PASS
+PCREF,dcbf preserves state,0x5A5A5A5A,0x5A5A5A5A,PASS
+PCREF,dcbtst preserves state,0x5A5A5A5A,0x5A5A5A5A,PASS
+PCREF,dcbt preserves state,0x5A5A5A5A,0x5A5A5A5A,PASS
+PCREF,dcbi preserves state,0x5A5A5A5A,0x5A5A5A5A,PASS
+PCREF,icbi preserves state,0x5A5A5A5A,0x5A5A5A5A,PASS
+PCREF,tlbsync preserves state,0x5A5A5A5A,0x5A5A5A5A,PASS
+PCREF,fallback sees raw instruction,0xFC20102C,0xFC20102C,PASS
+PCREF,fallback sees instruction address,0x800001EC,0x800001EC,PASS
+PCREF,fallback can run instruction,0x0F1BACCB,0x0F1BACCB,PASS
+PCREF,fallback avoids illegal trap,0x00000000,0x00000000,PASS
+PCREF,fsqrt raises program,0x00000001,0x00000001,PASS
+PCREF,fsqrt is illegal,0x00080000,0x00080000,PASS
+PCREF,fsqrts raises program,0x00000001,0x00000001,PASS
+PCREF,fsqrts is illegal,0x00080000,0x00080000,PASS
+PCREF,tlbia raises program,0x00000001,0x00000001,PASS
+PCREF,tlbia is illegal,0x00080000,0x00080000,PASS
+PCREF,sc raises system call,0x00000008,0x00000008,PASS
+PCREF,sc stores next CIA in SRR0,0x80000204,0x80000204,PASS
+PCREF,sc stores MSR bits in SRR1,0x0000F073,0x0000F073,PASS
+PCREF,sc vectors through IP,0xFFF00C00,0xFFF00C00,PASS
+PCREF,sc clears exception MSR bits,0x00001040,0x00001040,PASS
+PCREF,rfi resumes from SRR0,0x80000120,0x80000120,PASS
+PCREF,rfi restores masked MSR bits and clears POW,0x783BF073,0x783BF073,PASS
+PCREF,rfi in user mode raises program,0x00000001,0x00000001,PASS
+PCREF,rfi in user mode is privileged,0x00040000,0x00040000,PASS
+PCREF,mftb reads TBL,0x55667788,0x55667788,PASS
+PCREF,mftbu reads TBU,0x11223344,0x11223344,PASS
+PCREF,mftb invalid TBR raises program,0x00000001,0x00000001,PASS
+PCREF,mftb invalid TBR is illegal,0x00080000,0x00080000,PASS
+PCREF,dcbz_l without LCE raises program,0x00000001,0x00000001,PASS
+PCREF,dcbz_l without LCE is illegal,0x00080000,0x00080000,PASS
+PCREF,dcbz_l illegal leaves memory,0x11111111,0x11111111,PASS
+PCREF,dcbz_l clears first word,0x00000000,0x00000000,PASS
+PCREF,dcbz_l clears last word,0x00000000,0x00000000,PASS
+PCREF,dcbz_l miss does not set DCHERR,0x00000000,0x00000000,PASS
+PCREF,dcbz_l hit sets DCHERR,0x00800000,0x00800000,PASS
+PCREF,dcbz_l hit can raise machine check,0x00000010,0x00000010,PASS
+PCREF,dcbz_l machine check marks SRR1 bit 10,0x00200000,0x00200000,PASS
+PCREF,tlbie increments invalidate count,0x00000001,0x00000001,PASS
+PCREF,tlbie records VPS,0x00001234,0x00001234,PASS
+PCREF,tlbie records TLB index,0x00000034,0x00000034,PASS
+PCREF,eciwx EAR disabled raises DSI,0x00000002,0x00000002,PASS
+PCREF,eciwx DSI stores DAR,0x80007000,0x80007000,PASS
+PCREF,eciwx DSI marks EAR disabled,0x00100000,0x00100000,PASS
+PCREF,eciwx exception leaves rD,0xDEADBEEF,0xDEADBEEF,PASS
+PCREF,eciwx unaligned raises alignment,0x00000004,0x00000004,PASS
+PCREF,eciwx alignment stores DAR,0x80007002,0x80007002,PASS
+PCREF,eciwx reads external word,0x25007D04,0x25007D04,PASS
+PCREF,eciwx records RID,0x0000000D,0x0000000D,PASS
+PCREF,eciwx records address,0x80007004,0x80007004,PASS
+PCREF,ecowx records write count,0x00000001,0x00000001,PASS
+PCREF,ecowx records RID,0x0000000C,0x0000000C,PASS
+PCREF,ecowx records address,0x80007008,0x80007008,PASS
+PCREF,ecowx records value,0xCAFEBABE,0xCAFEBABE,PASS
+PCREF,tlbie in user mode raises program,0x00000001,0x00000001,PASS
+PCREF,tlbie in user mode is privileged,0x00040000,0x00040000,PASS
+--- branches / CR / SPR ---
+PCREF,b changes PC,0x80000078,0x80000078,PASS
+PCREF,bl changes PC,0x80000078,0x80000078,PASS
+PCREF,bl sets LR,0x80000064,0x80000064,PASS
+PCREF,bclr/blr uses LR,0x80001234,0x80001234,PASS
+PCREF,bcctr/bctr uses CTR,0x80005678,0x80005678,PASS
+PCREF,crand 00,0x00000000,0x00000000,PASS
+PCREF,crand 01,0x00000000,0x00000000,PASS
+PCREF,crand 10,0x00000000,0x00000000,PASS
+PCREF,crand 11,0x00000001,0x00000001,PASS
+PCREF,crandc 00,0x00000000,0x00000000,PASS
+PCREF,crandc 01,0x00000000,0x00000000,PASS
+PCREF,crandc 10,0x00000001,0x00000001,PASS
+PCREF,crandc 11,0x00000000,0x00000000,PASS
+PCREF,creqv 00,0x00000001,0x00000001,PASS
+PCREF,creqv 01,0x00000000,0x00000000,PASS
+PCREF,creqv 10,0x00000000,0x00000000,PASS
+PCREF,creqv 11,0x00000001,0x00000001,PASS
+PCREF,crnand 00,0x00000001,0x00000001,PASS
+PCREF,crnand 01,0x00000001,0x00000001,PASS
+PCREF,crnand 10,0x00000001,0x00000001,PASS
+PCREF,crnand 11,0x00000000,0x00000000,PASS
+PCREF,crnor 00,0x00000001,0x00000001,PASS
+PCREF,crnor 01,0x00000000,0x00000000,PASS
+PCREF,crnor 10,0x00000000,0x00000000,PASS
+PCREF,crnor 11,0x00000000,0x00000000,PASS
+PCREF,crorc 00,0x00000001,0x00000001,PASS
+PCREF,crorc 01,0x00000000,0x00000000,PASS
+PCREF,crorc 10,0x00000001,0x00000001,PASS
+PCREF,crorc 11,0x00000001,0x00000001,PASS
+PCREF,crxor 00,0x00000000,0x00000000,PASS
+PCREF,crxor 01,0x00000001,0x00000001,PASS
+PCREF,crxor 10,0x00000001,0x00000001,PASS
+PCREF,crxor 11,0x00000000,0x00000000,PASS
+PCREF,cror copies true source,0x00000001,0x00000001,PASS
+PCREF,mcrf copies source field,0x00000004,0x00000004,PASS
+PCREF,mcrf leaves source field,0x00000004,0x00000004,PASS
+PCREF,mfcr reads CR,0xA5A50000,0xA5A50000,PASS
+PCREF,mtcrf full mask writes CR,0x12345678,0x12345678,PASS
+PCREF,mtcrf partial mask writes selected fields,0x811B1111,0x811B1111,PASS
+PCREF,mtcrf zero mask leaves CR,0x2468ACE0,0x2468ACE0,PASS
+PCREF,mtcrf low mask writes CR7,0x1234567F,0x1234567F,PASS
+PCREF,mtspr/mtlr writes LR,0x12345678,0x12345678,PASS
+PCREF,mfspr/mflr reads LR,0x12345678,0x12345678,PASS
+PCREF,mtspr/mtctr writes CTR,0x00000005,0x00000005,PASS
+PCREF,mfspr/mfctr reads CTR,0x00000005,0x00000005,PASS
+PCREF,mtspr/mtxer writes XER,0x20000000,0x20000000,PASS
+PCREF,mfspr/mfxer reads XER,0x20000000,0x20000000,PASS
+PCREF,mtspr 18 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 18 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 18 roundtrip,0xA5001200,0xA5001200,PASS
+PCREF,mtspr 19 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 19 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 19 roundtrip,0xA5001301,0xA5001301,PASS
+PCREF,mtspr 22 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 22 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 22 roundtrip,0xA5001602,0xA5001602,PASS
+PCREF,mtspr 25 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 25 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 25 roundtrip,0xA5001903,0xA5001903,PASS
+PCREF,mtspr 26 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 26 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 26 roundtrip,0xA5001A04,0xA5001A04,PASS
+PCREF,mtspr 27 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 27 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 27 roundtrip,0xA5001B05,0xA5001B05,PASS
+PCREF,mtspr 272 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 272 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 272 roundtrip,0xA5011006,0xA5011006,PASS
+PCREF,mtspr 273 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 273 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 273 roundtrip,0xA5011107,0xA5011107,PASS
+PCREF,mtspr 274 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 274 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 274 roundtrip,0xA5011208,0xA5011208,PASS
+PCREF,mtspr 275 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 275 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 275 roundtrip,0xA5011309,0xA5011309,PASS
+PCREF,mtspr 282 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 282 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 282 roundtrip,0xA5011A0A,0xA5011A0A,PASS
+PCREF,mtspr 528 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 528 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 528 roundtrip,0xA502100B,0xA502100B,PASS
+PCREF,mtspr 529 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 529 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 529 roundtrip,0xA502110C,0xA502110C,PASS
+PCREF,mtspr 530 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 530 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 530 roundtrip,0xA502120D,0xA502120D,PASS
+PCREF,mtspr 531 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 531 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 531 roundtrip,0xA502130E,0xA502130E,PASS
+PCREF,mtspr 532 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 532 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 532 roundtrip,0xA502140F,0xA502140F,PASS
+PCREF,mtspr 533 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 533 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 533 roundtrip,0xA5021510,0xA5021510,PASS
+PCREF,mtspr 534 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 534 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 534 roundtrip,0xA5021611,0xA5021611,PASS
+PCREF,mtspr 535 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 535 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 535 roundtrip,0xA5021712,0xA5021712,PASS
+PCREF,mtspr 536 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 536 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 536 roundtrip,0xA5021813,0xA5021813,PASS
+PCREF,mtspr 537 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 537 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 537 roundtrip,0xA5021914,0xA5021914,PASS
+PCREF,mtspr 538 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 538 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 538 roundtrip,0xA5021A15,0xA5021A15,PASS
+PCREF,mtspr 539 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 539 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 539 roundtrip,0xA5021B16,0xA5021B16,PASS
+PCREF,mtspr 540 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 540 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 540 roundtrip,0xA5021C17,0xA5021C17,PASS
+PCREF,mtspr 541 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 541 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 541 roundtrip,0xA5021D18,0xA5021D18,PASS
+PCREF,mtspr 542 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 542 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 542 roundtrip,0xA5021E19,0xA5021E19,PASS
+PCREF,mtspr 543 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 543 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 543 roundtrip,0xA5021F1A,0xA5021F1A,PASS
+PCREF,mtspr 912 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 912 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 912 roundtrip,0xA503901B,0xA503901B,PASS
+PCREF,mtspr 913 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 913 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 913 roundtrip,0xA503911C,0xA503911C,PASS
+PCREF,mtspr 914 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 914 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 914 roundtrip,0xA503921D,0xA503921D,PASS
+PCREF,mtspr 915 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 915 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 915 roundtrip,0xA503931E,0xA503931E,PASS
+PCREF,mtspr 916 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 916 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 916 roundtrip,0xA503941F,0xA503941F,PASS
+PCREF,mtspr 917 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 917 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 917 roundtrip,0xA5039520,0xA5039520,PASS
+PCREF,mtspr 918 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 918 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 918 roundtrip,0xA5039621,0xA5039621,PASS
+PCREF,mtspr 919 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 919 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 919 roundtrip,0xA5039722,0xA5039722,PASS
+PCREF,mtspr 920 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 920 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 920 roundtrip,0xA5039823,0xA5039823,PASS
+PCREF,mtspr 921 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 921 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 921 roundtrip,0xA5039924,0xA5039924,PASS
+PCREF,mtspr 922 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 922 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 922 roundtrip,0xA5039A25,0xA5039A25,PASS
+PCREF,mtspr 923 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 923 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 923 roundtrip,0xA5039B26,0xA5039B26,PASS
+PCREF,mtspr 936 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 936 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 936 roundtrip,0xA503A827,0xA503A827,PASS
+PCREF,mtspr 937 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 937 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 937 roundtrip,0xA503A928,0xA503A928,PASS
+PCREF,mtspr 938 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 938 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 938 roundtrip,0xA503AA29,0xA503AA29,PASS
+PCREF,mtspr 939 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 939 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 939 roundtrip,0xA503AB2A,0xA503AB2A,PASS
+PCREF,mtspr 940 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 940 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 940 roundtrip,0xA503AC2B,0xA503AC2B,PASS
+PCREF,mtspr 941 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 941 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 941 roundtrip,0xA503AD2C,0xA503AD2C,PASS
+PCREF,mtspr 942 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 942 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 942 roundtrip,0xA503AE2D,0xA503AE2D,PASS
+PCREF,mtspr 952 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 952 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 952 roundtrip,0xA503B82E,0xA503B82E,PASS
+PCREF,mtspr 953 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 953 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 953 roundtrip,0xA503B92F,0xA503B92F,PASS
+PCREF,mtspr 954 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 954 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 954 roundtrip,0xA503BA30,0xA503BA30,PASS
+PCREF,mtspr 955 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 955 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 955 roundtrip,0xA503BB31,0xA503BB31,PASS
+PCREF,mtspr 956 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 956 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 956 roundtrip,0xA503BC32,0xA503BC32,PASS
+PCREF,mtspr 957 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 957 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 957 roundtrip,0xA503BD33,0xA503BD33,PASS
+PCREF,mtspr 958 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 958 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 958 roundtrip,0xA503BE34,0xA503BE34,PASS
+PCREF,mtspr 1008 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 1008 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 1008 roundtrip,0xA503F035,0xA503F035,PASS
+PCREF,mtspr 1009 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 1009 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 1009 roundtrip,0xA503F136,0xA503F136,PASS
+PCREF,mtspr 1010 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 1010 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 1010 roundtrip,0xA503F237,0xA503F237,PASS
+PCREF,mtspr 1013 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 1013 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 1013 roundtrip,0xA503F538,0xA503F538,PASS
+PCREF,mtspr 1017 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 1017 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 1017 roundtrip,0xA503F939,0xA503F939,PASS
+PCREF,mtspr 1019 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 1019 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 1019 roundtrip,0xA503FB3A,0xA503FB3A,PASS
+PCREF,mtspr 1020 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 1020 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 1020 roundtrip,0xA503FC3B,0xA503FC3B,PASS
+PCREF,mtspr 1021 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 1021 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 1021 roundtrip,0xA503FD3C,0xA503FD3C,PASS
+PCREF,mtspr 1022 does not trap,0x00000000,0x00000000,PASS
+PCREF,mfspr 1022 does not trap,0x00000000,0x00000000,PASS
+PCREF,mtspr/mfspr 1022 roundtrip,0xA503FE3D,0xA503FE3D,PASS
+PCREF,mfspr reads Gekko PVR,0x00083214,0x00083214,PASS
+PCREF,mtspr TBL writes timebase low hi,0xAABBCCDD,0xAABBCCDD,PASS
+PCREF,mtspr TBL writes timebase low lo,0x55667788,0x55667788,PASS
+PCREF,mtspr TBU writes timebase high hi,0x99AABBCC,0x99AABBCC,PASS
+PCREF,mtspr TBU writes timebase high lo,0x55667788,0x55667788,PASS
+PCREF,mftb reads TBL,0x55667788,0x55667788,PASS
+PCREF,mftbu reads TBU,0x99AABBCC,0x99AABBCC,PASS
+PCREF,mtspr PVR traps,0x00000001,0x00000001,PASS
+PCREF,mtspr PVR traps,0x00080000,0x00080000,PASS
+PCREF,mfspr TBL alias traps,0x00000001,0x00000001,PASS
+PCREF,mfspr TBL alias traps,0x00080000,0x00080000,PASS
+PCREF,mfspr TBL write alias traps,0x00000001,0x00000001,PASS
+PCREF,mfspr TBL write alias traps,0x00080000,0x00080000,PASS
+PCREF,mfspr undefined SPR traps,0x00000001,0x00000001,PASS
+PCREF,mfspr undefined SPR traps,0x00080000,0x00080000,PASS
+PCREF,mtspr undefined SPR traps,0x00000001,0x00000001,PASS
+PCREF,mtspr undefined SPR traps,0x00080000,0x00080000,PASS
+--- host hooks ---
+PCREF,host call missing callback,0x00000000,0x00000000,PASS
+PCREF,host call rejects unknown address,0x00000000,0x00000000,PASS
+PCREF,host call sees rejected address,0x80001200,0x80001200,PASS
+PCREF,host call accepts registered address,0x00000001,0x00000001,PASS
+PCREF,host call writes result register,0x484C4501,0x484C4501,PASS
+PCREF,host call returns through LR,0x80000080,0x80000080,PASS
+
+746 passed, 0 failed
+ALL TESTS PASSED
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"pc_reference" end time: Aug 11 12:25 CEST
+"pc_reference" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/17 Testing: c_execute
+13/17 Test: c_execute
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_c_execute"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"c_execute" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"c_execute" end time: Aug 11 12:25 CEST
+"c_execute" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/17 Testing: dolir
+14/17 Test: dolir
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_dolir"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"dolir" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+dolir tests passed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"dolir" end time: Aug 11 12:25 CEST
+"dolir" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/17 Testing: llvm_backend
+15/17 Test: llvm_backend
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_llvm_backend" "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/dolir_test.o" "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/dolir_test.ll"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"llvm_backend" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"llvm_backend" end time: Aug 11 12:25 CEST
+"llvm_backend" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/17 Testing: llvm_pipeline
+17/17 Test: llvm_pipeline
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_llvm_pipeline" "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/dolrecomp" "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/llvm_pipeline"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"llvm_pipeline" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+=== DOL Info ===
+entry point: 0x80003100
+game: GameCube DOL
+BSS: 0x00000000 (0x0 bytes)
+
+text sections:
+  [0] file:0x00000100 -> addr:0x80003100  size:0x00001000
+data sections:
+cpu: Gekko (GameCube)
+
+writing output to: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/llvm_pipeline/out/generated/generated.c
+decoding text[0]: 1024 instructions at 0x80003100
+  1024 known, 0 embedded data, 0 unknown
+  writing 2 LLVM objects with 2 jobs
+[1/2] Reusing cached LLVM object chunk_0000_text0_80003100.o
+[2/2] Reusing cached LLVM object chunk_0001_text0_80003900.o
+done!
+  header: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/llvm_pipeline/out/generated/generated.h
+  objects: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/llvm_pipeline/out/generated/chunks (2 files)
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"llvm_pipeline" end time: Aug 11 12:25 CEST
+"llvm_pipeline" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/17 Testing: llvm_execute
+16/17 Test: llvm_execute
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_llvm_execute"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"llvm_execute" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"llvm_execute" end time: Aug 11 12:25 CEST
+"llvm_execute" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/17 Testing: codegen_compile
+12/17 Test: codegen_compile
+Command: "/usr/bin/cmake" "-DGENERATOR_EXE=/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/test_codegen_emit" "-DOUTPUT_C=/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/codegen_check.c" "-DREPO_SRC=/home/linux/HPCOS-GC-RECOMP/ModernGekko/vendor/dolphin/DolRecomp/src" "-DHOST_GENERATOR=Ninja" "-DHOST_GENERATOR_PLATFORM=" "-DHOST_GENERATOR_TOOLSET=" "-DHOST_C_COMPILER=/usr/bin/cc" "-DHOST_BUILD_CONFIG=Release" "-P" "/home/linux/HPCOS-GC-RECOMP/ModernGekko/vendor/dolphin/DolRecomp/tests/cmake/codegen_compile.cmake"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp
+"codegen_compile" start time: Aug 11 12:25 CEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.46 sec
+----------------------------------------------------------
+Test Passed.
+"codegen_compile" end time: Aug 11 12:25 CEST
+"codegen_compile" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 11 12:25 CEST

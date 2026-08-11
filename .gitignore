@@ -1,88 +1,46 @@
+# ============================================================
 # HPCOS-GC-RECOMP
-# Keep everything required to build/run the project.
-# Ignore only reproducible build output, user/game data and temporary files.
+# Keep all source/runtime/module/recomp/vendor trees trackable.
+# Ignore only local game data, user state, caches and build dirs.
+# ============================================================
 
-# -----------------------------------------------------------------------------
-# Reproducible build/intermediate output
-# -----------------------------------------------------------------------------
+# Local build outputs
 /build/
 /port-build/
 /port-build-*/
-/cmake-build-*/
 /.cache/
 /.releases/
 /.publish.*/
-/.build.lock
+.build.lock
 
-# Generic CMake/Ninja state when created outside the directories above
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-CTestTestfile.cmake
-compile_commands.json
-.ninja_deps
-.ninja_log
+# Local runtime/user state
+/user/
 
-# -----------------------------------------------------------------------------
-# User-owned original game data — never publish
-# -----------------------------------------------------------------------------
-/extracted/*
-!/extracted/README.md
-!/extracted/.gitkeep
-
-/iso/*
-!/iso/README.md
-!/iso/.gitkeep
-
+# User-provided copyrighted game data
+/extracted/
+/iso/
 *.iso
 *.gcm
 *.rvz
 *.wbfs
-*.wad
 
-# -----------------------------------------------------------------------------
-# Per-user runtime state / saves / dumps
-# -----------------------------------------------------------------------------
-/user/
-
-# -----------------------------------------------------------------------------
-# Temporary/editor files
-# -----------------------------------------------------------------------------
+# Temporary / backup files
 *.log
 *.bak
 *.tmp
+*.temp
+*.old
 *.orig
 *.rej
-*.old
 *~
-*.swp
-*.swo
-*.dmp
-core
-core.*
-vgcore.*
-
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-
-.vscode/
-.idea/
 .DS_Store
 Thumbs.db
-desktop.ini
 
-# Local repository-maintenance helpers
-/hpcos_repo_polish.py
-/hpcos_repo_polish_v2.py
-/hpcos_repo_polish_v3.py
+# Editor metadata
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# IMPORTANT: intentionally NOT ignored:
-#   /ModernGekko/  -> source used by build.sh
-#   /DolRecomp/    -> development dependency/source when present
-#   /recomp/       -> recompilation source/output that represents the port
-#   /runtime/      -> published runnable ModernGekko runtime
-#   /module/       -> published gGHSE69_recomp.so module
-#   /build.sh      -> reproducible build entry point
-#   /run.sh        -> launcher
+# This helper itself
+/vendor_upstreams_and_push.py

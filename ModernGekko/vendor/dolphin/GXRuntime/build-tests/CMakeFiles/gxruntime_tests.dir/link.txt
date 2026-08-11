@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/gxruntime_tests.dir/link.d CMakeFiles/gxruntime_tests.dir/tests/runtime_tests.c.o -o gxruntime_tests  libgxruntime.a -lm

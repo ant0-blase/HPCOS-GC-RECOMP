@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/linux/HPCOS-GC-RECOMP/DolRecomp/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

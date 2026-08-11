@@ -1,0 +1,255 @@
+// RecompCore: StaticRecomp CPU core - Main execution loop.
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+#include "Core/PowerPC/StaticRecomp/StaticRecompCore.h"
+#include "Core/System.h"
+#include "Core/PowerPC/PowerPC.h"
+#include "Core/PowerPC/Interpreter/Interpreter.h"
+#include "Core/PowerPC/StaticRecomp/StaticRecompLockstep.h"
+#include "Core/CoreTiming.h"
+#include "Core/HW/CPU.h"
+#include "Core/Config/MainSettings.h"
+#include "Core/Config/ConfigManager.h"
+#include "Core/HW/SystemTimers.h"
+
+#include <algorithm>
+#include <cstdio>
+
+namespace
+{
+constexpr u32 SYNC_EXCEPTION_MASK = ~static_cast<u32>(
+    EXCEPTION_EXTERNAL_INT | EXCEPTION_DECREMENTER | EXCEPTION_PERFORMANCE_MONITOR);
+}
+
+void StaticRecompCore::Run()
+{
+  auto& core_timing = m_system.GetCoreTiming();
+  auto& power_pc = m_system.GetPowerPC();
+  auto& ppc = power_pc.GetPPCState();
+  auto& interpreter = m_system.GetInterpreter();
+  auto& memory = m_system.GetMemory();
+  const CPU::State* state_ptr = m_system.GetCPU().GetStatePtr();
+
+  m_guest.ram = memory.GetRAM();
+  m_guest.ram_size = memory.GetRamSizeReal();
+  m_guest.exram = memory.GetEXRAM();
+  m_guest.exram_size = memory.GetExRamSizeReal();
+  InitLookupTable(m_guest.ram_size, m_guest.exram_size);
+
+  const std::string initial_game_id = SConfig::GetInstance().GetGameID();
+  m_module_active = m_module && (initial_game_id.empty() || initial_game_id == m_module->game_id);
+
+  if (!m_module_active && m_fallback_jit && !m_guest.host_call)
+  {
+    m_fallback_jit->Run();
+    return;
+  }
+
+  while (*state_ptr == CPU::State::Running)
+  {
+    core_timing.Advance();
+    const std::string current_game_id = SConfig::GetInstance().GetGameID();
+    m_module_active = m_module && (current_game_id.empty() || current_game_id == m_module->game_id);
+
+    do
+    {
+      // MSR.FP needs no gate here: generated FPU instructions raise the
+      // FP-unavailable exception themselves (ppc_fp_available).
+      if (m_module_active && DispatchableAt(ppc.pc) &&
+          !(m_guest.host_call && IsHostCallAddress(ppc.pc)))
+      {
+        SyncIn();
+        ++m_bursts;
+        do
+        {
+          const bool do_ls = m_lockstep_verifier->ShouldCheck(m_guest.pc);
+          if (do_ls)
+          {
+            m_lockstep_verifier->Prepare(m_guest);
+          }
+
+          const u32 runtime_dispatch_address = m_guest.pc;
+          u32 linked_dispatch_address = runtime_dispatch_address;
+
+          // HPCOS DOL fast path: DOL runtime and linked addresses are identical.
+          if (!m_active_rel_sections.empty())
+            ResolveNativeAddress(runtime_dispatch_address, &linked_dispatch_address, nullptr);
+
+          m_guest.pc = linked_dispatch_address;
+
+          /*
+           * One public native dispatch may execute an in-chunk cycle, but it
+           * must not run past either the configured quantum or Dolphin's
+           * current CoreTiming deadline. The second counter is a termination
+           * backstop for cycles made entirely from zero-cycle helper/data
+           * blocks. Both fields live in CPUState so helper/MMIO callbacks
+           * cannot accidentally reset the budget.
+           */
+          const u64 remaining_slice =
+              ppc.downcount > 0 ? static_cast<u64>(ppc.downcount) : 1u;
+          m_guest.native_cycle_budget = static_cast<s64>(
+              std::min<u64>(m_native_cycle_quantum, remaining_slice));
+          m_guest.native_guard_budget = 4096;
+
+          u32 dispatched_blocks = 0;
+
+          /*
+           * ABI v4 native burst:
+           *
+           * Keep lockstep and REL execution on the old one-segment path.
+           * For the normal DOL gameplay path, execute multiple verified chunks
+           * inside the native module before returning to the C++ chassis.
+           */
+          if (false && !do_ls &&
+              m_module->dispatch_burst &&
+              m_active_rel_sections.empty() &&
+              !m_native_chain_state.empty())
+          {
+            /*
+             * Never execute past Dolphin's current CoreTiming slice.
+             *
+             * The old dispatcher returned to this loop after every native
+             * segment and stopped chaining as soon as ppc.downcount <= 0.
+             * Give the module exactly that remaining budget so native chaining
+             * cannot run through a pending CoreTiming event.
+             */
+            const u64 burst_cycle_budget =
+                ppc.downcount > 0 ? static_cast<u64>(ppc.downcount) : 1u;
+
+            dispatched_blocks = m_module->dispatch_burst(
+                &m_guest,
+                linked_dispatch_address,
+                m_native_chain_state.data(),
+                static_cast<u32>(m_native_chain_state.size()),
+                burst_cycle_budget,
+                m_burst_tb_base,
+                m_burst_tb_cycles,
+                static_cast<u32>(SystemTimers::TIMER_RATIO));
+          }
+
+          // Safety fallback for non-chainable/legacy paths.
+          if (dispatched_blocks == 0)
+          {
+            m_module->dispatch(&m_guest, linked_dispatch_address);
+            dispatched_blocks = 1;
+          }
+
+          if (!m_active_rel_sections.empty())
+            m_guest.pc = TranslateRelAddress(m_guest.pc);
+
+          m_native_dispatches += dispatched_blocks;
+
+          if (do_ls)
+          {
+            m_lockstep_verifier->Verify(m_guest);
+          }
+
+          // Flush the module's per-block cycle charges into Dolphin's
+          // downcount. A dispatch that charged nothing (PC-switch default,
+          // pure embedded data) still costs 1 so the burst always makes
+          // downcount progress; this per-dispatch flush is also the
+          // dispatcher back-edge timing check — CoreTiming regains control
+          // with at least CachedInterpreter's per-block frequency, so
+          // external-interrupt latency matches stock.
+          const s64 charge = -m_guest.downcount;
+          m_guest.downcount = 0;
+          ppc.downcount -= static_cast<int>(charge > 0 ? charge : 1);
+          m_charged_cycles += static_cast<u64>(charge > 0 ? charge : 1);
+          m_burst_tb_cycles += static_cast<u64>(charge > 0 ? charge : 1);
+          m_guest.timebase = m_burst_tb_base + m_burst_tb_cycles / SystemTimers::TIMER_RATIO;
+
+          // Idle loop skipping for configured target loops (e.g. Wii Menu OSIdleThread)
+          if (m_guest.pc == m_idle_pc && m_idle_pc != 0)
+          {
+            m_system.GetCoreTiming().Idle();
+          }
+
+          // ctx->timebase is refreshed at burst start (SyncIn), and here we
+          // incrementally advance it by the exact block cycle charges to
+          // prevent guest busy-wait loops from spinning on a stale timebase.
+          if (m_guest.exception)
+          {
+            // DolRecomp's runtime already redirected pc/msr/srr to the guest
+            // exception vector; the flag only signals that it happened.
+            m_guest.exception = 0;
+            m_guest.program_exception = 0;
+            ++m_native_exceptions;
+          }
+          if ((ppc.Exceptions & SYNC_EXCEPTION_MASK) != 0)
+            break;  // Hook-raised synchronous exception: deliver via Dolphin below.
+        } while (m_module_active && FastDispatchableAt(m_guest.pc) &&
+                 !(m_guest.host_call && IsHostCallAddress(m_guest.pc)) && ppc.downcount > 0 &&
+                 *state_ptr == CPU::State::Running);
+        SyncOut();
+        if ((ppc.Exceptions & SYNC_EXCEPTION_MASK) != 0)
+          power_pc.CheckExceptions();
+      }
+      else
+      {
+        if (m_guest.host_call && IsHostCallAddress(ppc.pc))
+        {
+          SyncIn();
+          bool handled = m_guest.host_call(&m_guest, m_guest.pc);
+          if (!handled && m_guest.pc < m_guest.ram_size)
+            handled = m_guest.host_call(&m_guest, m_guest.pc | 0x80000000u);
+          if (m_fallback_jit && IsHostCallAddress(m_guest.lr))
+            m_fallback_jit->GetBlockCache()->InvalidateICache(m_guest.lr, 4, true);
+          if (handled)
+          {
+            const s64 charge = -m_guest.downcount;
+            m_guest.downcount = 0;
+            ppc.downcount -= static_cast<int>(charge > 0 ? charge : 1);
+            m_burst_tb_cycles += static_cast<u64>(charge > 0 ? charge : 1);
+            m_guest.timebase = m_burst_tb_base + m_burst_tb_cycles / SystemTimers::TIMER_RATIO;
+            SyncOut();
+            continue;
+          }
+          SyncOut();
+          if (m_fallback_jit)
+          {
+            m_host_call_passthrough_pc = ppc.pc;
+            m_host_call_passthrough = true;
+          }
+        }
+        // SingleStepInner delivers synchronous exceptions itself; external
+        // interrupts are delivered at slice start, as in Interpreter::Run.
+        // A failed verification retires module code specifically to Dolphin's
+        // interpreter. Do not let the ordinary fallback JIT hide SMC execution
+        // from fallback telemetry. Non-module code retains the configured JIT
+        // fallback policy.
+        const bool smc_failed_module_pc = m_module_active && IsFailedModuleAddress(ppc.pc);
+        if (m_module_active &&
+            (smc_failed_module_pc || IsForcedFallbackAddress(ppc.pc)))
+        {
+          ppc.downcount -= interpreter.SingleStepInner();
+          ++m_fallback_steps;
+          if (smc_failed_module_pc)
+            ++m_smc_interpreter_steps;
+        }
+        else if (m_fallback_jit)
+        {
+          m_fallback_jit->Run();
+        }
+        else
+        {
+          do
+          {
+            ppc.downcount -= interpreter.SingleStepInner();
+            ++m_fallback_steps;
+          } while (!(m_module_active && DispatchableAt(ppc.pc)) &&
+                   !IsHostCallAddress(ppc.pc) && ppc.downcount > 0 &&
+                   *state_ptr == CPU::State::Running);
+        }
+      }
+    } while (ppc.downcount > 0 && *state_ptr == CPU::State::Running);
+  }
+}
+
+void StaticRecompCore::SingleStep()
+{
+  // Debugger stepping runs through the interpreter; state outside Run() lives
+  // in PowerPCState, so no sync is needed.
+  auto& system = m_system;
+  system.GetCoreTiming().Advance();
+  system.GetPPCState().downcount -= system.GetInterpreter().SingleStepInner();
+}

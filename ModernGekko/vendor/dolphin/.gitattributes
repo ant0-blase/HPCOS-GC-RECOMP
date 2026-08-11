@@ -1,0 +1,4 @@
+*.sln text eol=crlf
+*.sh text eol=lf
+*.patch text eol=lf
+*.entitlements text eol=lf

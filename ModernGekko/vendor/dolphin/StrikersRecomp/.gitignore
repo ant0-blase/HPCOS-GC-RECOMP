@@ -1,0 +1,27 @@
+# Recompiled output is derived from the user's own ISO and is large.
+# Reproduce it with: python3 tools/generate.py --iso <your-melee.iso>
+/generated/
+
+# Never commit copyrighted game data.
+*.iso
+*.wbfs
+*.dol
+*.gci
+*.raw
+*.dolcard
+
+# Build trees
+/build/
+/build-*/
+*.o
+*.obj
+
+# Editor / OS noise
+.DS_Store
+*.swp
+compile_commands.json
+
+# Trace fixtures are captured from a retail disc; keep them local only.
+/tests/traces/
+*.log
+*.dols

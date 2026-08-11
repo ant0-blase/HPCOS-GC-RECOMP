@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.16)
+project(CodegenCompileCheck C)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+file(WRITE "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/codegen_check_project/host_cpu.h" "#include \"cpu/cpu.h\"\n")
+add_library(codegen_check OBJECT "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/codegen_check.c")
+target_include_directories(codegen_check PRIVATE "/home/linux/HPCOS-GC-RECOMP/ModernGekko/build-llvm20/vendor/dolphin/DolRecomp/codegen_check_project" "/home/linux/HPCOS-GC-RECOMP/ModernGekko/vendor/dolphin/DolRecomp/src")
+target_compile_definitions(codegen_check PRIVATE DOLRECOMP_CPU_HEADER="host_cpu.h")

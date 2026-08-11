@@ -1,0 +1,33 @@
+Start testing: Aug 11 12:19 CEST
+----------------------------------------------------------
+1/1 Testing: gxruntime_tests
+1/1 Test: gxruntime_tests
+Command: "/home/linux/HPCOS-GC-RECOMP/ModernGekko/vendor/dolphin/GXRuntime/build-tests/gxruntime_tests"
+Directory: /home/linux/HPCOS-GC-RECOMP/ModernGekko/vendor/dolphin/GXRuntime/build-tests
+"gxruntime_tests" start time: Aug 11 12:19 CEST
+Output:
+----------------------------------------------------------
+error: cannot open DOL 'gxruntime-loader-missing.dol'
+error: 'gxruntime-loader-fail.dol' is too small to be a DOL (255 bytes)
+error: DOL text[0] file range out of bounds
+error: DOL text[0] address 0x81800000+0x4 does not fit in RAM
+error: DOL text[0] address 0x00001000+0x4 does not fit in RAM
+error: BSS 0x81800000+0x1000 does not fit in RAM
+[boot] entry=0x80003100 arena_lo=0x80026000 arena_hi=0x817FEC60 sp=0x817FFF00
+[dvd] disc image: gxruntime-dvd-test.iso (3 FST entries)
+[dvd] disc image: gxruntime-dvd-edges.iso (4 FST entries)
+[dvd] no readable GameCube disc image at 'gxruntime-dvd-badmagic.iso'
+[dvd] no readable GameCube disc image at 'gxruntime-dvd-truncated.iso'
+[dvd] no readable GameCube disc image at '(null)'
+[dvd] no readable GameCube disc image at ''
+[card] invalid card container: gxruntime-memory-card-corrupt.dolcard
+GXRuntime tests passed
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"gxruntime_tests" end time: Aug 11 12:19 CEST
+"gxruntime_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 11 12:19 CEST

@@ -1,0 +1,6 @@
+#define SCM_REV_STR "7ddb34a1ac6f0a1029ca29cee4089eec6d9829c5"
+#define SCM_DESC_STR "7ddb34a1ac"
+#define SCM_BRANCH_STR "HEAD"
+#define SCM_COMMITS_AHEAD_MASTER 
+#define SCM_DISTRIBUTOR_STR "ModernGekko"
+#define SCM_UPDATE_TRACK_STR ""

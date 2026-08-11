@@ -1,0 +1,8555 @@
+{
+ "meta": {
+  "game": "G4QE01",
+  "generated": "2026-07-06",
+  "functions_total": 8590,
+  "edges": 22036,
+  "addr_taken_roots": 2347,
+  "reachable_functions": 7281,
+  "unreachable_functions": 1309
+ },
+ "lanes": {
+  "ai": {
+   "AIsgn__Ff": {
+    "addr": "0x80005FC4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 8,
+    "game_caller_names": [
+     "DownfieldFrom__FP7cPlayerP7cPlayer",
+     "IsFielderInPosition__18FormationDefensiveFP8cFie",
+     "IsFielderInPosition__18FormationOffensiveFP8cFie",
+     "OnBreakaway__FP8cFielder",
+     "OpenToPosition__FRC9nlVector3RC9nlVector3PC5cTea",
+     "UpdateDesireState__8cFielderFf"
+    ],
+    "sdk_callers": 0
+   },
+   "AIEventHandler__FP5EventPv": {
+    "addr": "0x800105EC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "AILocToFieldLoc__FR9nlVector3RC9nlVector39eTeamSide": {
+    "addr": "0x8003BB6C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "DesireSupportBall__8cFielderFfb"
+    ],
+    "sdk_callers": 0
+   },
+   "AIRegisterDMACallback": {
+    "addr": "0x8023AEE8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 4
+   },
+   "AIInitDMA": {
+    "addr": "0x8023AF2C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 4
+   },
+   "AIStartDMA": {
+    "addr": "0x8023AFB4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "AIStopDMA": {
+    "addr": "0x8023AFCC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "AIGetDMAStartAddr": {
+    "addr": "0x8023AFE4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "AISetStreamPlayState": {
+    "addr": "0x8023B000",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "AIGetStreamPlayState": {
+    "addr": "0x8023B0D8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "AISetDSPSampleRate": {
+    "addr": "0x8023B0E8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "AIGetDSPSampleRate": {
+    "addr": "0x8023B1C8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "__AI_set_stream_sample_rate": {
+    "addr": "0x8023B1DC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "AIGetStreamSampleRate": {
+    "addr": "0x8023B2B0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "AISetStreamVolLeft": {
+    "addr": "0x8023B2C0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 4
+   },
+   "AIGetStreamVolLeft": {
+    "addr": "0x8023B2DC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "AISetStreamVolRight": {
+    "addr": "0x8023B2EC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 4
+   },
+   "AIGetStreamVolRight": {
+    "addr": "0x8023B308",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "AIInit": {
+    "addr": "0x8023B318",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Initialize__9PlatAudioFb"
+    ],
+    "sdk_callers": 0
+   },
+   "AIReset": {
+    "addr": "0x8023B484",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Shutdown__9PlatAudioFv"
+    ],
+    "sdk_callers": 0
+   },
+   "__AISHandler": {
+    "addr": "0x8023B490",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__AIDHandler": {
+    "addr": "0x8023B50C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__AICallbackStackSwitch": {
+    "addr": "0x8023B5B8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__AI_SRC_INIT": {
+    "addr": "0x8023B610",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   }
+  },
+  "ar": {
+   "ARRegisterDMACallback": {
+    "addr": "0x8023B824",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "ARGetDMAStatus": {
+    "addr": "0x8023B868",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "TRK__read_aram",
+     "TRK__write_aram",
+     "__VMSwapPageIn"
+    ],
+    "sdk_callers": 0
+   },
+   "ARStartDMA": {
+    "addr": "0x8023B8A4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "TRK__read_aram",
+     "TRK__write_aram",
+     "__VMSwapPageIn"
+    ],
+    "sdk_callers": 3
+   },
+   "ARAlloc": {
+    "addr": "0x8023B994",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Initialize__9PlatAudioFb"
+    ],
+    "sdk_callers": 0
+   },
+   "ARFree": {
+    "addr": "0x8023B9FC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Shutdown__9PlatAudioFv"
+    ],
+    "sdk_callers": 0
+   },
+   "ARInit": {
+    "addr": "0x8023BA70",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Initialize__9PlatAudioFb"
+    ],
+    "sdk_callers": 0
+   },
+   "ARReset": {
+    "addr": "0x8023BB34",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Shutdown__9PlatAudioFv"
+    ],
+    "sdk_callers": 0
+   },
+   "ARGetBaseAddress": {
+    "addr": "0x8023BB40",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 6,
+    "game_caller_names": [
+     "__sinit_plataudio_cpp",
+     "aramGetAvailableBytes",
+     "aramGetFirstUserAddress",
+     "aramGetZeroBuffer",
+     "aramInit",
+     "aramStoreData"
+    ],
+    "sdk_callers": 0
+   },
+   "ARGetSize": {
+    "addr": "0x8023BB48",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "aramInit"
+    ],
+    "sdk_callers": 0
+   },
+   "__ARHandler": {
+    "addr": "0x8023BB50",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__ARClearInterrupt": {
+    "addr": "0x8023BBC8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "TRK__read_aram",
+     "TRK__write_aram",
+     "__VMSwapPageIn"
+    ],
+    "sdk_callers": 0
+   },
+   "__ARGetInterruptStatus": {
+    "addr": "0x8023BBE8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "TRK__read_aram",
+     "TRK__write_aram",
+     "__VMSwapPageIn"
+    ],
+    "sdk_callers": 0
+   },
+   "__ARChecksize": {
+    "addr": "0x8023BBF8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__ARQServiceQueueLo": {
+    "addr": "0x8023D3EC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "__ARQCallbackHack": {
+    "addr": "0x8023D4EC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__ARQInterruptServiceRoutine": {
+    "addr": "0x8023D4F0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "ARQInit": {
+    "addr": "0x8023D5BC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Initialize__9PlatAudioFb"
+    ],
+    "sdk_callers": 0
+   },
+   "ARQReset": {
+    "addr": "0x8023D62C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Shutdown__9PlatAudioFv"
+    ],
+    "sdk_callers": 0
+   },
+   "ARQPostRequest": {
+    "addr": "0x8023D638",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "aramInit",
+     "aramStoreData",
+     "aramUploadData"
+    ],
+    "sdk_callers": 0
+   },
+   "ARQSetChunkSize": {
+    "addr": "0x8023D794",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 6,
+    "game_caller_names": [
+     "ActivateDPL2__11AudioLoaderFbb",
+     "LoadFEAudioData__11AudioLoaderFb",
+     "LoadFE__11AudioLoaderFb",
+     "LoadInGame__11AudioLoaderFv",
+     "LoadPermanentSoundGroups__11AudioLoaderFb",
+     "LoadSoundGroup__9PlatAudioFR13AudioFileDataUlUlb"
+    ],
+    "sdk_callers": 0
+   },
+   "ARQGetChunkSize": {
+    "addr": "0x8023D7B4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "aramSetUploadCallback"
+    ],
+    "sdk_callers": 0
+   }
+  },
+  "card": {
+   "__CARDDefaultApiCallback": {
+    "addr": "0x8023D8D0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__CARDExtHandler": {
+    "addr": "0x8023D8D4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__CARDExiHandler": {
+    "addr": "0x8023D9AC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__CARDTxHandler": {
+    "addr": "0x8023DAC4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__CARDUnlockedHandler": {
+    "addr": "0x8023DB6C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__CARDEnableInterrupt": {
+    "addr": "0x8023DBF0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "DoMount"
+    ],
+    "sdk_callers": 0
+   },
+   "__CARDReadStatus": {
+    "addr": "0x8023DCB0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "DoMount",
+     "DoneCallback"
+    ],
+    "sdk_callers": 1
+   },
+   "__CARDReadVendorID": {
+    "addr": "0x8023DDA0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "DoMount"
+    ],
+    "sdk_callers": 0
+   },
+   "__CARDClearStatus": {
+    "addr": "0x8023DE90",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "DoMount"
+    ],
+    "sdk_callers": 1
+   },
+   "__CARDStart": {
+    "addr": "0x8023E390",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "__CARDReadSegment": {
+    "addr": "0x8023E5B4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "BlockReadCallback"
+    ],
+    "sdk_callers": 1
+   },
+   "__CARDWritePage": {
+    "addr": "0x8023E6E8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "BlockWriteCallback"
+    ],
+    "sdk_callers": 1
+   },
+   "__CARDEraseSector": {
+    "addr": "0x8023E824",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "FormatCallback",
+     "WriteCallback"
+    ],
+    "sdk_callers": 4
+   },
+   "CARDInit": {
+    "addr": "0x8023E934",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Initialize__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "__CARDGetFontEncode": {
+    "addr": "0x8023E9E0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "VerifyID"
+    ],
+    "sdk_callers": 1
+   },
+   "__CARDSetDiskID": {
+    "addr": "0x8023E9E8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__CARDGetControlBlock": {
+    "addr": "0x8023EA20",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 12
+   },
+   "__CARDPutControlBlock": {
+    "addr": "0x8023EAD8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 13,
+    "game_caller_names": [
+     "BlockReadCallback",
+     "BlockWriteCallback",
+     "CreateCallbackFat",
+     "DeleteCallback",
+     "DoMount",
+     "EraseCallback"
+    ],
+    "sdk_callers": 13
+   },
+   "CARDFreeBlocks": {
+    "addr": "0x8023EB3C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 5,
+    "game_caller_names": [
+     "CardCheckBrokenDoneCB__7MemCardFll",
+     "CreateFileDoneCB__7MemCardFll",
+     "DeleteFileDoneCB__7MemCardFll",
+     "FormatDoneCB__7MemCardFll",
+     "MountDoneCB__7MemCardFll"
+    ],
+    "sdk_callers": 0
+   },
+   "CARDGetFastMode": {
+    "addr": "0x8023ECDC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "DoMount"
+    ],
+    "sdk_callers": 0
+   },
+   "__CARDUnlock": {
+    "addr": "0x8023F06C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "DoMount"
+    ],
+    "sdk_callers": 0
+   },
+   "__CARDRead": {
+    "addr": "0x80240034",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "DoMount",
+     "ReadCallback"
+    ],
+    "sdk_callers": 1
+   },
+   "__CARDWrite": {
+    "addr": "0x80240180",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "EraseCallback",
+     "EraseCallback",
+     "EraseCallback",
+     "FormatCallback"
+    ],
+    "sdk_callers": 0
+   },
+   "CARDGetXferredBytes": {
+    "addr": "0x802401E8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 6,
+    "game_caller_names": [
+     "CreateFile__7MemCardFPCcUlPQ27MemCard11ICON_CONF",
+     "DeleteFile__7MemCardFPCcRC14MemCardFunctor",
+     "FormatCard__7MemCardFRC14MemCardFunctor",
+     "InternalReadFile__7MemCardFPQ27MemCard7MC_FILEPv",
+     "InternalWriteFile__7MemCardFPQ27MemCard7MC_FILEP",
+     "WriteFileIconData__7MemCardFPQ27MemCard7MC_FILEP"
+    ],
+    "sdk_callers": 0
+   },
+   "__CARDGetFatBlock": {
+    "addr": "0x80240200",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "ReadCallback",
+     "WriteCallback"
+    ],
+    "sdk_callers": 3
+   },
+   "__CARDAllocBlock": {
+    "addr": "0x802403A4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__CARDFreeBlock": {
+    "addr": "0x802404BC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "DeleteCallback"
+    ],
+    "sdk_callers": 0
+   },
+   "__CARDUpdateFatBlock": {
+    "addr": "0x80240558",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "__CARDGetDirBlock": {
+    "addr": "0x80240604",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "CreateCallbackFat",
+     "WriteCallback"
+    ],
+    "sdk_callers": 10
+   },
+   "__CARDUpdateDir": {
+    "addr": "0x802407A4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "CreateCallbackFat",
+     "WriteCallback"
+    ],
+    "sdk_callers": 3
+   },
+   "__CARDCheckSum": {
+    "addr": "0x80240868",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "__CARDVerify": {
+    "addr": "0x80241160",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "CARDCheckExAsync": {
+    "addr": "0x802411EC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "CARDCheckAsync": {
+    "addr": "0x8024177C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "MountDoneCB__7MemCardFll"
+    ],
+    "sdk_callers": 0
+   },
+   "CARDProbeEx": {
+    "addr": "0x80241870",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 8,
+    "game_caller_names": [
+     "BeginCardAccess__7MemCardFRC14MemCardFunctor",
+     "CreateFileDoneCB__7MemCardFll",
+     "DeleteFileDoneCB__7MemCardFll",
+     "PushNoCardMessage__Fv",
+     "ReadFileDoneCB__7MemCardFll",
+     "UpdateCardRemovedFlag__13SaveLoadSceneFv"
+    ],
+    "sdk_callers": 0
+   },
+   "__CARDMountCallback": {
+    "addr": "0x80241E40",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "DoneCallback"
+    ],
+    "sdk_callers": 0
+   },
+   "CARDMountAsync": {
+    "addr": "0x80241F78",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "BeginCardAccess__7MemCardFRC14MemCardFunctor"
+    ],
+    "sdk_callers": 0
+   },
+   "CARDUnmount": {
+    "addr": "0x802421B4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 15,
+    "game_caller_names": [
+     "CardMountCB__13LoadCallbacksFUllPv",
+     "CardMountCB__13SaveCallbacksFUllPv",
+     "CardMountCB__15DeleteCallbacksFUllPv",
+     "CardMountCB__15FormatCallbacksFUllPv",
+     "CardMountCB__19FileExistsCallbacksFUllPv",
+     "CardMountCB__21MemoryCardIDCallbacksFUllPv"
+    ],
+    "sdk_callers": 0
+   },
+   "__CARDFormatRegionAsync": {
+    "addr": "0x802423A4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "CARDFormatAsync": {
+    "addr": "0x802429FC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "FormatCard__7MemCardFRC14MemCardFunctor"
+    ],
+    "sdk_callers": 0
+   },
+   "__CARDCompareFileName": {
+    "addr": "0x80242A44",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "__CARDAccess": {
+    "addr": "0x80242AAC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "__CARDIsWritable": {
+    "addr": "0x80242B40",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "__CARDIsReadable": {
+    "addr": "0x80242C74",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "__CARDGetFileNo": {
+    "addr": "0x80242D68",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "CARDOpen": {
+    "addr": "0x80242EB8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "FileExists__7MemCardFPCc",
+     "OpenFile__7MemCardFPCcRPQ27MemCard7MC_FILEPUl"
+    ],
+    "sdk_callers": 0
+   },
+   "CARDClose": {
+    "addr": "0x80242FD4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "CloseFile__7MemCardFPQ27MemCard7MC_FILE",
+     "DeleteFile__7MemCardFPCcRC14MemCardFunctor",
+     "FileExists__7MemCardFPCc"
+    ],
+    "sdk_callers": 0
+   },
+   "__CARDIsOpened": {
+    "addr": "0x80243028",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "CARDCreateAsync": {
+    "addr": "0x80243160",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "CreateFile__7MemCardFPCcUlPQ27MemCard11ICON_CONF"
+    ],
+    "sdk_callers": 0
+   },
+   "__CARDSeek": {
+    "addr": "0x80243380",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "CARDReadAsync": {
+    "addr": "0x80243668",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "InternalReadFile__7MemCardFPQ27MemCard7MC_FILEPv"
+    ],
+    "sdk_callers": 0
+   },
+   "CARDWriteAsync": {
+    "addr": "0x802439CC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "InternalWriteFile__7MemCardFPQ27MemCard7MC_FILEP",
+     "SetStatusDoneCB__7MemCardFll"
+    ],
+    "sdk_callers": 0
+   },
+   "CARDDeleteAsync": {
+    "addr": "0x80243B84",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "DeleteFile__7MemCardFPCcRC14MemCardFunctor"
+    ],
+    "sdk_callers": 0
+   },
+   "CARDGetStatus": {
+    "addr": "0x80243E8C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "OpenFile__7MemCardFPCcRPQ27MemCard7MC_FILEPUl",
+     "WriteFileIconData__7MemCardFPQ27MemCard7MC_FILEP"
+    ],
+    "sdk_callers": 0
+   },
+   "CARDSetStatusAsync": {
+    "addr": "0x80243FA0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "WriteFileIconData__7MemCardFPQ27MemCard7MC_FILEP"
+    ],
+    "sdk_callers": 0
+   },
+   "CARDGetSerialNo": {
+    "addr": "0x80244114",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "MountDoneCB__7MemCardFll"
+    ],
+    "sdk_callers": 0
+   }
+  },
+  "db": {
+   "DBInit": {
+    "addr": "0x802441D8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__DBExceptionDestinationAux": {
+    "addr": "0x80244200",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__DBExceptionDestination": {
+    "addr": "0x80244248",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__DBIsExceptionMarked": {
+    "addr": "0x80244258",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "DBPrintf": {
+    "addr": "0x80244274",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "L2GlobalInvalidate"
+    ],
+    "sdk_callers": 3
+   },
+   "DBClose": {
+    "addr": "0x802607B4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "gdev_cc_pre_continue"
+    ],
+    "sdk_callers": 0
+   },
+   "DBOpen": {
+    "addr": "0x802607B8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "gdev_cc_post_stop"
+    ],
+    "sdk_callers": 0
+   },
+   "DBWrite": {
+    "addr": "0x802607BC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "gdev_cc_write"
+    ],
+    "sdk_callers": 0
+   },
+   "DBRead": {
+    "addr": "0x80260A1C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gdev_cc_peek",
+     "gdev_cc_read"
+    ],
+    "sdk_callers": 0
+   },
+   "DBQueryData": {
+    "addr": "0x80260AA8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gdev_cc_peek",
+     "gdev_cc_read"
+    ],
+    "sdk_callers": 0
+   },
+   "DBInitInterrupts": {
+    "addr": "0x80260B44",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "gdev_cc_initinterrupts"
+    ],
+    "sdk_callers": 0
+   },
+   "DBInitComm": {
+    "addr": "0x80260B98",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "gdev_cc_initialize"
+    ],
+    "sdk_callers": 0
+   },
+   "DBGHandler": {
+    "addr": "0x80260C10",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "DBGReadStatus": {
+    "addr": "0x80260C8C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "DBGWrite": {
+    "addr": "0x80260D38",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "DBGRead": {
+    "addr": "0x80260E14",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "DBGReadMailbox": {
+    "addr": "0x80260EF0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "DBGEXIImm": {
+    "addr": "0x80260F9C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 5
+   }
+  },
+  "dsp": {
+   "DSPCheckMailToDSP": {
+    "addr": "0x802442C4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "InitCallback"
+    ],
+    "sdk_callers": 4
+   },
+   "DSPCheckMailFromDSP": {
+    "addr": "0x802442D4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "DSPReadMailFromDSP": {
+    "addr": "0x802442E4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "DSPSendMailToDSP": {
+    "addr": "0x802442FC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "InitCallback"
+    ],
+    "sdk_callers": 4
+   },
+   "DSPInit": {
+    "addr": "0x80244310",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "DSPAddTask": {
+    "addr": "0x802443D4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "DSPCancelTask": {
+    "addr": "0x80244444",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__DSP_debug_printf": {
+    "addr": "0x80244484",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "__DSPHandler": {
+    "addr": "0x802444D4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__DSP_exec_task": {
+    "addr": "0x802448F8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__DSP_boot_task": {
+    "addr": "0x80244A98",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__DSP_insert_task": {
+    "addr": "0x80244C24",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__DSP_remove_task": {
+    "addr": "0x80244CC4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   }
+  },
+  "dvd": {
+   "DVDAllClearSebring__Fi": {
+    "addr": "0x80093F74",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__DVDInitWA": {
+    "addr": "0x80244D58",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__DVDInterruptHandler": {
+    "addr": "0x80244D98",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "DVDLowRead": {
+    "addr": "0x802452FC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "cbForStateCheckID2",
+     "stateBusy",
+     "stateCheckID2",
+     "stateReadingFST"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDLowSeek": {
+    "addr": "0x80245594",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "AlarmHandler",
+     "SeekTwiceBeforeRead",
+     "cbForStateGettingError",
+     "stateBusy"
+    ],
+    "sdk_callers": 1
+   },
+   "DVDLowWaitCoverClose": {
+    "addr": "0x80245628",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "cbForStateBusy",
+     "stateMotorStopped",
+     "stateReady"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDLowReadDiskID": {
+    "addr": "0x80245654",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "stateBusy",
+     "stateCoverClosed_CMD"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDLowStopMotor": {
+    "addr": "0x802456F8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 9,
+    "game_caller_names": [
+     "cbForStateBusy",
+     "cbForStateCheckID1",
+     "cbForStateGettingError",
+     "cbForStateGoToRetry",
+     "cbForUnrecoveredErrorRetry",
+     "stateBusy"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDLowRequestError": {
+    "addr": "0x80245784",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 7,
+    "game_caller_names": [
+     "cbForStateBusy",
+     "cbForStateCheckID2",
+     "cbForStateCheckID2a",
+     "cbForStateCheckID3",
+     "cbForStateCoverClosed",
+     "cbForUnrecoveredError"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDLowInquiry": {
+    "addr": "0x80245810",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "stateBusy"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDLowAudioStream": {
+    "addr": "0x802458AC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "cbForStateBusy",
+     "stateBusy"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDLowRequestAudioStatus": {
+    "addr": "0x80245944",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "stateBusy"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDLowAudioBufferConfig": {
+    "addr": "0x802459D0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "stateBusy",
+     "stateCheckID2a",
+     "stateCheckID3"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDLowReset": {
+    "addr": "0x80245A6C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "DVDLowBreak": {
+    "addr": "0x80245B28",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "DVDLowClearCallback": {
+    "addr": "0x80245B3C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__DVDLowSetWAType": {
+    "addr": "0x80245B58",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__DVDLowTestAlarm": {
+    "addr": "0x80245B9C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__DVDFSInit": {
+    "addr": "0x80245BD4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "cbForStateReadingFST"
+    ],
+    "sdk_callers": 1
+   },
+   "DVDConvertPathToEntrynum": {
+    "addr": "0x80245C0C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "nlLoadEntireFileToVirtualMemory__FPCcPiUiPv10eAl",
+     "nlOpen__FPCc"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDFastOpen": {
+    "addr": "0x80245F00",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "nlLoadEntireFileToVirtualMemory__FPCcPiUiPv10eAl",
+     "nlOpen__FPCc"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDClose": {
+    "addr": "0x80245F74",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "__dt__11DolphinFileFv"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDReadAsyncPrio": {
+    "addr": "0x80245F98",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ReadAsync__11DolphinFileFPvUlUl"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDInit": {
+    "addr": "0x8024608C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "nlInitFileSystem__Fv",
+     "nlInitMemory__Fv"
+    ],
+    "sdk_callers": 2
+   },
+   "DVDReadAbsAsyncPrio": {
+    "addr": "0x80247CC8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "GetApploaderPosition",
+     "ReadDisc"
+    ],
+    "sdk_callers": 2
+   },
+   "DVDReadAbsAsyncForBS": {
+    "addr": "0x80247DA4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "cb"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDReadDiskID": {
+    "addr": "0x80247E74",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "__fstLoad",
+     "cb"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDCancelStreamAsync": {
+    "addr": "0x80247F48",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "DVDInquiryAsync": {
+    "addr": "0x80248004",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "DVDReset": {
+    "addr": "0x802480D4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 17,
+    "game_caller_names": [
+     "AlarmHandler",
+     "__fstLoad",
+     "cb",
+     "cbForStateBusy",
+     "cbForStateCheckID1",
+     "cbForStateCheckID2"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDGetCommandBlockStatus": {
+    "addr": "0x80248118",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "GetApploaderPosition",
+     "GetReadStatus__11DolphinFileFv",
+     "ReadDisc"
+    ],
+    "sdk_callers": 1
+   },
+   "DVDGetDriveStatus": {
+    "addr": "0x80248164",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 6,
+    "game_caller_names": [
+     "GameCubeReadAsync__FP6GCFilePFP6nlFilePvUiUl_vPv",
+     "GameCubeReadBlocking__FP6GCFilePvUl",
+     "Run__9ResetTaskFf",
+     "UpdateReadState__FP10AsyncEntry",
+     "__fstLoad",
+     "nlServiceFileSystem__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDSetAutoInvalidation": {
+    "addr": "0x80248210",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "DVDResume": {
+    "addr": "0x80248220",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "DVDCancelAsync": {
+    "addr": "0x80248270",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "DVDCancel": {
+    "addr": "0x802484EC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "DVDGetCurrentDiskID": {
+    "addr": "0x802485BC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "Initialize__Fv",
+     "__sinit_gcmemcard_cpp"
+    ],
+    "sdk_callers": 2
+   },
+   "DVDCheckDisk": {
+    "addr": "0x802485C4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "GetApploaderPosition",
+     "ReadDisc"
+    ],
+    "sdk_callers": 1
+   },
+   "__DVDPrepareResetAsync": {
+    "addr": "0x802486BC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__DVDTestAlarm": {
+    "addr": "0x802487D8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "OnReset"
+    ],
+    "sdk_callers": 0
+   },
+   "__DVDClearWaitingQueue": {
+    "addr": "0x80248810",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "cbForStateMotorStopped",
+     "stateCoverClosed",
+     "stateReady"
+    ],
+    "sdk_callers": 2
+   },
+   "__DVDPushWaitingQueue": {
+    "addr": "0x80248848",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 5
+   },
+   "__DVDPopWaitingQueue": {
+    "addr": "0x802488B0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "stateReady"
+    ],
+    "sdk_callers": 1
+   },
+   "__DVDCheckWaitingQueue": {
+    "addr": "0x80248950",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "stateReady"
+    ],
+    "sdk_callers": 0
+   },
+   "__DVDDequeueWaitingQueue": {
+    "addr": "0x802489A8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__DVDStoreErrorCode": {
+    "addr": "0x80248B24",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 12,
+    "game_caller_names": [
+     "cbForStateBusy",
+     "cbForStateCheckID1",
+     "cbForStateCheckID2",
+     "cbForStateCheckID2a",
+     "cbForStateCheckID3",
+     "cbForStateCoverClosed"
+    ],
+    "sdk_callers": 0
+   },
+   "DVDCompareDiskID": {
+    "addr": "0x80248BA0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "stateCheckID"
+    ],
+    "sdk_callers": 0
+   },
+   "__DVDPrintFatalMessage": {
+    "addr": "0x80248C98",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "cbForStateError"
+    ],
+    "sdk_callers": 0
+   }
+  },
+  "exi": {
+   "EXI2_Init": {
+    "addr": "0x8023B7F4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ddh_cc_initialize"
+    ],
+    "sdk_callers": 0
+   },
+   "EXI2_EnableInterrupts": {
+    "addr": "0x8023B7F8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ddh_cc_initinterrupts"
+    ],
+    "sdk_callers": 0
+   },
+   "EXI2_Poll": {
+    "addr": "0x8023B7FC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "ddh_cc_peek",
+     "ddh_cc_read"
+    ],
+    "sdk_callers": 0
+   },
+   "EXI2_ReadN": {
+    "addr": "0x8023B804",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "ddh_cc_peek",
+     "ddh_cc_read"
+    ],
+    "sdk_callers": 0
+   },
+   "EXI2_WriteN": {
+    "addr": "0x8023B80C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ddh_cc_write"
+    ],
+    "sdk_callers": 0
+   },
+   "EXI2_Reserve": {
+    "addr": "0x8023B814",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ddh_cc_post_stop"
+    ],
+    "sdk_callers": 0
+   },
+   "EXI2_Unreserve": {
+    "addr": "0x8023B818",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ddh_cc_pre_continue"
+    ],
+    "sdk_callers": 0
+   },
+   "EXIImm": {
+    "addr": "0x80248FFC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "ProbeBarnacle",
+     "UnlockSram",
+     "WriteSram",
+     "WriteUARTN"
+    ],
+    "sdk_callers": 7
+   },
+   "EXIImmEx": {
+    "addr": "0x80249258",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "ReadArrayUnlock",
+     "Retry",
+     "UnlockSram",
+     "WriteSram"
+    ],
+    "sdk_callers": 3
+   },
+   "EXIDma": {
+    "addr": "0x802492F8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Retry"
+    ],
+    "sdk_callers": 3
+   },
+   "EXISync": {
+    "addr": "0x802493E4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "ProbeBarnacle",
+     "UnlockSram",
+     "WriteSram",
+     "WriteUARTN"
+    ],
+    "sdk_callers": 7
+   },
+   "EXIClearInterrupts": {
+    "addr": "0x80249630",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 4
+   },
+   "EXISetExiCallback": {
+    "addr": "0x80249678",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "DoMount",
+     "DoUnmount",
+     "TimeoutHandler"
+    ],
+    "sdk_callers": 3
+   },
+   "__EXIProbe": {
+    "addr": "0x802496F4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 7
+   },
+   "EXIProbe": {
+    "addr": "0x80249868",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "DoMount",
+     "DoneCallback"
+    ],
+    "sdk_callers": 2
+   },
+   "EXIProbeEx": {
+    "addr": "0x802498E8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "EXIAttach": {
+    "addr": "0x8024999C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ProbeBarnacle"
+    ],
+    "sdk_callers": 1
+   },
+   "EXIDetach": {
+    "addr": "0x80249AA8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "DoUnmount",
+     "ProbeBarnacle"
+    ],
+    "sdk_callers": 1
+   },
+   "EXISelect": {
+    "addr": "0x80249B64",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 6,
+    "game_caller_names": [
+     "ProbeBarnacle",
+     "ReadArrayUnlock",
+     "Retry",
+     "UnlockSram",
+     "WriteSram",
+     "WriteUARTN"
+    ],
+    "sdk_callers": 7
+   },
+   "EXIDeselect": {
+    "addr": "0x80249C90",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 6,
+    "game_caller_names": [
+     "ProbeBarnacle",
+     "ReadArrayUnlock",
+     "Retry",
+     "UnlockSram",
+     "WriteSram",
+     "WriteUARTN"
+    ],
+    "sdk_callers": 10
+   },
+   "EXIIntrruptHandler": {
+    "addr": "0x80249DA0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "EXIInit": {
+    "addr": "0x8024A150",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "EXILock": {
+    "addr": "0x8024A324",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 5,
+    "game_caller_names": [
+     "ProbeBarnacle",
+     "UnlockSram",
+     "UnlockedCallback",
+     "WriteSram",
+     "WriteUARTN"
+    ],
+    "sdk_callers": 6
+   },
+   "EXIUnlock": {
+    "addr": "0x8024A418",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 7,
+    "game_caller_names": [
+     "DoMount",
+     "DoneCallback",
+     "ProbeBarnacle",
+     "Retry",
+     "UnlockSram",
+     "WriteSram"
+    ],
+    "sdk_callers": 7
+   },
+   "EXIGetState": {
+    "addr": "0x8024A4F4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "EXIGetID": {
+    "addr": "0x8024A534",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "DoMount",
+     "UnlockedHandler"
+    ],
+    "sdk_callers": 6
+   }
+  },
+  "gx": {
+   "__GXDefaultTexRegionCallback": {
+    "addr": "0x8024AE9C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__GXDefaultTlutRegionCallback": {
+    "addr": "0x8024AF98",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__GXShutdown": {
+    "addr": "0x8024AFBC",
+    "reachable": true,
+    "addr_taken": true,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__GXInitRevisionBits": {
+    "addr": "0x8024B14C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXInit": {
+    "addr": "0x8024B2F0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glplatStartup__FP13gl_ScreenInfo"
+    ],
+    "sdk_callers": 0
+   },
+   "__GXInitGX": {
+    "addr": "0x8024B8F0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXCPInterruptHandler": {
+    "addr": "0x8024C228",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "GXInitFifoBase": {
+    "addr": "0x8024C35C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXInitFifoPtrs": {
+    "addr": "0x8024C3C8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXInitFifoLimits": {
+    "addr": "0x8024C438",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetCPUFifo": {
+    "addr": "0x8024C444",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetGPFifo": {
+    "addr": "0x8024C56C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetBreakPtCallback": {
+    "addr": "0x8024C6E4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__GXFifoInit": {
+    "addr": "0x8024C728",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__GXFifoReadEnable": {
+    "addr": "0x8024C774",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__GXFifoReadDisable": {
+    "addr": "0x8024C798",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__GXFifoLink": {
+    "addr": "0x8024C7BC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "__GXWriteFifoIntEnable": {
+    "addr": "0x8024C7F0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "__GXWriteFifoIntReset": {
+    "addr": "0x8024C820",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "GXGetGPFifo": {
+    "addr": "0x8024C850",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetVtxDesc": {
+    "addr": "0x8024C858",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SwitchStreams__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "__GXSetVCD": {
+    "addr": "0x8024CAC4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "__GXCalculateVLim": {
+    "addr": "0x8024CB80",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "GXClearVtxDesc": {
+    "addr": "0x8024CCA4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SwitchStreams__FPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetVtxAttrFmt": {
+    "addr": "0x8024CCDC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glx_SendReset__Fv",
+     "glx_SwitchStreams__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetVtxAttrFmtv": {
+    "addr": "0x8024CF38",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__GXSetVAT": {
+    "addr": "0x8024D1B8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "GXSetArray": {
+    "addr": "0x8024D240",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SwitchStreams__FPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "GXInvalidateVtxCache": {
+    "addr": "0x8024D284",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glplatFrameAllocNextFrame__Fv"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetTexCoordGen2": {
+    "addr": "0x8024D294",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SwitchUserData__FPC13glModelPacket",
+     "gxSetTexCoordGen__Fi13_GXTexGenType12_GXTexGenSr"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetNumTexGens": {
+    "addr": "0x8024D514",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxSetNumTexGens__FUl"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetMisc": {
+    "addr": "0x8024D550",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXFlush": {
+    "addr": "0x8024D5E4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 7,
+    "game_caller_names": [
+     "DisplayMessage__FiiPCUciUlb",
+     "ErrorHandler__FUsP9OSContextUlUl",
+     "MoviePlay__Fv",
+     "glplatStartup__FP13gl_ScreenInfo",
+     "glxInitSwap__FPvPv",
+     "glxSwapWaitDrawDone__Fv"
+    ],
+    "sdk_callers": 1
+   },
+   "__GXAbort": {
+    "addr": "0x8024D640",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetDrawDone": {
+    "addr": "0x8024D7AC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "MoviePlay__Fv",
+     "glxInitSwap__FPvPv",
+     "glxSwapWaitDrawDone__Fv",
+     "hitz_Post__Fb"
+    ],
+    "sdk_callers": 0
+   },
+   "GXWaitDrawDone": {
+    "addr": "0x8024D844",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "MoviePlay__Fv",
+     "glxSwapWaitDrawDone__Fv",
+     "hitz_Pre__Fb"
+    ],
+    "sdk_callers": 0
+   },
+   "GXDrawDone": {
+    "addr": "0x8024D890",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 5,
+    "game_caller_names": [
+     "DisplayMessage__FiiPCUciUlb",
+     "ErrorHandler__FUsP9OSContextUlUl",
+     "glx_ScreenCapture__Fb",
+     "glx_SendViews__Fv",
+     "simple_Post__Fb"
+    ],
+    "sdk_callers": 0
+   },
+   "GXPixModeSync": {
+    "addr": "0x8024D910",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "glPlatGrabFrameBufferToTexture__FUlUiUiUiUiUiUi",
+     "glx_DOFGrab__Fv",
+     "glx_ShadowTextureGrab__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "GXPokeAlphaMode": {
+    "addr": "0x8024D934",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXPokeAlphaRead": {
+    "addr": "0x8024D948",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXPokeAlphaUpdate": {
+    "addr": "0x8024D968",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXPokeBlendMode": {
+    "addr": "0x8024D980",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "DisplayMessage__FiiPCUciUlb",
+     "ErrorHandler__FUsP9OSContextUlUl"
+    ],
+    "sdk_callers": 1
+   },
+   "GXPokeColorUpdate": {
+    "addr": "0x8024D9E4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "DisplayMessage__FiiPCUciUlb",
+     "ErrorHandler__FUsP9OSContextUlUl"
+    ],
+    "sdk_callers": 1
+   },
+   "GXPokeDstAlpha": {
+    "addr": "0x8024D9FC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXPokeDither": {
+    "addr": "0x8024DA20",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXPokeZMode": {
+    "addr": "0x8024DA38",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXPeekARGB": {
+    "addr": "0x8024DA58",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "ErrorHandler__FUsP9OSContextUlUl",
+     "glx_ScreenCapture__Fb"
+    ],
+    "sdk_callers": 0
+   },
+   "GXPokeARGB": {
+    "addr": "0x8024DA7C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "DisplayMessage__FiiPCUciUlb",
+     "ErrorHandler__FUsP9OSContextUlUl"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetDrawSyncCallback": {
+    "addr": "0x8024DA9C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXTokenInterruptHandler": {
+    "addr": "0x8024DAE0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "GXSetDrawDoneCallback": {
+    "addr": "0x8024DB68",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXFinishInterruptHandler": {
+    "addr": "0x8024DBAC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__GXPEInit": {
+    "addr": "0x8024DC2C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__GXSetDirtyState": {
+    "addr": "0x8024DCA0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "GXBegin": {
+    "addr": "0x8024DD20",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "__GXSendFlushPrim": {
+    "addr": "0x8024DDF0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "GXSetLineWidth": {
+    "addr": "0x8024DE78",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetPointSize": {
+    "addr": "0x8024DEB8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXEnableTexOffsets": {
+    "addr": "0x8024DEF8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetCullMode": {
+    "addr": "0x8024DF40",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxSetCullMode__F11_GXCullMode"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetCoPlanar": {
+    "addr": "0x8024DF68",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxSetCoPlanar__Fb"
+    ],
+    "sdk_callers": 1
+   },
+   "__GXSetGenMode": {
+    "addr": "0x8024DF9C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "GXAdjustForOverscan": {
+    "addr": "0x8024DFC0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glplatStartup__FP13gl_ScreenInfo",
+     "glx_SwitchVideoMode__FP16_GXRenderModeObj10eVide"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetDispCopySrc": {
+    "addr": "0x8024E104",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glplatStartup__FP13gl_ScreenInfo",
+     "glx_SwitchVideoMode__FP16_GXRenderModeObj10eVide"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetTexCopySrc": {
+    "addr": "0x8024E180",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "glPlatGrabFrameBufferToTexture__FUlUiUiUiUiUiUi",
+     "glx_ClearZBuffer__Fv",
+     "glx_DOFGrab__Fv",
+     "glx_ShadowTextureGrab__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetDispCopyDst": {
+    "addr": "0x8024E1FC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glplatStartup__FP13gl_ScreenInfo",
+     "glx_SwitchVideoMode__FP16_GXRenderModeObj10eVide"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetTexCopyDst": {
+    "addr": "0x8024E230",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "glPlatGrabFrameBufferToTexture__FUlUiUiUiUiUiUi",
+     "glx_ClearZBuffer__Fv",
+     "glx_DOFGrab__Fv",
+     "glx_ShadowTextureGrab__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetDispCopyFrame2Field": {
+    "addr": "0x8024E360",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetCopyClamp": {
+    "addr": "0x8024E384",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXGetYScaleFactor": {
+    "addr": "0x8024E3DC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glplatStartup__FP13gl_ScreenInfo",
+     "glx_SwitchVideoMode__FP16_GXRenderModeObj10eVide"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetDispCopyYScale": {
+    "addr": "0x8024E614",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glplatStartup__FP13gl_ScreenInfo",
+     "glx_SwitchVideoMode__FP16_GXRenderModeObj10eVide"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetCopyClear": {
+    "addr": "0x8024E6E0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "glplatStartup__FP13gl_ScreenInfo",
+     "glx_ShadowTextureGrab__Fv",
+     "hitz_Post__Fb"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetCopyFilter": {
+    "addr": "0x8024E758",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetDispCopyGamma": {
+    "addr": "0x8024E960",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glplatStartup__FP13gl_ScreenInfo"
+    ],
+    "sdk_callers": 1
+   },
+   "GXCopyDisp": {
+    "addr": "0x8024E974",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "DisplayMessage__FiiPCUciUlb",
+     "ErrorHandler__FUsP9OSContextUlUl",
+     "hitz_Post__Fb",
+     "simple_Post__Fb"
+    ],
+    "sdk_callers": 0
+   },
+   "GXCopyTex": {
+    "addr": "0x8024EADC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "glPlatGrabFrameBufferToTexture__FUlUiUiUiUiUiUi",
+     "glx_ClearZBuffer__Fv",
+     "glx_DOFGrab__Fv",
+     "glx_ShadowTextureGrab__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "GXClearBoundingBox": {
+    "addr": "0x8024EC68",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXInitLightAttn": {
+    "addr": "0x8024ECA0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glud_Specular__FPv"
+    ],
+    "sdk_callers": 0
+   },
+   "GXInitLightAttnA": {
+    "addr": "0x8024ECBC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glx_LoadLight__FP15GLLightUserData10_GXLightID",
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXInitLightDistAttn": {
+    "addr": "0x8024ECCC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glx_LoadLight__FP15GLLightUserData10_GXLightID",
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXInitLightPos": {
+    "addr": "0x8024ED9C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glx_LoadLight__FP15GLLightUserData10_GXLightID",
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXInitSpecularDir": {
+    "addr": "0x8024EDAC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glud_Specular__FPv"
+    ],
+    "sdk_callers": 0
+   },
+   "GXInitLightColor": {
+    "addr": "0x8024EE90",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "glud_Specular__FPv",
+     "glx_LoadLight__FP15GLLightUserData10_GXLightID",
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXLoadLightObjImm": {
+    "addr": "0x8024EE9C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "glud_Specular__FPv",
+     "glx_LoadLight__FP15GLLightUserData10_GXLightID",
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetChanAmbColor": {
+    "addr": "0x8024EF18",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxSetChanAmbColour__FiRC8nlColour"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetChanMatColor": {
+    "addr": "0x8024F000",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxSetChanMatColour__FiRC8nlColour"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetNumChans": {
+    "addr": "0x8024F0E8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxSetNumChans__FUl"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetChanCtrl": {
+    "addr": "0x8024F124",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "glud_Light__FPv",
+     "glud_Specular__FPv",
+     "glx_SendReset__Fv",
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "GXInitTexObj": {
+    "addr": "0x8024F29C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "Prepare__11PlatTextureFv",
+     "glplatTextureReplace__FUlPCvUl",
+     "glx_MakeGridTexture__Fii",
+     "glx_MakeTexture__FP15GXTextureHeaderUl"
+    ],
+    "sdk_callers": 2
+   },
+   "GXInitTexObjCI": {
+    "addr": "0x8024F4E8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "Prepare__11PlatTextureFv",
+     "glplatTextureReplace__FUlPCvUl",
+     "glx_MakeGridTexture__Fii",
+     "glx_MakeTexture__FP15GXTextureHeaderUl"
+    ],
+    "sdk_callers": 0
+   },
+   "GXInitTexObjLOD": {
+    "addr": "0x8024F530",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "Prepare__11PlatTextureFv",
+     "glplatTextureReplace__FUlPCvUl",
+     "glx_MakeGridTexture__Fii",
+     "glx_MakeTexture__FP15GXTextureHeaderUl"
+    ],
+    "sdk_callers": 0
+   },
+   "GXInitTexObjWrapMode": {
+    "addr": "0x8024F694",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SwitchTextureState__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXInitTexObjTlut": {
+    "addr": "0x8024F6B0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXInitTexObjFilter": {
+    "addr": "0x8024F6B8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SwitchTextureState__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXInitTexObjMaxAniso": {
+    "addr": "0x8024F6F0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SwitchTextureState__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXGetTexObjFmt": {
+    "addr": "0x8024F700",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXGetTexObjMipMap": {
+    "addr": "0x8024F708",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXLoadTexObjPreLoaded": {
+    "addr": "0x8024F720",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXLoadTexObj": {
+    "addr": "0x8024F89C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "GXInitTlutObj": {
+    "addr": "0x8024F8F0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "Prepare__11PlatTextureFv",
+     "glplatTextureReplace__FUlPCvUl",
+     "glx_MakeGridTexture__Fii",
+     "glx_MakeTexture__FP15GXTextureHeaderUl"
+    ],
+    "sdk_callers": 0
+   },
+   "GXLoadTlut": {
+    "addr": "0x8024F928",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXInitTexCacheRegion": {
+    "addr": "0x8024F9C0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXInitTlutRegion": {
+    "addr": "0x8024FAB4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXInvalidateTexAll": {
+    "addr": "0x8024FAEC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 5,
+    "game_caller_names": [
+     "MoviePlay__Fv",
+     "MovieStart__FPCcbb",
+     "glplatFrameAllocNextFrame__Fv",
+     "glplatLoadTextureBundle__FPCc",
+     "glxParseTextureBundle__FPCc"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetTexRegionCallback": {
+    "addr": "0x8024FB34",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetTlutRegionCallback": {
+    "addr": "0x8024FB48",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__GXSetSUTexRegs": {
+    "addr": "0x8024FBFC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "__GXSetTmemConfig": {
+    "addr": "0x8024FD78",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetTevIndirect": {
+    "addr": "0x802500CC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "GXSetIndTexMtx": {
+    "addr": "0x80250138",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetIndTexCoordScale": {
+    "addr": "0x802502B0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetIndTexOrder": {
+    "addr": "0x802503F4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetNumIndStages": {
+    "addr": "0x802504E0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetTevDirect": {
+    "addr": "0x80250504",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetTevIndWarp": {
+    "addr": "0x8025054C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "__GXUpdateBPMask": {
+    "addr": "0x802505B0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "__GXSetIndirectMask": {
+    "addr": "0x802505B4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__GXFlushTextureState": {
+    "addr": "0x802505E4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 4
+   },
+   "GXSetTevOp": {
+    "addr": "0x80250608",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetTevColorIn": {
+    "addr": "0x80250694",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SwitchTexConfig__FPC13glModelPacket",
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetTevAlphaIn": {
+    "addr": "0x802506D8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxSetTevAlphaIn__Fi14_GXTevAlphaArg14_GXTevAlpha",
+     "gxSetTevAlphaIn__Fii14_GXTevAlphaArg"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetTevColorOp": {
+    "addr": "0x8025071C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "gxSetTevColourOp__Fi8_GXTevOp10_GXTevBias11_GXTe"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetTevAlphaOp": {
+    "addr": "0x80250784",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "gxSetTevAlphaOp__Fi8_GXTevOp10_GXTevBias11_GXTev"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetTevColor": {
+    "addr": "0x802507EC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetTevColorS10": {
+    "addr": "0x8025084C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SwitchTexConfig__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetTevKColor": {
+    "addr": "0x802508B0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SwitchTextureState__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetTevKColorSel": {
+    "addr": "0x80250914",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SwitchTexConfig__FPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetTevKAlphaSel": {
+    "addr": "0x80250970",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glx_SendFrame_cb__F7eGLViewUlPC13glModelPacket",
+     "glx_SwitchTexConfig__FPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetTevSwapMode": {
+    "addr": "0x802509CC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glx_SendFrame_cb__F7eGLViewUlPC13glModelPacket",
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetTevSwapModeTable": {
+    "addr": "0x80250A14",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SendReset__Fv"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetAlphaCompare": {
+    "addr": "0x80250A94",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxSetAlphaCompare__F10_GXCompareUc"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetZTexture": {
+    "addr": "0x80250AD8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetTevOrder": {
+    "addr": "0x80250B64",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SwitchTexConfig__FPC13glModelPacket",
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetNumTevStages": {
+    "addr": "0x80250D00",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxSetNumTevStages__FUl"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetFog": {
+    "addr": "0x80250D28",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glx_Fog__Fb",
+     "glx_SendViews__Fv"
+    ],
+    "sdk_callers": 1
+   },
+   "GXInitFogAdjTable": {
+    "addr": "0x80250F3C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SendViews__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetFogRangeAdj": {
+    "addr": "0x802510EC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SendViews__Fv"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetBlendMode": {
+    "addr": "0x80251210",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxSetBlendMode__Fb14_GXBlendFactor14_GXBlendFact"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetColorUpdate": {
+    "addr": "0x80251264",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxSetColourUpdate__Fb"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetAlphaUpdate": {
+    "addr": "0x80251290",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxSetAlphaUpdate__Fb"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetZMode": {
+    "addr": "0x802512BC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxRestoreZMode__Fv",
+     "gxSetZMode__Fb10_GXCompareb"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetZCompLoc": {
+    "addr": "0x802512F0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxSetZCompLoc__Fb"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetPixelFmt": {
+    "addr": "0x80251324",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glplatStartup__FP13gl_ScreenInfo"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetDither": {
+    "addr": "0x802513F8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "gxInit__Fv",
+     "gxSetDither__Fb"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetDstAlpha": {
+    "addr": "0x80251424",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetFieldMask": {
+    "addr": "0x80251460",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetFieldMode": {
+    "addr": "0x80251498",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXCallDisplayList": {
+    "addr": "0x80251510",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXProject": {
+    "addr": "0x80251580",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DOFUpdate__Ff"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetProjection": {
+    "addr": "0x802516F4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SendFrame_cb__F7eGLViewUlPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetProjectionv": {
+    "addr": "0x80251798",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXGetProjectionv": {
+    "addr": "0x80251824",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DOFUpdate__Ff"
+    ],
+    "sdk_callers": 0
+   },
+   "GXLoadPosMtxImm": {
+    "addr": "0x8025186C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "glud_Skin__FPvPC13glModelPacket",
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SendFrame_cb__F7eGLViewUlPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "GXLoadNrmMtxImm": {
+    "addr": "0x802518BC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glud_Skin__FPvPC13glModelPacket",
+     "glx_SendFrame_cb__F7eGLViewUlPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetCurrentMtx": {
+    "addr": "0x8025190C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SendFrame_cb__F7eGLViewUlPC13glModelPacket",
+     "gxInit__Fv"
+    ],
+    "sdk_callers": 1
+   },
+   "GXLoadTexMtxImm": {
+    "addr": "0x80251940",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "GetConstants__Fv",
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 1
+   },
+   "__GXSetViewport": {
+    "addr": "0x802519F4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetViewport": {
+    "addr": "0x80251A84",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "glplatStartup__FP13gl_ScreenInfo",
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SwitchVideoMode__FP16_GXRenderModeObj10eVide"
+    ],
+    "sdk_callers": 1
+   },
+   "GXGetViewportv": {
+    "addr": "0x80251ACC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_DOFUpdate__Ff"
+    ],
+    "sdk_callers": 0
+   },
+   "GXSetScissor": {
+    "addr": "0x80251AF0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "glplatStartup__FP13gl_ScreenInfo",
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SwitchUserData__FPC13glModelPacket",
+     "glx_SwitchVideoMode__FP16_GXRenderModeObj10eVide"
+    ],
+    "sdk_callers": 1
+   },
+   "GXSetScissorBoxOffset": {
+    "addr": "0x80251B68",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "GXSetClipMode": {
+    "addr": "0x80251BA8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__GXSetMatrixIndex": {
+    "addr": "0x80251BD0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "GXSetGPMetric": {
+    "addr": "0x80251C54",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SendViews__Fv"
+    ],
+    "sdk_callers": 1
+   },
+   "GXReadGPMetric": {
+    "addr": "0x8025249C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SendViews__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "GXClearGPMetric": {
+    "addr": "0x80252644",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glx_SendViews__Fv"
+    ],
+    "sdk_callers": 1
+   }
+  },
+  "mtx": {
+   "PSMTXIdentity": {
+    "addr": "0x80252654",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "GetConstants__Fv",
+     "glx_DOFUpdate__Ff"
+    ],
+    "sdk_callers": 0
+   },
+   "PSMTXConcat": {
+    "addr": "0x80252680",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "glud_Skin__FPvPC13glModelPacket",
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SwitchUserData__FPC13glModelPacket",
+     "nlMultMatrices__FR10SkinMatrixRC10SkinMatrixRC10"
+    ],
+    "sdk_callers": 0
+   },
+   "PSMTXInvXpose": {
+    "addr": "0x8025274C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "glud_Skin__FPvPC13glModelPacket",
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SendFrame_cb__F7eGLViewUlPC13glModelPacket",
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "PSMTXTrans": {
+    "addr": "0x80252814",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "PSMTXScale": {
+    "addr": "0x80252848",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glx_DrawPacket__FPC13glModelPacket",
+     "glx_SwitchUserData__FPC13glModelPacket"
+    ],
+    "sdk_callers": 0
+   },
+   "C_MTXPerspective": {
+    "addr": "0x80252870",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glplatMatrixPerspective__FR9nlMatrix4ffff"
+    ],
+    "sdk_callers": 0
+   },
+   "C_MTXOrtho": {
+    "addr": "0x80252940",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "glplatMatrixOrthographicCentered__FR9nlMatrix4ff",
+     "glplatMatrixOrthographic__FR9nlMatrix4ff"
+    ],
+    "sdk_callers": 0
+   },
+   "PSMTX44Identity": {
+    "addr": "0x802529D8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "SetIdentity__9nlMatrix4Fv",
+     "nlMakeRotationMatrixX__FR9nlMatrix4f",
+     "nlMakeRotationMatrixY__FR9nlMatrix4f",
+     "nlMakeRotationMatrixZ__FR9nlMatrix4f"
+    ],
+    "sdk_callers": 0
+   },
+   "PSMTX44Copy": {
+    "addr": "0x80252A0C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "PSMTX44Concat": {
+    "addr": "0x80252A50",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "nlMultMatrices__FR9nlMatrix4RC9nlMatrix4RC9nlMat"
+    ],
+    "sdk_callers": 0
+   },
+   "PSMTX44Transpose": {
+    "addr": "0x80252B54",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "nlTransposeMatrix__FR9nlMatrix4RC9nlMatrix4"
+    ],
+    "sdk_callers": 0
+   },
+   "C_MTX44Inverse": {
+    "addr": "0x80252BB8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "nlInvertMatrix__FR9nlMatrix4RC9nlMatrix4"
+    ],
+    "sdk_callers": 0
+   },
+   "PSMTX44Scale": {
+    "addr": "0x80252FA8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "nlMakeScaleMatrix__FR9nlMatrix4fff"
+    ],
+    "sdk_callers": 0
+   },
+   "PSQUATScale": {
+    "addr": "0x80252FDC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "nlQuatScale__FR12nlQuaternionRC12nlQuaternionf"
+    ],
+    "sdk_callers": 0
+   },
+   "PSQUATDotProduct": {
+    "addr": "0x80252FF8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "nlQuatDot__FRC12nlQuaternionRC12nlQuaternion"
+    ],
+    "sdk_callers": 0
+   }
+  },
+  "musyx_api": {
+   "sndPushGroupCallback__32ARAMTransferHelperLoadEntireFileFUlUl": {
+    "addr": "0x801C6494",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "sndPushGroupCallback__18ARAMTransferHelperFUlUl": {
+    "addr": "0x801C65D0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "sndSeqSpeed": {
+    "addr": "0x80268708",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "sndSeqContinue": {
+    "addr": "0x80268750",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "sndSeqMute": {
+    "addr": "0x80268788",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "sndSeqVolume": {
+    "addr": "0x802687E0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "sndFXCtrl": {
+    "addr": "0x80268908",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "SetSFXReverbVol__9PlatAudioFUlf",
+     "SetSFXVolume__9PlatAudioFUlf"
+    ],
+    "sdk_callers": 0
+   },
+   "sndFXCtrl14": {
+    "addr": "0x80268968",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "SetFilterFreqOnSFX__9PlatAudioFUlUs",
+     "SetMIDIControllerVal14Bit__9PlatAudioFUlUcUs",
+     "SetPitchBendOnSFX__9PlatAudioFUlUs"
+    ],
+    "sdk_callers": 0
+   },
+   "sndFXKeyOff": {
+    "addr": "0x802689C8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "StopSFX__9PlatAudioFUl"
+    ],
+    "sdk_callers": 0
+   },
+   "sndFXStartParaInfo": {
+    "addr": "0x80268A08",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "PlaySFX__9PlatAudioFRC12SFXStartInfo"
+    ],
+    "sdk_callers": 0
+   },
+   "sndFXCheck": {
+    "addr": "0x80268B34",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "GetFreeEmitter__9PlatAudioFRUl",
+     "IsSFXPlaying__9PlatAudioFUl",
+     "SetFilterFreqOnSFX__9PlatAudioFUlUs",
+     "SetPitchBendOnSFX__9PlatAudioFUlUs"
+    ],
+    "sdk_callers": 2
+   },
+   "sndSilence": {
+    "addr": "0x80268B80",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "StopAllSound__9PlatAudioFv",
+     "UnloadAllSoundGroups__9PlatAudioFR13AudioFileDat"
+    ],
+    "sdk_callers": 0
+   },
+   "sndFXAssignVolGroup2FXId": {
+    "addr": "0x80268BB4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "SetSFXVolumeGroup__9PlatAudioFUlUc"
+    ],
+    "sdk_callers": 0
+   },
+   "sndVolume": {
+    "addr": "0x80268C3C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "Initialize__9PlatAudioFb",
+     "SetVolGroupVolume__9PlatAudioFUcfUs",
+     "Update__5AudioFf"
+    ],
+    "sdk_callers": 0
+   },
+   "sndOutputMode": {
+    "addr": "0x80268C9C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "Initialize__9PlatAudioFb",
+     "SetOutputMode__9PlatAudioF15MusyXOutputType"
+    ],
+    "sdk_callers": 0
+   },
+   "sndSetAuxProcessingCallbacks": {
+    "addr": "0x80268D88",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "AddAuxEffect__F15MusyXEffectTypePvbUc",
+     "ShutdownAuxEffectA__9PlatAudioFv"
+    ],
+    "sdk_callers": 0
+   },
+   "sndStreamARAMUpdate": {
+    "addr": "0x80269B14",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "DoUpdateRead__Q216GCAudioStreaming15MonoAudioStr",
+     "DoUpdateRead__Q216GCAudioStreaming17StereoAudioS",
+     "_UpdateReadCB__Q216GCAudioStreaming11AudioStream",
+     "_WarmReadCB__Q216GCAudioStreaming11AudioStreamFP"
+    ],
+    "sdk_callers": 0
+   },
+   "sndStreamAllocEx": {
+    "addr": "0x8026A160",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "CreateBuffers__Q216GCAudioStreaming14AudioBuffer"
+    ],
+    "sdk_callers": 0
+   },
+   "sndStreamAllocLength": {
+    "addr": "0x8026A600",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "sndStreamADPCMParameter": {
+    "addr": "0x8026A644",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "_HdrReadCB__Q216GCAudioStreaming11AudioStreamFP6"
+    ],
+    "sdk_callers": 0
+   },
+   "sndStreamMixParameterEx": {
+    "addr": "0x8026AD40",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 18,
+    "game_caller_names": [
+     "ChangeCrowdVolume__Ff",
+     "CreateBuffers__Q216GCAudioStreaming14AudioBuffer",
+     "DeleteBuffers__Q216GCAudioStreaming14AudioBuffer",
+     "Destructor__Q216GCAudioStreaming11AudioStreamFv",
+     "GrabCrowdStream__14PriorityStreamFUl",
+     "OnMasterVolumeChange__Q216AudioStreamTrack15Trac"
+    ],
+    "sdk_callers": 0
+   },
+   "sndStreamFrq": {
+    "addr": "0x8026B2A8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "_HdrReadCB__Q216GCAudioStreaming11AudioStreamFP6"
+    ],
+    "sdk_callers": 0
+   },
+   "sndStreamLPFParameter": {
+    "addr": "0x8026B910",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "ActivateLPF__9CrowdMoodFb",
+     "PlayVocal__FRC22CROWD_VOCAL_DEFINITIONRQ211CROWD",
+     "SetLPF__9CrowdMoodFUs",
+     "Warm__Q216GCAudioStreaming17StereoAudioStreamFb"
+    ],
+    "sdk_callers": 0
+   },
+   "sndStreamFree": {
+    "addr": "0x8026BE44",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "DeleteBuffers__Q216GCAudioStreaming14AudioBuffer"
+    ],
+    "sdk_callers": 0
+   },
+   "sndStreamActivate": {
+    "addr": "0x8026C518",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "PlayVocal__FRC22CROWD_VOCAL_DEFINITIONRQ211CROWD",
+     "ProcessNewHeadStream__Q216AudioStreamTrack11Stre",
+     "WarmReadDone__Q216GCAudioStreaming11AudioStreamF"
+    ],
+    "sdk_callers": 1
+   },
+   "sndStreamDeactivate": {
+    "addr": "0x8026CB70",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 10,
+    "game_caller_names": [
+     "DeleteBuffers__Q216GCAudioStreaming14AudioBuffer",
+     "Destructor__Q216GCAudioStreaming11AudioStreamFv",
+     "GrabCrowdStream__14PriorityStreamFUl",
+     "Pause__Q216AudioStreamTrack11StreamTrackFUlb",
+     "Purge__9CrowdMoodFb",
+     "ShutdownStreaming__9PlatAudioFv"
+    ],
+    "sdk_callers": 1
+   },
+   "sndPitchUpOne": {
+    "addr": "0x80275D00",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "LowPrecisionHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "sndGetPitch": {
+    "addr": "0x80275D3C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "LowPrecisionHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "sndSetSampleDataUploadCallback": {
+    "addr": "0x80277254",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "LoadSoundGroup__9PlatAudioFR13AudioFileDataUlUlb"
+    ],
+    "sdk_callers": 0
+   },
+   "sndPushGroup": {
+    "addr": "0x80277274",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "LoadSoundGroup__9PlatAudioFR13AudioFileDataUlUlb"
+    ],
+    "sdk_callers": 0
+   },
+   "sndPopGroup": {
+    "addr": "0x802775C0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "UnloadAllSoundGroupsOnStack__9PlatAudioFR13Audio",
+     "UnloadAllSoundGroups__9PlatAudioFR13AudioFileDat",
+     "UnloadSoundGroup__9PlatAudioFR13AudioFileDataUl"
+    ],
+    "sdk_callers": 0
+   },
+   "sndStackGetSize": {
+    "addr": "0x80277910",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Initialize__9PlatAudioFb"
+    ],
+    "sdk_callers": 0
+   },
+   "sndStackAdd": {
+    "addr": "0x80277918",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Initialize__9PlatAudioFb"
+    ],
+    "sdk_callers": 0
+   },
+   "sndStackSetCurrent": {
+    "addr": "0x80277990",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "LoadSoundGroup__9PlatAudioFR13AudioFileDataUlUlb",
+     "UnloadAllSoundGroupsOnStack__9PlatAudioFR13Audio",
+     "UnloadAllSoundGroups__9PlatAudioFR13AudioFileDat",
+     "UnloadSoundGroup__9PlatAudioFR13AudioFileDataUl"
+    ],
+    "sdk_callers": 0
+   },
+   "sndStackGetARAMAddressRange": {
+    "addr": "0x802779C4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "PrintSoundStackInfo__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "sndStackGetAvailableSampleMemory": {
+    "addr": "0x80277A04",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "PrintAvailableARAMMemory__Fv",
+     "PrintSoundStackInfo__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "sndSeqPlayEx": {
+    "addr": "0x80277BA4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "sndUpdateEmitter": {
+    "addr": "0x8027C0A4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Update3DSFXEmitter__9PlatAudioFP10SFXEmitterRC9n"
+    ],
+    "sdk_callers": 0
+   },
+   "sndCheckEmitter": {
+    "addr": "0x8027C17C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "GetFreeEmitter__9PlatAudioFRUl",
+     "IsEmitterActive__9PlatAudioFP10SFXEmitter"
+    ],
+    "sdk_callers": 0
+   },
+   "sndAddEmitter2StudioPara": {
+    "addr": "0x8027C644",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Add3DSFXEmitter__9PlatAudioFRC16EmitterStartInfo"
+    ],
+    "sdk_callers": 0
+   },
+   "sndRemoveEmitter": {
+    "addr": "0x8027C6A0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "GetFreeEmitter__9PlatAudioFRUl",
+     "RemoveEmitter__9PlatAudioFP10SFXEmitter",
+     "RemoveEmitter__9PlatAudioFUl"
+    ],
+    "sdk_callers": 0
+   },
+   "sndEmitterVoiceID": {
+    "addr": "0x8027C748",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "GetEmitterVoiceID__9PlatAudioFP10SFXEmitter",
+     "GetFreeEmitter__9PlatAudioFRUl"
+    ],
+    "sdk_callers": 0
+   },
+   "s3dKillAllEmitter": {
+    "addr": "0x8027C7A4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "s3dKillEmitterByFXID": {
+    "addr": "0x8027C85C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "sndUpdateListener": {
+    "addr": "0x8027C958",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Update3DSFXListener__9PlatAudioFP12SND_LISTENERR"
+    ],
+    "sdk_callers": 0
+   },
+   "sndAddListenerEx": {
+    "addr": "0x8027CACC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Add3DSFXListener__9PlatAudioFP12SND_LISTENERRC9n"
+    ],
+    "sdk_callers": 0
+   },
+   "sndRemoveListener": {
+    "addr": "0x8027CCEC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Remove3DSFXListener__9PlatAudioFP12SND_LISTENER"
+    ],
+    "sdk_callers": 0
+   },
+   "s3dHandle": {
+    "addr": "0x8027D7B0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "s3dInit": {
+    "addr": "0x8027DED8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "s3dExit": {
+    "addr": "0x8027DF10",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "sndInit": {
+    "addr": "0x8027DF14",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Initialize__9PlatAudioFb"
+    ],
+    "sdk_callers": 0
+   },
+   "sndQuit": {
+    "addr": "0x8027E04C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Shutdown__9PlatAudioFv"
+    ],
+    "sdk_callers": 0
+   },
+   "sndIsInstalled": {
+    "addr": "0x8027E080",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Initialize__9PlatAudioFb"
+    ],
+    "sdk_callers": 0
+   },
+   "sndRand": {
+    "addr": "0x80280758",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 4
+   },
+   "sndSin": {
+    "addr": "0x80280774",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "LowPrecisionHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "sndBSearch": {
+    "addr": "0x80280800",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 6
+   },
+   "sndSqrt": {
+    "addr": "0x802808A4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "sndCos": {
+    "addr": "0x802808F8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "sndConvertMs": {
+    "addr": "0x802809CC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 9
+   },
+   "sndConvertTicks": {
+    "addr": "0x802809DC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 5
+   },
+   "sndConvert2Ms": {
+    "addr": "0x80280A24",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "snd_handle_irq": {
+    "addr": "0x80280A2C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "sndSetHooks": {
+    "addr": "0x80281AB0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Initialize__9PlatAudioFb"
+    ],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackReverbSTD": {
+    "addr": "0x80282EE8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackUpdateSettingsReverbSTD": {
+    "addr": "0x80282F44",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "UpdateAuxEffectA__9PlatAudioF15MusyXEffectTypePv"
+    ],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackPrepareReverbSTD": {
+    "addr": "0x80282F98",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "AddAuxEffect__F15MusyXEffectTypePvbUc"
+    ],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackShutdownReverbSTD": {
+    "addr": "0x80282FD4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ShutdownAuxEffectA__9PlatAudioFv"
+    ],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackReverbHI": {
+    "addr": "0x80283A9C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackUpdateSettingsReverbHI": {
+    "addr": "0x80283AF8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "UpdateAuxEffectA__9PlatAudioF15MusyXEffectTypePv"
+    ],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackPrepareReverbHI": {
+    "addr": "0x80283B50",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "AddAuxEffect__F15MusyXEffectTypePvbUc"
+    ],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackShutdownReverbHI": {
+    "addr": "0x80283B90",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ShutdownAuxEffectA__9PlatAudioFv"
+    ],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackDelay": {
+    "addr": "0x80284B00",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackUpdateSettingsDelay": {
+    "addr": "0x80284C68",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "UpdateAuxEffectA__9PlatAudioF15MusyXEffectTypePv"
+    ],
+    "sdk_callers": 1
+   },
+   "sndAuxCallbackPrepareDelay": {
+    "addr": "0x80284E38",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "AddAuxEffect__F15MusyXEffectTypePvbUc"
+    ],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackShutdownDelay": {
+    "addr": "0x80284E60",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ShutdownAuxEffectA__9PlatAudioFv"
+    ],
+    "sdk_callers": 1
+   },
+   "sndAuxCallbackChorus": {
+    "addr": "0x80285230",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackUpdateSettingsChorus": {
+    "addr": "0x802854EC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "UpdateAuxEffectA__9PlatAudioF15MusyXEffectTypePv"
+    ],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackPrepareChorus": {
+    "addr": "0x80285584",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "AddAuxEffect__F15MusyXEffectTypePvbUc"
+    ],
+    "sdk_callers": 0
+   },
+   "sndAuxCallbackShutdownChorus": {
+    "addr": "0x80285784",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ShutdownAuxEffectA__9PlatAudioFv"
+    ],
+    "sdk_callers": 0
+   }
+  },
+  "musyx_int": {
+   "seqGetPrivateId": {
+    "addr": "0x80261234",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "seqStartPlay": {
+    "addr": "0x8026129C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "seqPause": {
+    "addr": "0x80261DCC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "seqStop": {
+    "addr": "0x80262048",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 4
+   },
+   "seqKillAllInstances": {
+    "addr": "0x802622F8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "seqKillInstancesByGroupID": {
+    "addr": "0x80262354",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "seqSpeed": {
+    "addr": "0x802623E4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "seqContinue": {
+    "addr": "0x802624C8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "seqMute": {
+    "addr": "0x802625D0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "seqVolume": {
+    "addr": "0x8026268C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "seqCrossFade": {
+    "addr": "0x80262858",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "HandleEvent"
+    ],
+    "sdk_callers": 0
+   },
+   "seqHandle": {
+    "addr": "0x80264698",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "seqInit": {
+    "addr": "0x802650B4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "synthSetBpm": {
+    "addr": "0x8026525C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "HandleTrackEvents"
+    ],
+    "sdk_callers": 2
+   },
+   "synthGetTicksPerSecond": {
+    "addr": "0x802652A0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "synthInitPortamento": {
+    "addr": "0x802652D4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "synthStartSound": {
+    "addr": "0x80265C08",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "HandleEvent"
+    ],
+    "sdk_callers": 1
+   },
+   "synthAddJob": {
+    "addr": "0x80266F5C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "LowPrecisionHandler",
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 3
+   },
+   "synthStartSynthJobHandling": {
+    "addr": "0x802670AC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "synthForceLowPrecisionUpdate": {
+    "addr": "0x80267110",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "macStart"
+    ],
+    "sdk_callers": 1
+   },
+   "synthKeyStateUpdate": {
+    "addr": "0x80267154",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "inpSetMidiCtrl"
+    ],
+    "sdk_callers": 2
+   },
+   "synthHandle": {
+    "addr": "0x8026717C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "synthFXGetMaxVoices": {
+    "addr": "0x8026768C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "AddEmitter"
+    ],
+    "sdk_callers": 0
+   },
+   "synthFXStart": {
+    "addr": "0x802676C0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "AddEmitter",
+     "StartContinousEmitters"
+    ],
+    "sdk_callers": 2
+   },
+   "synthCheckFXRealloc": {
+    "addr": "0x802677A4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "StartContinousEmitters"
+    ],
+    "sdk_callers": 0
+   },
+   "synthFXSetCtrl": {
+    "addr": "0x80267820",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "AddEmitter",
+     "StartContinousEmitters"
+    ],
+    "sdk_callers": 3
+   },
+   "synthFXSetCtrl14": {
+    "addr": "0x80267904",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "AddEmitter",
+     "StartContinousEmitters"
+    ],
+    "sdk_callers": 3
+   },
+   "synthFXCloneMidiSetup": {
+    "addr": "0x802679E8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "synthSendKeyOff": {
+    "addr": "0x80267A6C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "HandleEvent"
+    ],
+    "sdk_callers": 6
+   },
+   "synthVolume": {
+    "addr": "0x80267AF4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 4
+   },
+   "synthIsFadeOutActive": {
+    "addr": "0x80268024",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "synthSetMusicVolumeType": {
+    "addr": "0x80268078",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "synthHWMessageHandler": {
+    "addr": "0x802680A0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "synthInit": {
+    "addr": "0x80268170",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "synthExit": {
+    "addr": "0x802686E4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "seqGetMIDIPriority": {
+    "addr": "0x80268848",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "macStart"
+    ],
+    "sdk_callers": 0
+   },
+   "seqGetInstanceForVoice": {
+    "addr": "0x80268864",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "vsSampleStartNotify"
+    ],
+    "sdk_callers": 0
+   },
+   "streamInit": {
+    "addr": "0x80268EE0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "streamHandle": {
+    "addr": "0x80269034",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "streamCorrectLoops": {
+    "addr": "0x80269918",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "streamKill": {
+    "addr": "0x8026991C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "streamOutputModeChanged": {
+    "addr": "0x8026A030",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "dataInsertKeymap": {
+    "addr": "0x8026D284",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "InsertData"
+    ],
+    "sdk_callers": 0
+   },
+   "dataRemoveKeymap": {
+    "addr": "0x8026D474",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "InsertData"
+    ],
+    "sdk_callers": 0
+   },
+   "dataInsertLayer": {
+    "addr": "0x8026D5F0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "InsertData"
+    ],
+    "sdk_callers": 0
+   },
+   "dataRemoveLayer": {
+    "addr": "0x8026D838",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "InsertData"
+    ],
+    "sdk_callers": 0
+   },
+   "dataInsertCurve": {
+    "addr": "0x8026D9FC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "InsertData"
+    ],
+    "sdk_callers": 0
+   },
+   "dataRemoveCurve": {
+    "addr": "0x8026DC00",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "InsertData"
+    ],
+    "sdk_callers": 0
+   },
+   "dataInsertSDir": {
+    "addr": "0x8026DD7C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "dataRemoveSDir": {
+    "addr": "0x8026DEE4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "dataAddSampleReference": {
+    "addr": "0x8026E0C0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "InsertData"
+    ],
+    "sdk_callers": 0
+   },
+   "dataRemoveSampleReference": {
+    "addr": "0x8026E198",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "InsertData"
+    ],
+    "sdk_callers": 0
+   },
+   "dataInsertFX": {
+    "addr": "0x8026E234",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "dataRemoveFX": {
+    "addr": "0x8026E374",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "dataInsertMacro": {
+    "addr": "0x8026E540",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "InsertData"
+    ],
+    "sdk_callers": 0
+   },
+   "dataRemoveMacro": {
+    "addr": "0x8026E82C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "InsertData"
+    ],
+    "sdk_callers": 0
+   },
+   "dataGetMacro": {
+    "addr": "0x8026EAC0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "macStart"
+    ],
+    "sdk_callers": 2
+   },
+   "dataGetSample": {
+    "addr": "0x8026EB5C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "dataGetCurve": {
+    "addr": "0x8026EC9C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 5
+   },
+   "dataGetKeymap": {
+    "addr": "0x8026ECF8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "StartKeymap"
+    ],
+    "sdk_callers": 1
+   },
+   "dataGetLayer": {
+    "addr": "0x8026ED64",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "StartLayer"
+    ],
+    "sdk_callers": 0
+   },
+   "dataGetFX": {
+    "addr": "0x8026EDF0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 4
+   },
+   "dataInit": {
+    "addr": "0x8026EE8C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "dataExit": {
+    "addr": "0x8026EF70",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdWait": {
+    "addr": "0x8026EF90",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "mcmdGosub": {
+    "addr": "0x8026F280",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdLoop": {
+    "addr": "0x8026F350",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdPlayMacro": {
+    "addr": "0x8026F4A4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdAddKey": {
+    "addr": "0x8026F630",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdStartSample": {
+    "addr": "0x8026F708",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdVibrato": {
+    "addr": "0x8026F908",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdSetADSR": {
+    "addr": "0x8026FC24",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdSetADSRFromCtrl": {
+    "addr": "0x8026FE7C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdSetPitchADSR": {
+    "addr": "0x8026FFA8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdSetPanning": {
+    "addr": "0x80270224",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdSetSurroundPanning": {
+    "addr": "0x802702C0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdScaleVolume": {
+    "addr": "0x8027035C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdEnvelope": {
+    "addr": "0x80270490",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdFadeIn": {
+    "addr": "0x802705C0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdRandomKey": {
+    "addr": "0x802706FC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdVolumeSelect": {
+    "addr": "0x80270898",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdPanningSelect": {
+    "addr": "0x8027099C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdPitchWheelSelect": {
+    "addr": "0x80270AA0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdModWheelSelect": {
+    "addr": "0x80270BA4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdPedalSelect": {
+    "addr": "0x80270CA8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdPortamentoSelect": {
+    "addr": "0x80270DAC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdReverbSelect": {
+    "addr": "0x80270EB0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdPreAuxASelect": {
+    "addr": "0x80270FB4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdPreAuxBSelect": {
+    "addr": "0x802710B8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdPostAuxBSelect": {
+    "addr": "0x802711BC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdSurroundPanningSelect": {
+    "addr": "0x802712C0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdDopplerSelect": {
+    "addr": "0x802713C4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdTremoloSelect": {
+    "addr": "0x802714C8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdFilterSwitchSelect": {
+    "addr": "0x802715CC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdFilterParameterSelect": {
+    "addr": "0x802716D0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdAuxAFXSelect": {
+    "addr": "0x802717D4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdAuxBFXSelect": {
+    "addr": "0x80271950",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdPortamento": {
+    "addr": "0x80271ACC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdVarCalculation": {
+    "addr": "0x80271C98",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdIfVarCompare": {
+    "addr": "0x80271EB8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdSendMessage": {
+    "addr": "0x80272004",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdGetVID": {
+    "addr": "0x80272248",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "mcmdSetKeyGroup": {
+    "addr": "0x802722C8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "macHandleActive": {
+    "addr": "0x802723A4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "macHandle": {
+    "addr": "0x80273338",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "macSampleEndNotify": {
+    "addr": "0x8027348C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "vsSampleUpdates"
+    ],
+    "sdk_callers": 1
+   },
+   "macMakeActive": {
+    "addr": "0x802737D4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "macSetExternalKeyoff",
+     "macSetPedalState"
+    ],
+    "sdk_callers": 3
+   },
+   "macMakeInactive": {
+    "addr": "0x802738DC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 5
+   },
+   "vidGetInternalId": {
+    "addr": "0x802743E8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 6
+   },
+   "vidGetPublicId": {
+    "addr": "0x80274438",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "vsSampleStartNotify"
+    ],
+    "sdk_callers": 0
+   },
+   "voiceSetPriority": {
+    "addr": "0x8027448C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "macStart"
+    ],
+    "sdk_callers": 2
+   },
+   "voiceAllocateFind": {
+    "addr": "0x802746D8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "voiceAllocate": {
+    "addr": "0x80274A60",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "macStart"
+    ],
+    "sdk_callers": 0
+   },
+   "voiceAllocatePeek": {
+    "addr": "0x80274B70",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "voiceFree": {
+    "addr": "0x80274BE8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "macStart"
+    ],
+    "sdk_callers": 2
+   },
+   "synthInitAllocationAids": {
+    "addr": "0x80274DAC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "voiceBlock": {
+    "addr": "0x8027504C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "voiceUnblock": {
+    "addr": "0x80275210",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "voiceKill": {
+    "addr": "0x80275428",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "vsSampleUpdates"
+    ],
+    "sdk_callers": 6
+   },
+   "voiceKillSound": {
+    "addr": "0x8027565C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "StartContinousEmitters"
+    ],
+    "sdk_callers": 2
+   },
+   "synthKillAllVoices": {
+    "addr": "0x80275720",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "synthKillVoicesByMacroReferences": {
+    "addr": "0x802757C8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "synthKillVoicesBySampleReferences": {
+    "addr": "0x80275924",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "voiceIsLastStarted": {
+    "addr": "0x80275A80",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "voiceSetLastStarted": {
+    "addr": "0x80275AF4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "do_voice_portamento"
+    ],
+    "sdk_callers": 1
+   },
+   "voiceResetLastStarted": {
+    "addr": "0x80275B48",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "vidRemoveVoiceReferences"
+    ],
+    "sdk_callers": 0
+   },
+   "voiceInitLastStarted": {
+    "addr": "0x80275BBC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salChangeADSRState": {
+    "addr": "0x80275E78",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "adsrHandle",
+     "adsrSetup"
+    ],
+    "sdk_callers": 0
+   },
+   "dataInitStack": {
+    "addr": "0x80276F78",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "dataARAMDefaultGetInfo": {
+    "addr": "0x80276FB8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "aramAllocateStreamBuffer"
+    ],
+    "sdk_callers": 0
+   },
+   "seqPlaySong": {
+    "addr": "0x80277A50",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salInitDspCtrl": {
+    "addr": "0x80277CC8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salInitHRTFBuffer": {
+    "addr": "0x8027807C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salExitDspCtrl": {
+    "addr": "0x802780B4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salActivateStudio": {
+    "addr": "0x80278194",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salCheckVolErrorAndResetDelta": {
+    "addr": "0x802782E4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salBuildCommandList": {
+    "addr": "0x80278AA4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salSynthSendMessage": {
+    "addr": "0x8027B09C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salActivateVoice": {
+    "addr": "0x8027B0E0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salDeactivateVoice": {
+    "addr": "0x8027B180",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "salHandleAuxProcessing": {
+    "addr": "0x8027B1E0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salCalcVolume": {
+    "addr": "0x8027B338",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salApplyMatrix": {
+    "addr": "0x8027E088",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "CalcEmitter"
+    ],
+    "sdk_callers": 0
+   },
+   "salNormalizeVector": {
+    "addr": "0x8027E134",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "CalcEmitter"
+    ],
+    "sdk_callers": 0
+   },
+   "salCrossProduct": {
+    "addr": "0x8027E1E8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "salInvertMatrix": {
+    "addr": "0x8027E24C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "inpGetMidiCtrl": {
+    "addr": "0x8027F1C4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "LowPrecisionHandler",
+     "StartKeymap",
+     "StartLayer",
+     "_GetInputValue"
+    ],
+    "sdk_callers": 5
+   },
+   "inpGetChannelDefaults": {
+    "addr": "0x8027F488",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "inpGetMidiLastNote": {
+    "addr": "0x8027F710",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "inpGetVolume": {
+    "addr": "0x8027FBEC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "inpGetPanning": {
+    "addr": "0x8027FC34",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "inpGetSurPanning": {
+    "addr": "0x8027FC7C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "inpGetPitchBend": {
+    "addr": "0x8027FCC4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "LowPrecisionHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "inpGetDoppler": {
+    "addr": "0x8027FD0C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "LowPrecisionHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "inpGetModulation": {
+    "addr": "0x8027FD54",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "LowPrecisionHandler",
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 1
+   },
+   "inpGetPedal": {
+    "addr": "0x8027FD9C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "inpGetPreAuxA": {
+    "addr": "0x8027FDE4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "inpGetReverb": {
+    "addr": "0x8027FE2C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "inpGetPreAuxB": {
+    "addr": "0x8027FE74",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "inpGetPostAuxB": {
+    "addr": "0x8027FEBC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "inpGetTremolo": {
+    "addr": "0x8027FF04",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "inpGetFilterSwitch": {
+    "addr": "0x8027FF4C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "inpGetFilterParameter": {
+    "addr": "0x8027FF94",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "inpGetAuxA": {
+    "addr": "0x8027FFDC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "inpGetAuxB": {
+    "addr": "0x80280090",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "inpGetExCtrl": {
+    "addr": "0x80280478",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "varGet"
+    ],
+    "sdk_callers": 2
+   },
+   "hwInit": {
+    "addr": "0x80280B80",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwExit": {
+    "addr": "0x80280C44",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwSetTimeOffset": {
+    "addr": "0x80280C78",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwGetTimeOffset": {
+    "addr": "0x80280C80",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 1
+   },
+   "hwIsActive": {
+    "addr": "0x80280C88",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "LowPrecisionHandler",
+     "ZeroOffsetHandler",
+     "do_voice_portamento",
+     "macStart"
+    ],
+    "sdk_callers": 6
+   },
+   "hwSetMesgCallback": {
+    "addr": "0x80280CA8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwSetPriority": {
+    "addr": "0x80280CB0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 2
+   },
+   "hwInitSamplePlayback": {
+    "addr": "0x80280CC4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "hwBreak": {
+    "addr": "0x80280E78",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "macStart",
+     "vsSampleUpdates"
+    ],
+    "sdk_callers": 4
+   },
+   "hwSetADSR": {
+    "addr": "0x80280EC8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "hwSetVirtualSampleLoopBuffer": {
+    "addr": "0x80281074",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "vsSampleStartNotify"
+    ],
+    "sdk_callers": 0
+   },
+   "hwGetVirtualSampleState": {
+    "addr": "0x80281094",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "vsSampleUpdates"
+    ],
+    "sdk_callers": 0
+   },
+   "hwGetSampleType": {
+    "addr": "0x802810A8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "vsSampleStartNotify"
+    ],
+    "sdk_callers": 0
+   },
+   "hwGetSampleID": {
+    "addr": "0x802810BC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "vsSampleStartNotify"
+    ],
+    "sdk_callers": 0
+   },
+   "hwGetSampleExtraData": {
+    "addr": "0x802810D0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "vsSampleStartNotify"
+    ],
+    "sdk_callers": 0
+   },
+   "hwSetStreamLoopPS": {
+    "addr": "0x802810E4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "hwStart": {
+    "addr": "0x802810F8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "hwKeyOff": {
+    "addr": "0x80281134",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwSetPitch": {
+    "addr": "0x8028115C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "LowPrecisionHandler"
+    ],
+    "sdk_callers": 2
+   },
+   "hwSetSRCType": {
+    "addr": "0x802811D4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "hwSetPolyPhaseFilter": {
+    "addr": "0x80281200",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "hwLowPassFrqToCoef": {
+    "addr": "0x8028122C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 2
+   },
+   "hwSetFilter": {
+    "addr": "0x80281324",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 2
+   },
+   "hwSetITDMode": {
+    "addr": "0x802813A4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwSetVolume": {
+    "addr": "0x80281400",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "SetHWMix",
+     "ZeroOffsetHandler"
+    ],
+    "sdk_callers": 3
+   },
+   "hwSetAUXProcessingCallbacks": {
+    "addr": "0x802816C0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "hwGetPos": {
+    "addr": "0x802816E8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "vsSampleUpdates"
+    ],
+    "sdk_callers": 1
+   },
+   "hwFlushStream": {
+    "addr": "0x80281794",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "hwInitStream": {
+    "addr": "0x80281824",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwExitStream": {
+    "addr": "0x80281844",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwGetStreamPlayBuffer": {
+    "addr": "0x80281864",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwTransAddr": {
+    "addr": "0x80281888",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwFrq2Pitch": {
+    "addr": "0x8028188C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwInitSampleMem": {
+    "addr": "0x802818E8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwExitSampleMem": {
+    "addr": "0x8028190C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwSaveSample": {
+    "addr": "0x8028192C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwGetAvailableSampleMemory": {
+    "addr": "0x802819C4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwSetSaveSampleCallback": {
+    "addr": "0x802819E4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwRemoveSample": {
+    "addr": "0x80281A04",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwSyncSampleMem": {
+    "addr": "0x80281A8C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwFrameDone": {
+    "addr": "0x80281AAC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwDisableHRTF": {
+    "addr": "0x80281ACC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwEnableCompressor": {
+    "addr": "0x80281AD8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwGetVirtualSampleID": {
+    "addr": "0x80281AE4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "vsSampleUpdates"
+    ],
+    "sdk_callers": 1
+   },
+   "hwVoiceInStartup": {
+    "addr": "0x80281B0C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "vsSampleUpdates"
+    ],
+    "sdk_callers": 0
+   },
+   "salCallback": {
+    "addr": "0x8028290C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "salInitAi": {
+    "addr": "0x80282A4C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salStartAi": {
+    "addr": "0x80282B14",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salExitAi": {
+    "addr": "0x80282B34",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salAiGetDest": {
+    "addr": "0x80282B68",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salInitDsp": {
+    "addr": "0x80282B98",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salExitDsp": {
+    "addr": "0x80282C6C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salCtrlDsp": {
+    "addr": "0x80282CBC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salGetStartDelay": {
+    "addr": "0x80282D30",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwInitIrq": {
+    "addr": "0x80282D7C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwExitIrq": {
+    "addr": "0x80282DA8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwEnableIrq": {
+    "addr": "0x80282DAC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "AddEmitter"
+    ],
+    "sdk_callers": 49
+   },
+   "hwDisableIrq": {
+    "addr": "0x80282DE4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "AddEmitter"
+    ],
+    "sdk_callers": 48
+   },
+   "hwIRQEnterCritical": {
+    "addr": "0x80282E1C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "hwIRQLeaveCritical": {
+    "addr": "0x80282E3C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "salMalloc": {
+    "addr": "0x80282E5C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "ReverbHICreate",
+     "ReverbSTDCreate"
+    ],
+    "sdk_callers": 4
+   },
+   "salMallocPhysical": {
+    "addr": "0x80282E88",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "aramInit"
+    ],
+    "sdk_callers": 2
+   },
+   "salFree": {
+    "addr": "0x80282EB8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 5,
+    "game_caller_names": [
+     "ReverbHIFree",
+     "ReverbHIModify",
+     "ReverbSTDFree",
+     "ReverbSTDModify",
+     "aramInit"
+    ],
+    "sdk_callers": 5
+   }
+  },
+  "os": {
+   "__OSEnableBarnacle": {
+    "addr": "0x8024AA70",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSFPRInit": {
+    "addr": "0x80253194",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "OSGetConsoleType": {
+    "addr": "0x802532BC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 10,
+    "game_caller_names": [
+     "DoUpdateRead__Q216GCAudioStreaming15MonoAudioStr",
+     "GameCubeReadAsync__FP6GCFilePFP6nlFilePvUiUl_vPv",
+     "GameCubeReadBlocking__FP6GCFilePvUl",
+     "HandleAsyncs__9NisPlayerFv",
+     "InitializeUART",
+     "Update__16MoviePlayerSceneFf"
+    ],
+    "sdk_callers": 1
+   },
+   "OSInit": {
+    "addr": "0x80253320",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "OSExceptionInit": {
+    "addr": "0x80253800",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSDBIntegrator": {
+    "addr": "0x80253A80",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__OSDBJump": {
+    "addr": "0x80253AA4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__OSSetExceptionHandler": {
+    "addr": "0x80253AA8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 4
+   },
+   "__OSGetExceptionHandler": {
+    "addr": "0x80253AC4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "OSExceptionVector": {
+    "addr": "0x80253AD8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "OSDefaultExceptionHandler": {
+    "addr": "0x80253B74",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__OSPSInit": {
+    "addr": "0x80253BCC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__OSGetDIConfig": {
+    "addr": "0x80253C20",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "OSRegisterVersion": {
+    "addr": "0x80253C34",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 13
+   },
+   "OSInitAlarm": {
+    "addr": "0x80253C60",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "OSCreateAlarm": {
+    "addr": "0x80253CB8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "Read",
+     "cbForStateMotorStopped",
+     "stateCoverClosed",
+     "stateReady"
+    ],
+    "sdk_callers": 10
+   },
+   "OSSetAlarm": {
+    "addr": "0x80253F18",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 5,
+    "game_caller_names": [
+     "Read",
+     "Retry",
+     "cbForStateMotorStopped",
+     "stateCoverClosed",
+     "stateReady"
+    ],
+    "sdk_callers": 11
+   },
+   "OSCancelAlarm": {
+    "addr": "0x80253F80",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "DoUnmount",
+     "OnReset",
+     "Retry"
+    ],
+    "sdk_callers": 7
+   },
+   "OSAllocFromHeap": {
+    "addr": "0x80254468",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "__sys_alloc",
+     "nlInitMemory__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "OSFreeToHeap": {
+    "addr": "0x80254564",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "__sys_free"
+    ],
+    "sdk_callers": 0
+   },
+   "OSSetCurrentHeap": {
+    "addr": "0x802545E0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "__sys_alloc",
+     "__sys_free",
+     "nlInitMemory__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "OSInitAlloc": {
+    "addr": "0x802545F0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "__sys_alloc",
+     "__sys_free",
+     "nlInitMemory__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "OSCreateHeap": {
+    "addr": "0x80254660",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "__sys_alloc",
+     "__sys_free",
+     "nlInitMemory__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "OSGetArenaHi": {
+    "addr": "0x802546CC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "__fstLoad",
+     "__sys_alloc",
+     "__sys_free",
+     "nlInitMemory__Fv"
+    ],
+    "sdk_callers": 2
+   },
+   "OSGetArenaLo": {
+    "addr": "0x802546D4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 10,
+    "game_caller_names": [
+     "VMBASEInit",
+     "__VMAllocARAMToVirtualLUT",
+     "__VMAllocMRAMSwapSpace",
+     "__VMAllocVirtualToARAMLUT",
+     "__VMBASEInitLockedPageTable",
+     "__VMBASEInitPageTable"
+    ],
+    "sdk_callers": 1
+   },
+   "OSSetArenaHi": {
+    "addr": "0x802546DC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "__fstLoad"
+    ],
+    "sdk_callers": 2
+   },
+   "OSSetArenaLo": {
+    "addr": "0x802546E4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 9,
+    "game_caller_names": [
+     "__VMAllocARAMToVirtualLUT",
+     "__VMAllocMRAMSwapSpace",
+     "__VMAllocVirtualToARAMLUT",
+     "__VMBASEInitLockedPageTable",
+     "__VMBASEInitPageTable",
+     "__VMBASEInitReversePageTable"
+    ],
+    "sdk_callers": 3
+   },
+   "OSAllocFromArenaLo": {
+    "addr": "0x802546EC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "GetApploaderPosition"
+    ],
+    "sdk_callers": 2
+   },
+   "__OSInitAudioSystem": {
+    "addr": "0x80254718",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSStopAudioSystem": {
+    "addr": "0x802548D4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSCacheInit": {
+    "addr": "0x80254F30",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSLoadFPUContext": {
+    "addr": "0x80255024",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSSaveFPUContext": {
+    "addr": "0x80255148",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "OSSaveFPUContext": {
+    "addr": "0x80255270",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "OSSetCurrentContext": {
+    "addr": "0x80255278",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 8,
+    "game_caller_names": [
+     "AlarmHandlerForTimeout",
+     "DecrementerExceptionCallback",
+     "EXTIntrruptHandler",
+     "SamplingHandler",
+     "SelectThread",
+     "TCIntrruptHandler"
+    ],
+    "sdk_callers": 13
+   },
+   "OSGetCurrentContext": {
+    "addr": "0x802552D4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "SelectThread"
+    ],
+    "sdk_callers": 0
+   },
+   "OSSaveContext": {
+    "addr": "0x802552E0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "SelectThread"
+    ],
+    "sdk_callers": 0
+   },
+   "OSLoadContext": {
+    "addr": "0x80255360",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "DecrementerExceptionCallback",
+     "SelectThread",
+     "__VMBASEDSIServiceException",
+     "__VMBASEISIServiceException"
+    ],
+    "sdk_callers": 2
+   },
+   "OSGetStackPointer": {
+    "addr": "0x80255438",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "OSClearContext": {
+    "addr": "0x80255440",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 8,
+    "game_caller_names": [
+     "AlarmHandlerForTimeout",
+     "DecrementerExceptionCallback",
+     "EXTIntrruptHandler",
+     "SamplingHandler",
+     "SelectThread",
+     "TCIntrruptHandler"
+    ],
+    "sdk_callers": 13
+   },
+   "OSDumpContext": {
+    "addr": "0x80255464",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "DMAErrorHandler"
+    ],
+    "sdk_callers": 2
+   },
+   "OSSwitchFPUContext": {
+    "addr": "0x8025570C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "__OSContextInit": {
+    "addr": "0x80255790",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "OSReport": {
+    "addr": "0x802557D8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 16,
+    "game_caller_names": [
+     "DMAErrorHandler",
+     "FloatingPointErrorHandler__FUsP9OSContextUlUl",
+     "InitMetroTRKCommTable",
+     "InitializeGameState__14TransitionTaskFv",
+     "SendToGl__17DrawableCharacterCFRC10cCharacter",
+     "TRK_board_display"
+    ],
+    "sdk_callers": 10
+   },
+   "OSPanic": {
+    "addr": "0x80255858",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "cbForStateCheckID2",
+     "stateReadingFST"
+    ],
+    "sdk_callers": 3
+   },
+   "OSSetErrorHandler": {
+    "addr": "0x80255984",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "InstallCallStackDumper__Fv",
+     "InstallFloatingPointExceptionHandler__Fv"
+    ],
+    "sdk_callers": 1
+   },
+   "__OSUnhandledException": {
+    "addr": "0x80255B9C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "MEMIntrruptHandler"
+    ],
+    "sdk_callers": 1
+   },
+   "__OSGetExecParams": {
+    "addr": "0x802560C0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSBootDolSimple": {
+    "addr": "0x802561C4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSBootDol": {
+    "addr": "0x80256648",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "OSGetFontEncode": {
+    "addr": "0x80256958",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "OSDisableInterrupts": {
+    "addr": "0x80256AF8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 20,
+    "game_caller_names": [
+     "DoUnmount",
+     "DoUpdateRead__Q216GCAudioStreaming15MonoAudioStr",
+     "DoUpdateRead__Q216GCAudioStreaming17StereoAudioS",
+     "InterleavedHdrReadCB__Q216GCAudioStreaming17Ster",
+     "LCEnable",
+     "MWEnterCriticalSection"
+    ],
+    "sdk_callers": 141
+   },
+   "OSEnableInterrupts": {
+    "addr": "0x80256B0C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "SelectThread",
+     "dspResumeCallback"
+    ],
+    "sdk_callers": 5
+   },
+   "OSRestoreInterrupts": {
+    "addr": "0x80256B20",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 19,
+    "game_caller_names": [
+     "DoUnmount",
+     "DoUpdateRead__Q216GCAudioStreaming15MonoAudioStr",
+     "DoUpdateRead__Q216GCAudioStreaming17StereoAudioS",
+     "InterleavedHdrReadCB__Q216GCAudioStreaming17Ster",
+     "LCEnable",
+     "MWExitCriticalSection"
+    ],
+    "sdk_callers": 133
+   },
+   "__OSSetInterruptHandler": {
+    "addr": "0x80256B44",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 12
+   },
+   "__OSGetInterruptHandler": {
+    "addr": "0x80256B60",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "SetExiInterruptMask"
+    ],
+    "sdk_callers": 0
+   },
+   "__OSInterruptInit": {
+    "addr": "0x80256B74",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSMaskInterrupts": {
+    "addr": "0x80256EC0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 5,
+    "game_caller_names": [
+     "AlarmHandlerForTimeout",
+     "EXTIntrruptHandler",
+     "OnReset",
+     "SetExiInterruptMask",
+     "TCIntrruptHandler"
+    ],
+    "sdk_callers": 10
+   },
+   "__OSUnmaskInterrupts": {
+    "addr": "0x80256F48",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "SetExiInterruptMask"
+    ],
+    "sdk_callers": 16
+   },
+   "__OSDispatchInterrupt": {
+    "addr": "0x80256FD0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ExternalInterruptHandler"
+    ],
+    "sdk_callers": 0
+   },
+   "__OSModuleInit": {
+    "addr": "0x80257364",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSInitMemoryProtection": {
+    "addr": "0x8025753C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSUnlockAllMutex": {
+    "addr": "0x80257654",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSReboot": {
+    "addr": "0x802576C4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "OSGetSaveRegion": {
+    "addr": "0x80257734",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "OSRegisterResetFunction": {
+    "addr": "0x80257748",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 5
+   },
+   "__OSCallResetFunctions": {
+    "addr": "0x802577CC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSDoHotReset": {
+    "addr": "0x8025794C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "GetApploaderPosition",
+     "ReadDisc"
+    ],
+    "sdk_callers": 1
+   },
+   "OSResetSystem": {
+    "addr": "0x80257994",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Run__9ResetTaskFf"
+    ],
+    "sdk_callers": 0
+   },
+   "OSGetResetCode": {
+    "addr": "0x80257B94",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glplatStartup__FP13gl_ScreenInfo"
+    ],
+    "sdk_callers": 1
+   },
+   "__OSResetSWInterruptHandler": {
+    "addr": "0x80257BCC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "OSGetResetButtonState": {
+    "addr": "0x80257CC0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Run__9ResetTaskFf"
+    ],
+    "sdk_callers": 0
+   },
+   "__OSInitSram": {
+    "addr": "0x802580D0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSLockSram": {
+    "addr": "0x8025820C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "__OSLockSramEx": {
+    "addr": "0x80258268",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "DoMount",
+     "VerifyID"
+    ],
+    "sdk_callers": 2
+   },
+   "__OSUnlockSram": {
+    "addr": "0x80258600",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "__OSUnlockSramEx": {
+    "addr": "0x80258624",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "DoMount",
+     "VerifyID"
+    ],
+    "sdk_callers": 2
+   },
+   "__OSSyncSram": {
+    "addr": "0x80258648",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "OSGetSoundMode": {
+    "addr": "0x80258658",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "ForceApplySettings__13AudioSettingsFb",
+     "InitializeDefaults__13AudioSettingsFv"
+    ],
+    "sdk_callers": 0
+   },
+   "OSSetSoundMode": {
+    "addr": "0x802586D8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "ApplySettings__13AudioSettingsFbb"
+    ],
+    "sdk_callers": 0
+   },
+   "OSGetProgressiveMode": {
+    "addr": "0x8025877C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "StateTransition__14TransitionTaskFUiUi"
+    ],
+    "sdk_callers": 0
+   },
+   "OSSetProgressiveMode": {
+    "addr": "0x802587EC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Update__20ProgressiveScanSceneFf"
+    ],
+    "sdk_callers": 0
+   },
+   "OSGetLanguage": {
+    "addr": "0x80258890",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "DisplayDVDMessageSebring__Fi",
+     "Initialize__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "OSGetEuRgb60Mode": {
+    "addr": "0x802588FC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "__ct__20ProgressiveScanSceneFb"
+    ],
+    "sdk_callers": 0
+   },
+   "OSSetEuRgb60Mode": {
+    "addr": "0x8025896C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Update__20ProgressiveScanSceneFf"
+    ],
+    "sdk_callers": 0
+   },
+   "OSGetWirelessID": {
+    "addr": "0x80258A10",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "GetTypeCallback"
+    ],
+    "sdk_callers": 0
+   },
+   "OSSetWirelessID": {
+    "addr": "0x80258A94",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "GetTypeCallback"
+    ],
+    "sdk_callers": 3
+   },
+   "OSGetGbsMode": {
+    "addr": "0x80258B40",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "OSSetGbsMode": {
+    "addr": "0x80258BB0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSInitSystemCall": {
+    "addr": "0x80258C88",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__OSThreadInit": {
+    "addr": "0x80258CF0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "OSInitThreadQueue": {
+    "addr": "0x80258E48",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 6
+   },
+   "OSGetCurrentThread": {
+    "addr": "0x80258E58",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "OSDisableScheduler": {
+    "addr": "0x80258E64",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "DecrementerExceptionCallback"
+    ],
+    "sdk_callers": 3
+   },
+   "OSEnableScheduler": {
+    "addr": "0x80258EA4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "DecrementerExceptionCallback",
+     "TRKEXICallBack"
+    ],
+    "sdk_callers": 3
+   },
+   "__OSGetEffectivePriority": {
+    "addr": "0x80258F4C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "__OSReschedule": {
+    "addr": "0x80259370",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "DecrementerExceptionCallback"
+    ],
+    "sdk_callers": 2
+   },
+   "OSYieldThread": {
+    "addr": "0x802593A0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 13,
+    "game_caller_names": [
+     "BeginLoad__9JumbotronFv",
+     "BeginPlaying__9JumbotronFv",
+     "Destructor__Q216GCAudioStreaming11AudioStreamFv",
+     "GameCubeReadAsync__FP6GCFilePFP6nlFilePvUiUl_vPv",
+     "GameCubeReadBlocking__FP6GCFilePvUl",
+     "MoviePlay__Fv"
+    ],
+    "sdk_callers": 1
+   },
+   "OSCancelThread": {
+    "addr": "0x802593DC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "KillThreads"
+    ],
+    "sdk_callers": 0
+   },
+   "OSResumeThread": {
+    "addr": "0x80259598",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "OSSuspendThread": {
+    "addr": "0x80259820",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "OSSleepThread": {
+    "addr": "0x80259990",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 5
+   },
+   "OSWakeupThread": {
+    "addr": "0x80259A7C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "cbForCancelSync",
+     "dspDoneCallback"
+    ],
+    "sdk_callers": 4
+   },
+   "OSClearStack": {
+    "addr": "0x80259B80",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "main"
+    ],
+    "sdk_callers": 1
+   },
+   "OSGetTime": {
+    "addr": "0x80259C2C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 7,
+    "game_caller_names": [
+     "CreateCallbackFat",
+     "Destructor__Q216GCAudioStreaming11AudioStreamFv",
+     "HandleSoftReset__Fv",
+     "ShutdownReverb__5AudioFv",
+     "TimeStampCupEnd__15GameInfoManagerFv",
+     "WriteCallback"
+    ],
+    "sdk_callers": 10
+   },
+   "OSGetTick": {
+    "addr": "0x80259C44",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 4,
+    "game_caller_names": [
+     "DummyLen",
+     "Initialize__Fv",
+     "__VMPageReplacementRandom",
+     "nlGetTicker__Fv"
+    ],
+    "sdk_callers": 5
+   },
+   "__OSGetSystemTime": {
+    "addr": "0x80259C4C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 5,
+    "game_caller_names": [
+     "CompleteTransfer",
+     "DecrementerExceptionCallback",
+     "GetTypeCallback",
+     "InsertAlarm",
+     "Read"
+    ],
+    "sdk_callers": 11
+   },
+   "OSTicksToCalendarTime": {
+    "addr": "0x80259E4C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "TimeStampCupEnd__15GameInfoManagerFv"
+    ],
+    "sdk_callers": 0
+   }
+  },
+  "pad": {
+   "PADClampCircle": {
+    "addr": "0x8025A28C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "VBlankPadUpdate__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "PADOriginCallback": {
+    "addr": "0x8025A53C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "PADOriginUpdateCallback": {
+    "addr": "0x8025A600",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "PADProbeCallback": {
+    "addr": "0x8025A6CC",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "PADTypeAndStatusCallback": {
+    "addr": "0x8025A7A4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "PADReceiveCheckCallback": {
+    "addr": "0x8025AAD0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "PADReset": {
+    "addr": "0x8025AC10",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Update__9PadStatusFf"
+    ],
+    "sdk_callers": 2
+   },
+   "PADRecalibrate": {
+    "addr": "0x8025AD20",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "OnReset"
+    ],
+    "sdk_callers": 0
+   },
+   "PADInit": {
+    "addr": "0x8025AE34",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "nlInitMemory__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "PADRead": {
+    "addr": "0x8025AF84",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "InitPlatPad__Fv",
+     "VBlankPadUpdate__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "PADControlMotor": {
+    "addr": "0x8025B284",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "StartRumble__8cPlatPadFfff",
+     "StopRumble__8cPlatPadFv",
+     "Update__9PadStatusFf"
+    ],
+    "sdk_callers": 0
+   },
+   "PADSetSpec": {
+    "addr": "0x8025B33C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "PADSetSamplingCallback": {
+    "addr": "0x8025BC10",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "Initialize__Fv",
+     "OnReset"
+    ],
+    "sdk_callers": 0
+   },
+   "__PADDisableRecalibration": {
+    "addr": "0x8025BC64",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   }
+  },
+  "si": {
+   "SIBusy": {
+    "addr": "0x8025BCE0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "OnReset"
+    ],
+    "sdk_callers": 0
+   },
+   "SIIsChanBusy": {
+    "addr": "0x8025BD00",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "SIInterruptHandler": {
+    "addr": "0x8025C038",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "SIEnablePollingInterrupt": {
+    "addr": "0x8025C37C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "SIRegisterPollingHandler": {
+    "addr": "0x8025C414",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "SIUnregisterPollingHandler": {
+    "addr": "0x8025C4E0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "SIInit": {
+    "addr": "0x8025C5D4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__SITransfer": {
+    "addr": "0x8025C688",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "AlarmHandler"
+    ],
+    "sdk_callers": 2
+   },
+   "SIGetStatus": {
+    "addr": "0x8025C894",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   },
+   "SISetCommand": {
+    "addr": "0x8025C910",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 4
+   },
+   "SITransferCommands": {
+    "addr": "0x8025C924",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "SISetXY": {
+    "addr": "0x8025C934",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "SIEnablePolling": {
+    "addr": "0x8025C9A0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "SIDisablePolling": {
+    "addr": "0x8025CA3C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 5
+   },
+   "SIGetResponseRaw": {
+    "addr": "0x8025CAA8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "SIGetResponse": {
+    "addr": "0x8025CB7C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 4
+   },
+   "SITransfer": {
+    "addr": "0x8025CCCC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "GetTypeCallback"
+    ],
+    "sdk_callers": 5
+   },
+   "SIGetType": {
+    "addr": "0x8025D0D0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "UpdateOrigin"
+    ],
+    "sdk_callers": 4
+   },
+   "SIGetTypeAsync": {
+    "addr": "0x8025D294",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 6
+   },
+   "SISetSamplingRate": {
+    "addr": "0x8025D3D0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Initialize__Fv"
+    ],
+    "sdk_callers": 2
+   },
+   "SIRefreshSamplingRate": {
+    "addr": "0x8025D4B4",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 2
+   }
+  },
+  "thp": {
+   "THPSimpleGetCurrentFrame": {
+    "addr": "0x801CBF64",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "MovieStart__FPCcbb",
+     "MovieStop__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "THPSimpleSetVolume": {
+    "addr": "0x801CBF74",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "Update__16MoviePlayerSceneFf"
+    ],
+    "sdk_callers": 0
+   },
+   "THPAudioMixCallback__Fv": {
+    "addr": "0x801CC09C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "THPSimpleGetTotalFrame": {
+    "addr": "0x801CC214",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "MovieStart__FPCcbb",
+     "MovieStop__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "THPSimpleGetVideoInfo": {
+    "addr": "0x801CC238",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "MovieStart__FPCcbb"
+    ],
+    "sdk_callers": 0
+   },
+   "THPSimpleDecode": {
+    "addr": "0x801CC5E8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "MoviePlay__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "THPSimpleLoadStop": {
+    "addr": "0x801CC978",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "MovieStart__FPCcbb",
+     "MovieStop__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "THPSimpleAudioStop": {
+    "addr": "0x801CCAD8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "MovieStart__FPCcbb",
+     "MovieStop__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "THPSimpleAudioStart": {
+    "addr": "0x801CCAEC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "MoviePlay__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "THPSimplePreLoad": {
+    "addr": "0x801CCB00",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "MovieStart__FPCcbb"
+    ],
+    "sdk_callers": 0
+   },
+   "__THPSimpleDVDCallback__FP6nlFilePvUiUl": {
+    "addr": "0x801CCC70",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "THPSimpleSetBuffer": {
+    "addr": "0x801CCDD0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "MovieStart__FPCcbb"
+    ],
+    "sdk_callers": 0
+   },
+   "THPSimpleCalcNeedMemory": {
+    "addr": "0x801CD19C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "MovieStart__FPCcbb"
+    ],
+    "sdk_callers": 0
+   },
+   "THPSimpleClose": {
+    "addr": "0x801CD1FC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "MovieStart__FPCcbb",
+     "MovieStop__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "THPSimpleOpen": {
+    "addr": "0x801CD2C8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "MovieStart__FPCcbb"
+    ],
+    "sdk_callers": 0
+   },
+   "THPSimpleQuit": {
+    "addr": "0x801CD5C8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "MovieStart__FPCcbb",
+     "MovieStop__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "THPSimpleInit": {
+    "addr": "0x801CD62C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "MovieStart__FPCcbb"
+    ],
+    "sdk_callers": 0
+   },
+   "__THPAsyncCancelCB__FP6nlFilePvUiUlPFP6nlFilePvUiUl_v": {
+    "addr": "0x801CD748",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "THPVideoDecode": {
+    "addr": "0x802857AC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPSetupBuffers": {
+    "addr": "0x802859F0",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPReadFrameHeader": {
+    "addr": "0x80285A34",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPReadScaneHeader": {
+    "addr": "0x80285B70",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPReadQuantizationTable": {
+    "addr": "0x80285C8C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPReadHuffmanTableSpecification": {
+    "addr": "0x80286048",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPHuffGenerateSizeTable": {
+    "addr": "0x80286228",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPHuffGenerateCodeTable": {
+    "addr": "0x80286318",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPHuffGenerateDecoderTables": {
+    "addr": "0x80286380",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPRestartDefinition": {
+    "addr": "0x8028653C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPPrepBitStream": {
+    "addr": "0x80286590",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPDecompressYUV": {
+    "addr": "0x802867DC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPDecompressiMCURow512x448": {
+    "addr": "0x802868E8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPDecompressiMCURow640x480": {
+    "addr": "0x80288370",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPDecompressiMCURowNxN": {
+    "addr": "0x80289DFC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPHuffDecodeDCTCompY": {
+    "addr": "0x8028B8A8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "__THPHuffDecodeDCTCompU": {
+    "addr": "0x8028BF24",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "__THPHuffDecodeDCTCompV": {
+    "addr": "0x8028C5CC",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 3
+   },
+   "THPInit": {
+    "addr": "0x8028CC74",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "THPAudioDecode": {
+    "addr": "0x8028CD14",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPAudioGetNewSample": {
+    "addr": "0x8028D178",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__THPAudioInitialize": {
+    "addr": "0x8028D208",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   }
+  },
+  "vi": {
+   "__VIRetraceHandler": {
+    "addr": "0x8025D4D8",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 0
+   },
+   "VISetPreRetraceCallback": {
+    "addr": "0x8025D74C",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glxInitSwap__FPvPv"
+    ],
+    "sdk_callers": 0
+   },
+   "VISetPostRetraceCallback": {
+    "addr": "0x8025D790",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "glxInitSwap__FPvPv"
+    ],
+    "sdk_callers": 0
+   },
+   "__VIInit": {
+    "addr": "0x8025D87C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "VIInit": {
+    "addr": "0x8025DA80",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 1,
+    "game_caller_names": [
+     "nlInitMemory__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "VIWaitForRetrace": {
+    "addr": "0x8025DF30",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 7,
+    "game_caller_names": [
+     "DisplayMessage__FiiPCUciUlb",
+     "Run__9ResetTaskFf",
+     "glplatAbortFrame__Fv",
+     "glplatStartup__FP13gl_ScreenInfo",
+     "glx_SwitchVideoMode__FP16_GXRenderModeObj10eVide",
+     "hitz_Pre__Fb"
+    ],
+    "sdk_callers": 0
+   },
+   "VIConfigure": {
+    "addr": "0x8025E3F8",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 3,
+    "game_caller_names": [
+     "glplatBeginFrame__Fv",
+     "glplatStartup__FP13gl_ScreenInfo",
+     "glx_SwitchVideoMode__FP16_GXRenderModeObj10eVide"
+    ],
+    "sdk_callers": 0
+   },
+   "VIFlush": {
+    "addr": "0x8025EC00",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 9,
+    "game_caller_names": [
+     "DisplayMessage__FiiPCUciUlb",
+     "ErrorHandler__FUsP9OSContextUlUl",
+     "Run__9ResetTaskFf",
+     "glplatBeginFrame__Fv",
+     "glplatStartup__FP13gl_ScreenInfo",
+     "glx_SwitchVideoMode__FP16_GXRenderModeObj10eVide"
+    ],
+    "sdk_callers": 0
+   },
+   "VISetNextFrameBuffer": {
+    "addr": "0x8025ED30",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 6,
+    "game_caller_names": [
+     "DisplayMessage__FiiPCUciUlb",
+     "ErrorHandler__FUsP9OSContextUlUl",
+     "glplatStartup__FP13gl_ScreenInfo",
+     "hitz_AdvanceFrame__Fv",
+     "loading_indicator__Fv",
+     "simple_Post__Fb"
+    ],
+    "sdk_callers": 0
+   },
+   "VISetBlack": {
+    "addr": "0x8025ED9C",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 8,
+    "game_caller_names": [
+     "DisplayMessage__FiiPCUciUlb",
+     "ErrorHandler__FUsP9OSContextUlUl",
+     "Run__9ResetTaskFf",
+     "glxSwapSetBlack__Fb",
+     "glx_SwitchVideoMode__FP16_GXRenderModeObj10eVide",
+     "hitz_AdvanceFrame__Fv"
+    ],
+    "sdk_callers": 0
+   },
+   "VIGetRetraceCount": {
+    "addr": "0x8025EE18",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "hitz_Post__Fb",
+     "hitz_Pre__Fb"
+    ],
+    "sdk_callers": 0
+   },
+   "VIGetCurrentLine": {
+    "addr": "0x8025EE88",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "VIGetTvFormat": {
+    "addr": "0x8025EF20",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "StateTransition__14TransitionTaskFUiUi",
+     "glplatStartup__FP13gl_ScreenInfo"
+    ],
+    "sdk_callers": 2
+   },
+   "VIGetDTVStatus": {
+    "addr": "0x8025EF88",
+    "reachable": true,
+    "addr_taken": false,
+    "game_callers": 2,
+    "game_caller_names": [
+     "StateTransition__14TransitionTaskFUiUi",
+     "glplatStartup__FP13gl_ScreenInfo"
+    ],
+    "sdk_callers": 0
+   },
+   "__VIDisplayPositionToXY": {
+    "addr": "0x8025EFC4",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   },
+   "__VIGetCurrentPosition": {
+    "addr": "0x8025F1E0",
+    "reachable": false,
+    "addr_taken": false,
+    "game_callers": 0,
+    "game_caller_names": [],
+    "sdk_callers": 1
+   }
+  }
+ }
+}
