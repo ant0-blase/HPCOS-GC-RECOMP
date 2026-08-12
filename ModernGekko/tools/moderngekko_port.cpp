@@ -39,7 +39,7 @@ namespace
 constexpr std::string_view MODULE_CACHE_IDENTITY_VERSION =
     "moderngekko-module-v2";
 constexpr std::string_view MODULE_BUILD_TYPE = "Release";
-constexpr std::string_view MODULE_OPT_LEVEL = "2";
+constexpr std::string_view MODULE_OPT_LEVEL = "3";
 
 struct BuildOptions
 {
@@ -152,6 +152,27 @@ std::string RawEnvironment(const char* name)
 {
   const char* value = std::getenv(name);
   return value ? "set:" + std::string(value) : "unset";
+}
+
+// Build-knob helpers. Empty or unset means "keep the default", so an exported
+// but blank variable never silently reconfigures a build.
+std::string EnvOr(const char* name, std::string default_value)
+{
+  const char* value = std::getenv(name);
+  return (value && value[0]) ? std::string(value) : std::move(default_value);
+}
+
+bool EnvFlag(const char* name, bool default_value)
+{
+  const char* value = std::getenv(name);
+  if (!value || !value[0])
+    return default_value;
+  const std::string_view text(value);
+  if (text == "1" || text == "ON" || text == "on" || text == "true")
+    return true;
+  if (text == "0" || text == "OFF" || text == "off" || text == "false")
+    return false;
+  return default_value;
 }
 
 unsigned EffectiveChunkSize(const char* name, unsigned default_value)
@@ -1083,21 +1104,67 @@ std::optional<fs::path> Build(const char* argv0, const fs::path& root,
   identity.Add("python_path", python_path);
   identity.Add("python_binary_sha256", *python_hash);
   identity.Add("python_identity", python_identity);
+  // Module build knobs.
+  //
+  // Every one of these changes emitted code, so every one is folded into the
+  // identity below: distinct settings get distinct port-build/ directories and
+  // coexist instead of overwriting each other, which makes A/B comparisons and
+  // rollbacks free. build.sh drives them from HPCOS_PROFILE.
+  const std::string module_opt_level = EnvOr("HPCOS_MODULE_OPT", std::string(MODULE_OPT_LEVEL));
+  const bool module_mem1_only = EnvFlag("HPCOS_MODULE_MEM1_ONLY", true);
+  const bool module_mem_journal = EnvFlag("HPCOS_MODULE_MEM_JOURNAL", false);
+  const bool module_stack_protector = EnvFlag("HPCOS_MODULE_STACK_PROTECTOR", false);
+  const bool module_fastmem = EnvFlag("HPCOS_MODULE_FASTMEM", false);
+
   identity.Add("module_build_type", std::string(MODULE_BUILD_TYPE));
-  identity.Add("module_opt_level", std::string(MODULE_OPT_LEVEL));
+  identity.Add("module_opt_level", module_opt_level);
+  identity.Add("module_mem1_only", module_mem1_only ? "on" : "off");
+  identity.Add("module_mem_journal", module_mem_journal ? "on" : "off");
+  identity.Add("module_stack_protector", module_stack_protector ? "on" : "off");
+  identity.Add("module_fastmem", module_fastmem ? "on" : "off");
   // Apply ThinLTO explicitly instead of relying on the template's conditional
   // CheckIPOSupported result, so the successful build mode is part of the key.
   const std::string module_cmake_ipo = "OFF";
   const std::string module_effective_ipo = compiler == "clang" ? "thin-explicit" : "off";
   identity.Add("module_ipo_cmake_option", module_cmake_ipo);
   identity.Add("module_ipo_effective", module_effective_ipo);
+  // Target ISA for the generated chunks, which are the bulk of the CPU work in
+  // a static recompilation. Clang's default is the x86-64 baseline (SSE2), so
+  // without this the module ignores everything the host has gained since 2003.
+  // -ffp-contract=off, applied by module-template/CMakeLists.txt, still forbids
+  // FMA contraction, so guest float results do not change with the wider ISA.
+  //
+  // HPCOS_MODULE_MARCH overrides it, and feeds the build identity below, so
+  // several targets coexist under port-build/ instead of overwriting one
+  // another. Useful values:
+  //   x86-64      baseline, runs anywhere x86-64 runs
+  //   x86-64-v2   SSE4.2/POPCNT  (Nehalem / Bulldozer and later)
+  //   x86-64-v3   AVX2/BMI2/FMA  (Haswell / Excavator and later, the default)
+  //   native      this machine only, not redistributable
+  const std::string module_march = EnvOr("HPCOS_MODULE_MARCH", "x86-64-v3");
+  const std::string module_march_flag =
+      module_march == "none" ? std::string() : " -march=" + module_march;
+
+  // Generated chunks are machine-emitted and parse no untrusted input, so the
+  // distro's default -fstack-protector-strong buys nothing here while costing a
+  // canary load, store and compare in every protected chunk function.
+  const std::string module_ssp_flag =
+      module_stack_protector ? std::string() : " -fno-stack-protector";
+
+  const std::string module_extra_flags = module_march_flag + module_ssp_flag;
   const std::string module_release_c_flags = compiler == "cl" ? "/DNDEBUG" :
-      compiler == "clang" ? "-DNDEBUG -flto=thin" : "-DNDEBUG";
+      compiler == "clang" ? "-DNDEBUG -flto=thin" + module_extra_flags :
+      "-DNDEBUG" + module_extra_flags;
   const bool clang_msvc_target =
       compiler == "clang" && compiler_target.find("msvc") != std::string::npos;
+  // ThinLTO runs codegen at link time, so the optimization level and the
+  // target ISA have to be repeated here or the link stage silently falls back
+  // to -O2 on the baseline target.
+  const std::string module_link_opt = "-O" + module_opt_level;
   const std::string module_release_link_flags = compiler == "cl" ? "/INCREMENTAL:NO" :
       clang_msvc_target ? "-O2 -flto=thin -fuse-ld=lld" :
-      compiler == "clang" ? "-O2 -flto=thin" : "-O2";
+      compiler == "clang" ? module_link_opt + " -flto=thin" + module_march_flag :
+      module_link_opt + module_march_flag;
   identity.Add("module_base_c_flags", "");
   identity.Add("module_release_c_flags", module_release_c_flags);
   identity.Add("module_base_shared_linker_flags", "");
@@ -1380,8 +1447,11 @@ std::optional<fs::path> Build(const char* argv0, const fs::path& root,
       " -DCMAKE_C_FLAGS= -DCMAKE_C_FLAGS_RELEASE=" + Quote(module_release_c_flags) +
       " -DCMAKE_SHARED_LINKER_FLAGS= -DCMAKE_SHARED_LINKER_FLAGS_RELEASE=" +
       Quote(module_release_link_flags) +
-      " -DRECOMPCORE_MODULE_OPT_LEVEL=" + std::string(MODULE_OPT_LEVEL) +
+      " -DRECOMPCORE_MODULE_OPT_LEVEL=" + module_opt_level +
       " -DRECOMPCORE_MODULE_ENABLE_IPO=" + module_cmake_ipo +
+      " -DRECOMPCORE_MODULE_GAMECUBE_MEM1_ONLY=" + (module_mem1_only ? "ON" : "OFF") +
+      " -DRECOMPCORE_MODULE_ENABLE_MEM_JOURNAL=" + (module_mem_journal ? "ON" : "OFF") +
+      " -DRECOMPCORE_MODULE_FASTMEM=" + (module_fastmem ? "ON" : "OFF") +
       " -DGAME_ID=" + game.disc_id +
       " -DGENERATED_DIR=" + Quote(generated) +
       " -DGXRUNTIME_DIR=" + Quote(gxruntime) +
@@ -1402,8 +1472,14 @@ std::optional<fs::path> Build(const char* argv0, const fs::path& root,
       CMakeCacheValue(cmake_cache, "CMAKE_SHARED_LINKER_FLAGS") != std::string_view{} ||
       CMakeCacheValue(cmake_cache, "CMAKE_SHARED_LINKER_FLAGS_RELEASE") !=
           module_release_link_flags ||
-      CMakeCacheValue(cmake_cache, "RECOMPCORE_MODULE_OPT_LEVEL") != MODULE_OPT_LEVEL ||
-      CMakeCacheValue(cmake_cache, "RECOMPCORE_MODULE_ENABLE_IPO") != module_cmake_ipo)
+      CMakeCacheValue(cmake_cache, "RECOMPCORE_MODULE_OPT_LEVEL") != module_opt_level ||
+      CMakeCacheValue(cmake_cache, "RECOMPCORE_MODULE_ENABLE_IPO") != module_cmake_ipo ||
+      CMakeCacheValue(cmake_cache, "RECOMPCORE_MODULE_GAMECUBE_MEM1_ONLY") !=
+          (module_mem1_only ? "ON" : "OFF") ||
+      CMakeCacheValue(cmake_cache, "RECOMPCORE_MODULE_ENABLE_MEM_JOURNAL") !=
+          (module_mem_journal ? "ON" : "OFF") ||
+      CMakeCacheValue(cmake_cache, "RECOMPCORE_MODULE_FASTMEM") !=
+          (module_fastmem ? "ON" : "OFF"))
   {
     std::cerr << "module CMake configuration does not match its cache identity\n";
     return std::nullopt;

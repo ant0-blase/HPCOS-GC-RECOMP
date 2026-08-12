@@ -16,6 +16,52 @@ TOOLCHAIN="${TOOLCHAIN:-clang}"
 JOBS="${JOBS:-4}"
 LLVM_DIR="${LLVM_DIR:-/usr/lib/llvm20/lib/cmake/llvm}"
 
+# ---------------------------------------------------------------------------
+# Build profiles
+#
+# One knob that sets runtime and module coherently. Every setting below changes
+# emitted code and is folded into the module build identity, so each profile
+# gets its own port-build/GHSE69/<hash>/ directory: profiles coexist, and
+# switching back is a rebuild away rather than a lost artifact.
+#
+#   native    this machine only (-march=native), runtime LTO. Not portable.
+#   modern    AVX2/BMI2/FMA, Haswell / Excavator and later.        [default]
+#   compat    SSE4.2/POPCNT, Nehalem / Bulldozer and later.
+#   baseline  plain x86-64. Runs on anything 64-bit, including weak CPUs.
+#   lockstep  debug build: RAM write journal compiled in so
+#             STATICRECOMP_LOCKSTEP works, stack protector kept, no LTO.
+#
+# Individual settings still win over the profile, e.g.
+#   HPCOS_PROFILE=baseline HPCOS_RUNTIME_LTO=1 ./build.sh
+#
+# The structural optimizations (MEM1-only address decode, journal removal,
+# gather-pipe shortcut) are ISA-independent and stay on in every profile except
+# lockstep, so a weak CPU keeps them while dropping only the wide ISA.
+# ---------------------------------------------------------------------------
+HPCOS_PROFILE="${HPCOS_PROFILE:-modern}"
+
+case "$HPCOS_PROFILE" in
+  native)   p_march="native"     ; p_lto=1 ; p_journal=0 ; p_ssp=0 ; p_opt=3 ; p_fastmem=1 ;;
+  modern)   p_march="x86-64-v3"  ; p_lto=0 ; p_journal=0 ; p_ssp=0 ; p_opt=3 ; p_fastmem=0 ;;
+  compat)   p_march="x86-64-v2"  ; p_lto=0 ; p_journal=0 ; p_ssp=0 ; p_opt=3 ; p_fastmem=0 ;;
+  baseline) p_march="x86-64"     ; p_lto=0 ; p_journal=0 ; p_ssp=0 ; p_opt=3 ; p_fastmem=0 ;;
+  lockstep) p_march="x86-64-v3"  ; p_lto=0 ; p_journal=1 ; p_ssp=1 ; p_opt=2 ; p_fastmem=0 ;;
+  *) printf 'build.sh: unknown HPCOS_PROFILE %s (native|modern|compat|baseline|lockstep)\n' \
+       "$HPCOS_PROFILE" >&2; exit 1 ;;
+esac
+
+HPCOS_MARCH="${HPCOS_MARCH:-$p_march}"
+HPCOS_RUNTIME_LTO="${HPCOS_RUNTIME_LTO:-$p_lto}"
+HPCOS_MODULE_MEM_JOURNAL="${HPCOS_MODULE_MEM_JOURNAL:-$p_journal}"
+HPCOS_MODULE_STACK_PROTECTOR="${HPCOS_MODULE_STACK_PROTECTOR:-$p_ssp}"
+HPCOS_MODULE_OPT="${HPCOS_MODULE_OPT:-$p_opt}"
+HPCOS_MODULE_MARCH="${HPCOS_MODULE_MARCH:-$HPCOS_MARCH}"
+HPCOS_MODULE_MEM1_ONLY="${HPCOS_MODULE_MEM1_ONLY:-1}"
+HPCOS_MODULE_FASTMEM="${HPCOS_MODULE_FASTMEM:-$p_fastmem}"
+
+export HPCOS_MODULE_MARCH HPCOS_MODULE_OPT HPCOS_MODULE_MEM1_ONLY
+export HPCOS_MODULE_MEM_JOURNAL HPCOS_MODULE_STACK_PROTECTOR HPCOS_MODULE_FASTMEM
+
 die() {
   printf 'build.sh: %s\n' "$*" >&2
   exit 1
@@ -49,8 +95,39 @@ else
   DOLRECOMP_LLVM=OFF
 fi
 
+# Runtime host flags.
+#
+# Upstream Dolphin only sets -march on Apple targets, so on Linux this build was
+# emitting baseline x86-64. -ffp-contract=off is not optional once a wider ISA
+# is selected: clang defaults to contracting a*b+c into an FMA as soon as the
+# hardware allows it, which would silently change emulated float results (audio
+# mixing, projection and matrix math). Off keeps the current semantics exactly.
+if [[ "$HPCOS_MARCH" == "none" ]]; then
+  RUNTIME_ARCH_FLAGS="${RUNTIME_ARCH_FLAGS:--ffp-contract=off}"
+else
+  RUNTIME_ARCH_FLAGS="${RUNTIME_ARCH_FLAGS:--march=$HPCOS_MARCH -ffp-contract=off}"
+fi
+
+# Runtime link-time optimization. Its win is inlining TranslateRelAddress and
+# the MMU accessors into the StaticRecomp hooks, which no source change can
+# reach across translation units. Off outside the native profile because it
+# roughly doubles the runtime build time.
+if [[ "$HPCOS_RUNTIME_LTO" == "1" ]]; then
+  RUNTIME_ENABLE_LTO=ON
+else
+  RUNTIME_ENABLE_LTO=OFF
+fi
+
+printf 'build.sh: profile=%s march=%s runtime-lto=%s module(-O%s mem1=%s journal=%s ssp=%s fastmem=%s)\n' \
+  "$HPCOS_PROFILE" "$HPCOS_MARCH" "$RUNTIME_ENABLE_LTO" "$HPCOS_MODULE_OPT" \
+  "$HPCOS_MODULE_MEM1_ONLY" "$HPCOS_MODULE_MEM_JOURNAL" "$HPCOS_MODULE_STACK_PROTECTOR" \
+  "$HPCOS_MODULE_FASTMEM"
+
 cmake -S "$SOURCE" -B "$BUILD" -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_FLAGS="$RUNTIME_ARCH_FLAGS" \
+  -DCMAKE_CXX_FLAGS="$RUNTIME_ARCH_FLAGS" \
+  -DENABLE_LTO="$RUNTIME_ENABLE_LTO" \
   -DBUILD_TESTING=OFF \
   -DMODERNGEKKO_ENABLE_DOLPHIN_RUNTIME=ON \
   -DMODERNGEKKO_ENABLE_DOLPHIN_TESTS=OFF \

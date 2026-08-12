@@ -120,6 +120,38 @@ if(UNIX AND NOT APPLE)
     "${CMAKE_CURRENT_SOURCE_DIR}/module.exports")
 endif()
 
+option(RECOMPCORE_MODULE_GAMECUBE_MEM1_ONLY
+       "Assume GameCube retail memory (24 MiB MEM1, no EXRAM) in the guest address decoder" ON)
+if(RECOMPCORE_MODULE_GAMECUBE_MEM1_ONLY)
+  # Collapses get_ram_ptr() to one unsigned compare against a compile-time
+  # constant: the generic path also tests cpu->exram and loads cpu->ram_size
+  # from memory on every guest load and store. Valid because Dolphin allocates
+  # EXRAM as PhysicalMemoryRegion::WII_ONLY (NULL on GameCube) and reports
+  # MEM1_SIZE_RETAIL = 0x01800000, which is exactly GC_MAIN_RAM_SIZE, unless
+  # MAIN_RAM_OVERRIDE_ENABLE is set (off by default, never set by HPCOS).
+  # StaticRecompCore_Run.cpp asserts both at attach time. Turn OFF for Wii
+  # targets or when overriding MEM1 size.
+  target_compile_definitions(${MODULE_NAME} PRIVATE GXRUNTIME_GAMECUBE_MEM1_ONLY)
+endif()
+
+option(RECOMPCORE_MODULE_FASTMEM
+       "Index the chassis fastmem arena directly instead of range-checking guest accesses" OFF)
+if(RECOMPCORE_MODULE_FASTMEM)
+  # Turns a guest access into one indexed instruction against a base the chunk
+  # keeps in a register, the shape a JIT emits. Requires a chassis with a
+  # fastmem arena and the __fastmem_ex recovery handler (module ABI v5); the
+  # chassis refuses the module when either is missing.
+  target_compile_definitions(${MODULE_NAME} PRIVATE GXRUNTIME_FASTMEM)
+endif()
+
+option(RECOMPCORE_MODULE_ENABLE_MEM_JOURNAL
+       "Compile in the lockstep RAM write journal (costs a test on every guest store)" OFF)
+if(RECOMPCORE_MODULE_ENABLE_MEM_JOURNAL)
+  # Required for STATICRECOMP_LOCKSTEP: without it the module stops exporting
+  # ppc_set_mem_write_journal and the chassis disables lockstep at attach time.
+  target_compile_definitions(${MODULE_NAME} PRIVATE GXRUNTIME_ENABLE_MEM_JOURNAL)
+endif()
+
 option(RECOMPCORE_MODULE_ENABLE_IPO "Enable Clang module interprocedural optimization when supported" ON)
 set(RECOMPCORE_MODULE_OPT_LEVEL "2" CACHE STRING
     "Optimization level for generated module translation units (0, 1, 2, or 3)")

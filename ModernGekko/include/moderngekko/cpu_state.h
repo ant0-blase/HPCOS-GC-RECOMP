@@ -8,7 +8,8 @@
 extern "C" {
 #endif
 
-#define MODERNGEKKO_CPU_ABI_VERSION 4u
+/* 5: added CPUState::fastmem_base. */
+#define MODERNGEKKO_CPU_ABI_VERSION 5u
 #define GXRUNTIME_CPU_ABI_VERSION MODERNGEKKO_CPU_ABI_VERSION
 #define DOLRECOMP_CPU_ABI_VERSION MODERNGEKKO_CPU_ABI_VERSION
 
@@ -80,6 +81,21 @@ struct CPUState
     PPCSPRRead spr_read;
     PPCSPRWrite spr_write;
     PPCCacheControl cache_control;
+    /*
+     * Host views of the guest address space, or NULL when the chassis has no
+     * fastmem arena. host = view + u32(guest_address), so a guest access is one
+     * indexed instruction and unmapped guest pages fault instead of being
+     * range-checked.
+     *
+     * Two views because the hardware has two: MSR.DR picks address translation
+     * on or off, exactly as Dolphin's JIT does with
+     * RMEM = msr.DR ? logical : physical. The pointers themselves stay valid
+     * for the life of the arena -- a BAT update remaps pages inside the logical
+     * view without moving its base. Only modules built with GXRUNTIME_FASTMEM
+     * read them.
+     */
+    uint8_t* fastmem_physical;
+    uint8_t* fastmem_logical;
 };
 
 #ifdef __cplusplus

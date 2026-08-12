@@ -147,6 +147,10 @@ private:
 
   std::unique_ptr<StaticRecompLockstep::StaticRecompLockstepVerifier> m_lockstep_verifier;
 
+  // Both fastmem views were non-null at attach time, so a module compiled with
+  // GXRUNTIME_FASTMEM can index them.
+  bool m_fastmem_available = false;
+
   EmptyBlockCache m_block_cache{*this};
 
   CPUState m_guest{};

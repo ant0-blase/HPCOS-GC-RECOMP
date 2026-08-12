@@ -19,15 +19,22 @@
  * dolphin-chassis differential ("lockstep") harness installs it to snapshot
  * pre-images, so it can restore a pre-block memory view before re-running a
  * block on Dolphin's interpreter (correct read-modify-write comparison).
- * NULL and zero-cost unless installed; the chassis resolves the setter by name
- * via dlsym, so its absence simply disables lockstep. `offset` is the RAM byte
- * offset (into cpu->ram) about to be written, `size` the width in bytes. */
+ * The chassis resolves the setter by name via dlsym, so its absence simply
+ * disables lockstep. `offset` is the RAM byte offset (into cpu->ram) about to
+ * be written, `size` the width in bytes.
+ *
+ * Not "zero-cost unless installed": the test runs on every committed guest
+ * store, and visibility("default") here stops the compiler proving the pointer
+ * stays NULL. Built out by default; see GXRUNTIME_ENABLE_MEM_JOURNAL in
+ * include/core/cpu.h. */
+#if defined(GXRUNTIME_ENABLE_MEM_JOURNAL)
 PPCMemWriteJournal g_mem_write_journal = NULL;
 void* g_mem_write_journal_user = NULL;
 __attribute__((visibility("default"))) void ppc_set_mem_write_journal(PPCMemWriteJournal fn, void* user) {
     g_mem_write_journal = fn;
     g_mem_write_journal_user = user;
 }
+#endif
 
 bool cpu_init(CPUState* cpu) {
     memset(cpu, 0, sizeof(*cpu));

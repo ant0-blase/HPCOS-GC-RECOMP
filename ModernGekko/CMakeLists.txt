@@ -599,10 +599,25 @@ if(MODERNGEKKO_ENABLE_DOLPHIN_RUNTIME)
             MODERNGEKKO_DOLRECOMP_LLVM=1)
     endif()
     add_dependencies(moderngekko-port dolrecomp moderngekko-run)
-    add_custom_command(TARGET moderngekko-port POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "$<TARGET_FILE:dolrecomp>"
-                "$<TARGET_FILE_DIR:moderngekko-port>")
+
+    # moderngekko-port runs the dolrecomp sitting next to it (SiblingExecutable),
+    # and hashes that same file into the build identity that decides whether the
+    # cached port-build output can be reused.
+    #
+    # Hanging the copy off moderngekko-port's POST_BUILD made it fire only when
+    # that target relinked. A DolRecomp-only change -- any emitter or CFG edit --
+    # rebuilt vendor/dolphin/DolRecomp/dolrecomp while leaving the sibling copy
+    # stale, so the port tool kept running the old recompiler AND kept computing
+    # the old identity, silently reusing the cached chunks. The edit looked
+    # applied, the build succeeded, and the published module was unchanged.
+    #
+    # Driving the copy from a custom command that depends on the dolrecomp
+    # binary itself makes it track the real producer.
+    # Link dolrecomp straight into moderngekko-port's directory instead of
+    # building it under vendor/ and copying it afterwards. There is then a
+    # single dolrecomp binary and no way for the two to drift apart.
+    set_target_properties(dolrecomp PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 endif()
 
 if(WIN32)

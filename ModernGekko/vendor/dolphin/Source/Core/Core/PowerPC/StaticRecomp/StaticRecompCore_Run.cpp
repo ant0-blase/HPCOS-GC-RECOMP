@@ -100,8 +100,52 @@ void StaticRecompCore::Run()
   m_guest.exram_size = memory.GetExRamSizeReal();
   InitLookupTable(m_guest.ram_size, m_guest.exram_size);
 
+  // Fastmem views. Both stay NULL when the arena failed to reserve, which a
+  // module built with GXRUNTIME_FASTMEM must treat as "unavailable" -- these
+  // are the same 4 GiB windows Dolphin's own JIT indexes, so a module and the
+  // JIT can share them. Only the bases are cached: BAT updates remap pages
+  // inside the logical window without moving it.
+  // The fallback Jit64 built in the constructor calls InitFastmemArena during
+  // its own Init, so the arena normally exists by the time we attach. It can
+  // still be absent (MAIN_FASTMEM_ARENA off, or the 16 GiB reservation failed),
+  // and a module built with GXRUNTIME_FASTMEM would then dereference NULL on
+  // its first guest access, so say so rather than fault.
+  m_guest.fastmem_physical = memory.GetPhysicalBase();
+  m_guest.fastmem_logical = memory.GetLogicalBase();
+  m_fastmem_available = m_guest.fastmem_physical != nullptr &&
+                        m_guest.fastmem_logical != nullptr;
+  if (!m_fastmem_available)
+  {
+    WARN_LOG_FMT(POWERPC, "StaticRecomp: no fastmem arena (physical {}, logical {}); "
+                          "a module built with GXRUNTIME_FASTMEM cannot run.",
+                 fmt::ptr(m_guest.fastmem_physical), fmt::ptr(m_guest.fastmem_logical));
+  }
+
   const std::string initial_game_id = SConfig::GetInstance().GetGameID();
   m_module_active = m_module && (initial_game_id.empty() || initial_game_id == m_module->game_id);
+
+  // Modules built with GXRUNTIME_GAMECUBE_MEM1_ONLY decode guest addresses
+  // against a hard-coded 24 MiB MEM1 and ignore EXRAM entirely. That is the
+  // GameCube retail layout, but MAIN_RAM_OVERRIDE_ENABLE or a Wii title would
+  // break it into out-of-bounds host accesses, so say so loudly rather than
+  // corrupt memory quietly. The module cannot be interrogated for its build
+  // flags, so this reports the layout and leaves the decision visible.
+  if (m_module_active &&
+      (m_guest.ram == nullptr || m_guest.exram != nullptr || m_guest.ram_size != 0x01800000u))
+  {
+    ERROR_LOG_FMT(POWERPC,
+                  "StaticRecomp: guest memory is not the GameCube retail layout "
+                  "(RAM {}, MEM1 {} bytes, EXRAM {}). A module built with "
+                  "GXRUNTIME_GAMECUBE_MEM1_ONLY will mis-decode addresses; "
+                  "rebuild it with -DRECOMPCORE_MODULE_GAMECUBE_MEM1_ONLY=OFF.",
+                  m_guest.ram ? "mapped" : "NULL", m_guest.ram_size,
+                  m_guest.exram ? "present" : "absent");
+    // The module's address decoder asserts a non-null RAM base, so running on
+    // this layout would fault on the first guest access instead of taking the
+    // external path. Refuse the module rather than hand it a broken mapping.
+    if (m_guest.ram == nullptr)
+      m_module_active = false;
+  }
 
 
   if (!m_module_active && m_fallback_jit && !m_guest.host_call)

@@ -9,7 +9,8 @@
 extern "C" {
 #endif
 
-#define MODERNGEKKO_MODULE_ABI_VERSION 4u
+/* 5: wants_fastmem + __fastmem_ex bounds. */
+#define MODERNGEKKO_MODULE_ABI_VERSION 5u
 #define MODERNGEKKO_GET_MODULE_SYMBOL "staticrecomp_get_module"
 
 #if defined(_WIN32)
@@ -86,6 +87,24 @@ typedef struct ModernGekkoModuleDesc
         uint64_t timebase_origin,
         uint64_t timebase_cycles_before,
         uint32_t timebase_ratio);
+
+    /*
+     * ABI v5: fastmem.
+     *
+     * Non-zero when the module indexes the chassis fastmem arena directly
+     * rather than range-checking every guest access. Such a module dereferences
+     * CPUState::fastmem_physical / fastmem_logical on its first access, so the
+     * chassis must refuse it when no arena exists.
+     *
+     * The pair below bounds the module's __fastmem_ex section, empty when
+     * wants_fastmem is 0. Each 8-byte entry is two self-relative 32-bit
+     * offsets: at entry address E, E + entry[0] is an instruction that may
+     * fault on a guest access, and E + 4 + entry[1] is where execution resumes
+     * to take the slow path. Recovery is a lookup, never instruction decoding.
+     */
+    uint32_t wants_fastmem;
+    const void* fastmem_ex_start;
+    const void* fastmem_ex_end;
 } ModernGekkoModuleDesc;
 
 typedef const ModernGekkoModuleDesc* (*ModernGekkoGetModuleFn)(void);
