@@ -1,6 +1,8 @@
 // RecompCore: StaticRecomp CPU core - Main execution loop.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <cmath>
+#include "VideoCommon/Present.h"
 #include "Core/PowerPC/StaticRecomp/StaticRecompCore.h"
 #include "Core/System.h"
 #include "Core/PowerPC/PowerPC.h"
@@ -14,11 +16,73 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 namespace
 {
 constexpr u32 SYNC_EXCEPTION_MASK = ~static_cast<u32>(
     EXCEPTION_EXTERNAL_INT | EXCEPTION_DECREMENTER | EXCEPTION_PERFORMANCE_MONITOR);
+
+
+
+
+
+
+}
+
+
+// HPCOS guest FOV helpers.
+//
+// GHSE69 MEM1 is big-endian. These helpers access a float directly by
+// its original GameCube virtual address.
+static bool HpcosReadGuestFloatBE(const u8* ram, std::size_t ram_size,
+                                  u32 address, float* out)
+{
+  constexpr u32 MEM1_BASE = 0x80000000u;
+
+  if (!ram || !out || address < MEM1_BASE)
+    return false;
+
+  const std::size_t off =
+      static_cast<std::size_t>(address - MEM1_BASE);
+
+  if (off + 4 > ram_size)
+    return false;
+
+  const u32 bits =
+      (static_cast<u32>(ram[off + 0]) << 24) |
+      (static_cast<u32>(ram[off + 1]) << 16) |
+      (static_cast<u32>(ram[off + 2]) << 8) |
+      (static_cast<u32>(ram[off + 3]));
+
+  std::memcpy(out, &bits, sizeof(bits));
+  return true;
+}
+
+static bool HpcosWriteGuestFovFloatBE(u8* ram, std::size_t ram_size,
+                                      u32 address, float value)
+{
+  constexpr u32 MEM1_BASE = 0x80000000u;
+
+  if (!ram || address < MEM1_BASE)
+    return false;
+
+  const std::size_t off =
+      static_cast<std::size_t>(address - MEM1_BASE);
+
+  if (off + 4 > ram_size)
+    return false;
+
+  u32 bits;
+  std::memcpy(&bits, &value, sizeof(bits));
+
+  ram[off + 0] = static_cast<u8>(bits >> 24);
+  ram[off + 1] = static_cast<u8>(bits >> 16);
+  ram[off + 2] = static_cast<u8>(bits >> 8);
+  ram[off + 3] = static_cast<u8>(bits);
+
+  return true;
 }
 
 void StaticRecompCore::Run()
@@ -39,6 +103,7 @@ void StaticRecompCore::Run()
   const std::string initial_game_id = SConfig::GetInstance().GetGameID();
   m_module_active = m_module && (initial_game_id.empty() || initial_game_id == m_module->game_id);
 
+
   if (!m_module_active && m_fallback_jit && !m_guest.host_call)
   {
     m_fallback_jit->Run();
@@ -50,6 +115,109 @@ void StaticRecompCore::Run()
     core_timing.Advance();
     const std::string current_game_id = SConfig::GetInstance().GetGameID();
     m_module_active = m_module && (current_game_id.empty() || current_game_id == m_module->game_id);
+
+
+
+
+    // HPCOS guest-side FOV/frustum synchronization.
+    //
+    // HPCOS_FOV is a requested HORIZONTAL FOV.
+    // GHSE69's global at 0x8049EC88 is its game-side FOV used by
+    // camera/frustum construction, while 0x8049EC8C is its aspect.
+    //
+    // Convert requested hFOV -> the vertical FOV appropriate for
+    // whatever aspect the guest is currently using. This widens the
+    // actual game visibility frustum without changing the public
+    // meaning of --fov.
+    static const float hpcos_requested_hfov = [] {
+      const char* env = std::getenv("HPCOS_FOV");
+
+      if (!env || !*env)
+        return 0.0f;
+
+      char* end = nullptr;
+      const float value = std::strtof(env, &end);
+
+      if (end == env || *end != '\0' ||
+          value < 30.0f || value > 150.0f)
+      {
+        return 0.0f;
+      }
+
+      return value;
+    }();
+
+    if (hpcos_requested_hfov > 0.0f)
+    {
+      constexpr u32 FOV_ADDRESS = 0x8049EC88u;
+      constexpr u32 ASPECT_ADDRESS = 0x8049EC8Cu;
+      constexpr float pi = 3.14159265358979323846f;
+
+      float guest_aspect = 4.0f / 3.0f;
+      float memory_aspect = 0.0f;
+
+      if (HpcosReadGuestFloatBE(
+              m_guest.ram,
+              m_guest.ram_size,
+              ASPECT_ADDRESS,
+              &memory_aspect) &&
+          std::isfinite(memory_aspect) &&
+          memory_aspect >= 1.0f &&
+          memory_aspect <= 5.0f)
+      {
+        guest_aspect = memory_aspect;
+      }
+
+      // Recalculate trig only if the guest aspect actually changes.
+      static float hpcos_cached_aspect = -1.0f;
+      static float hpcos_guest_vfov = 0.0f;
+
+      if (std::fabs(guest_aspect - hpcos_cached_aspect) > 0.00001f)
+      {
+        const float half_h =
+            hpcos_requested_hfov * pi / 360.0f;
+
+        hpcos_guest_vfov =
+            2.0f *
+            std::atan(std::tan(half_h) / guest_aspect) *
+            180.0f / pi;
+
+        hpcos_cached_aspect = guest_aspect;
+
+        // Diagnostic ONCE per aspect change, not every CPU quantum.
+        std::fprintf(
+            stderr,
+            "[HPCOS-GUEST-FOV] "
+            "requested-h=%.3f guest-aspect=%.6f guest-v=%.3f\n",
+            hpcos_requested_hfov,
+            guest_aspect,
+            hpcos_guest_vfov);
+      }
+
+      // The game can restore its own 55° value.
+      // Only touch RAM when it actually differs from our target.
+      float current_guest_fov = 0.0f;
+
+      const bool have_current =
+          HpcosReadGuestFloatBE(
+              m_guest.ram,
+              m_guest.ram_size,
+              FOV_ADDRESS,
+              &current_guest_fov);
+
+      if (std::isfinite(hpcos_guest_vfov) &&
+          hpcos_guest_vfov > 1.0f &&
+          hpcos_guest_vfov < 179.0f &&
+          (!have_current ||
+           std::fabs(current_guest_fov - hpcos_guest_vfov) > 0.001f))
+      {
+        HpcosWriteGuestFovFloatBE(
+            m_guest.ram,
+            m_guest.ram_size,
+            FOV_ADDRESS,
+            hpcos_guest_vfov);
+      }
+    }
 
     do
     {

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <atomic>
 #include "Common/Flag.h"
 #include "Common/MathUtil.h"
 
@@ -51,6 +52,10 @@ public:
   // Window resolution (display resolution if fullscreen)
   int GetBackbufferWidth() const { return m_backbuffer_width; }
   int GetBackbufferHeight() const { return m_backbuffer_height; }
+  float GetHpcosHostAspect() const
+  {
+    return m_hpcos_host_aspect.load(std::memory_order_relaxed);
+  }
   float GetBackbufferScale() const { return m_backbuffer_scale; }
   u32 AutoIntegralScale() const;
   AbstractTextureFormat GetBackbufferFormat() const { return m_backbuffer_format; }
@@ -137,6 +142,7 @@ private:
   // Backbuffer (window) size and render area
   int m_backbuffer_width = 0;
   int m_backbuffer_height = 0;
+  std::atomic<float> m_hpcos_host_aspect{4.0f / 3.0f};
   float m_backbuffer_scale = 1.0f;
   AbstractTextureFormat m_backbuffer_format = AbstractTextureFormat::Undefined;
 

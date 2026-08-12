@@ -20,14 +20,101 @@
 **Harry Potter and the Chamber of Secrets** (`GHSE69`).
 
 The project uses the ExpansionPak GameCube/Wii recompilation stack, with
-**DolRecomp** for static PowerPC recompilation and **ModernGekko** for the runtime.
-The repository is intended to contain the actual HPCOS project state needed for
-building and running the port — not only screenshots or documentation.
+**DolRecomp** for ahead-of-time PowerPC recompilation and **ModernGekko** for the
+native runtime.
+
+The goal is to run the original GameCube executable as statically recompiled native
+code while preserving the behaviour of the original game and progressively adding
+PC-oriented improvements in the runtime.
 
 ## Current status
 
-HPCOS is actively under development. The current project reaches the title/menu
-flow, loading and in-game scenes shown below.
+The game currently reaches and runs:
+
+- title and menu flow
+- loading screens
+- in-game scenes and normal gameplay
+- audio
+- controller input
+- save/runtime state
+- Vulkan rendering through ModernGekko/Dolphin
+
+The current native build targets the original NTSC game timing.
+
+## PC enhancements
+
+### Dynamic widescreen
+
+HPCOS includes a runtime widescreen implementation rather than relying on a fixed
+16:9 game patch.
+
+The projection is adjusted dynamically from the actual host aspect ratio, allowing
+the 3D view to adapt to displays such as:
+
+- 16:9
+- 16:10
+- ultrawide aspect ratios
+- other window aspect ratios
+
+For wider displays the 3D projection uses a Hor+ style adjustment instead of simply
+stretching the original 4:3 image.
+
+Enable it with:
+
+```bash
+./run.sh --widescreen
+```
+
+### Configurable FOV
+
+A horizontal FOV can be selected at launch:
+
+```bash
+./run.sh --widescreen --fov 110
+```
+
+`--fov` represents the requested **horizontal** field of view.
+
+The renderer adjusts the host-side projection while the runtime also synchronizes
+the corresponding game-side camera/frustum FOV used by `GHSE69`.
+
+This is important because changing only the projection matrix causes objects near the
+expanded edges of the screen to be incorrectly culled by the original game.
+
+The game-side FOV synchronization greatly reduces this widescreen/FOV pop-in while
+leaving the original game logic intact.
+
+### XFB / presentation correction
+
+The presentation path includes an XFB crop used to remove the original overscan-style
+bordering and make better use of the host window while preserving the dynamically
+corrected aspect ratio.
+
+### HUD behaviour
+
+The 3D projection and orthographic paths are handled separately so increasing the
+world aspect ratio does not simply stretch the HUD together with the scene.
+
+## Static recompilation and runtime work
+
+HPCOS is not just a wrapper around an emulator.
+
+The original GameCube PowerPC code is processed by DolRecomp and translated ahead of
+time into native code that executes through the ModernGekko runtime.
+
+Project-specific work currently includes:
+
+- PowerPC static recompilation fixes and runtime integration
+- optimized generated-code dispatch paths
+- SMC / recompilation runtime optimizations
+- optimized PowerPC emitter paths
+- direct handling of common guest execution cases
+- GameCube memory/MMIO/runtime integration
+- guest-side camera/FOV synchronization
+- host-side projection and presentation changes
+
+The focus is to keep the recompiled execution path as native and lightweight as
+possible while retaining compatibility with the original GameCube software.
 
 ## Screenshots
 
@@ -48,15 +135,15 @@ flow, loading and in-game scenes shown below.
 
 ## Build layout
 
-The checked-in project deliberately keeps the files that are required to reproduce
-or run the current port:
+The checked-in project deliberately keeps the files required to reproduce or run the
+current port:
 
 ```text
 .
 ├── build.sh                  # configures/builds ModernGekko + DolRecomp + the GHSE69 module
 ├── run.sh                    # launches the published runtime/module
 ├── ModernGekko/              # source tree consumed by build.sh
-├── DolRecomp/                # recompilation dependency/source when present locally
+├── DolRecomp/                # recompilation source/tooling
 ├── recomp/                   # HPCOS recompilation source/output
 ├── runtime/                  # published moderngekko-run + Sys runtime data
 ├── module/                   # published gGHSE69_recomp.so + build info
@@ -69,7 +156,7 @@ or run the current port:
 
 `build.sh` validates the `GHSE69` `main.dol`, configures ModernGekko with CMake/Ninja,
 builds `moderngekko-run`, `moderngekko-port` and `dolrecomp`, builds the recompilation
-module, then atomically publishes the runnable outputs into `runtime/` and `module/`.
+module, then publishes the runnable outputs into `runtime/` and `module/`.
 
 `run.sh` launches:
 
@@ -81,8 +168,10 @@ module, then atomically publishes the runnable outputs into `runtime/` and `modu
 ## Building
 
 Requirements include CMake, Ninja, a supported C/C++ toolchain and the dependencies
-required by ModernGekko/DolRecomp. The current build script supports the `c` and
-`llvm` recompilation backends and `clang`, `gcc` or automatic toolchain selection.
+required by ModernGekko/DolRecomp.
+
+The current build script supports the `c` and `llvm` recompilation backends and
+`clang`, `gcc` or automatic toolchain selection.
 
 ```bash
 ./build.sh
@@ -101,27 +190,48 @@ The build expects your legally obtained game extraction at:
 extracted/sys/main.dol
 ```
 
-The expected target is `GHSE69`; `build.sh` verifies the DOL SHA-256 before building.
+The expected target is `GHSE69`; `build.sh` verifies the DOL before building.
 
 ## Running
 
-After a successful build:
+Basic launch:
 
 ```bash
 ./run.sh
 ```
 
+Dynamic widescreen:
+
+```bash
+./run.sh --widescreen
+```
+
+Dynamic widescreen with a custom horizontal FOV:
+
+```bash
+./run.sh --widescreen --fov 110
+```
+
 The current launcher uses Vulkan and Wayland.
+
+## Experimental project
+
+HPCOS GC is still under active development.
+
+Rendering, recompilation accuracy, performance and game compatibility may change as
+the static recompilation runtime continues to be investigated and optimized.
+
+The project does **not** currently provide an unlocked-framerate implementation; the
+original NTSC game timing is intentionally preserved.
 
 ## What is intentionally ignored
 
-The `.gitignore` is intentionally conservative. It ignores only things that should
-not be part of the repository: reproducible build directories, caches, release
-staging, user-specific Dolphin/ModernGekko state, logs/backups, and original game
-files supplied by the user.
+The `.gitignore` is intentionally conservative. It ignores things that should not be
+part of the repository, including reproducible build directories, caches, release
+staging, user-specific Dolphin/ModernGekko state, logs and original game files
+supplied by the user.
 
-Notably, **`runtime/`, `module/`, `recomp/`, `ModernGekko/`, `DolRecomp/`, `build.sh`
-and `run.sh` are not ignored.**
+Original game data must never be committed.
 
 ## Credits and acknowledgements
 
@@ -130,9 +240,9 @@ communities.
 
 ### ExpansionPak
 
-- **DolRecomp** — static PowerPC recompiler used by GameCube/Wii recompilation projects.
+- **DolRecomp** — static PowerPC recompiler used by GameCube/Wii recompilation projects  
   https://github.com/ExpansionPak/DolRecomp
-- **ModernGekko** — runtime and tooling used to execute recompiled GameCube/Wii code.
+- **ModernGekko** — runtime and tooling used to execute recompiled GameCube/Wii code  
   https://github.com/ExpansionPak/ModernGekko
 
 ### Upstream acknowledgements
@@ -151,11 +261,12 @@ complete and authoritative attribution.
 This is an unofficial research/fan project and is not affiliated with or endorsed by
 Electronic Arts, Warner Bros., Nintendo, ExpansionPak, or the original developers.
 
-No original disc image or extracted copyrighted game assets should be committed to
-this repository. Users must provide their own legally obtained game data.
+No original disc image or extracted copyrighted game assets are distributed by this
+repository. Users must provide their own legally obtained game data.
 
 ## License
 
-See [`LICENSE`](LICENSE) for HPCOS-specific repository content. Third-party components,
-including DolRecomp, ModernGekko and their dependencies, remain subject to their own
-licenses.
+See [`LICENSE`](LICENSE) for HPCOS-specific repository content.
+
+Third-party components, including DolRecomp, ModernGekko and their dependencies,
+remain subject to their respective licenses.

@@ -319,10 +319,98 @@ int StaticRecompCore::ChunkIndexOf(u32 address)
 
 bool StaticRecompCore::FastDispatchableAt(u32 address)
 {
-  if (IsForcedFallbackAddress(address))
+  if (!m_module_active || !m_module)
     return false;
+
+  /*
+   * Forced-fallback ranges are normally empty for the hot DOL gameplay path.
+   * Avoid the function call / range walk entirely in that common case.
+   */
+  if (!m_forced_fallback_ranges.empty() &&
+      IsForcedFallbackAddress(address))
+  {
+    return false;
+  }
+
+  /*
+   * HPCOS dispatch-locality fast path.
+   *
+   * Most native control flow remains inside the same DolRecomp chunk for many
+   * consecutive dispatches. Check the most recently used chunk before doing
+   * any address-to-chunk calculation.
+   */
+  if (m_active_rel_sections.empty())
+  {
+    const u32 num_chunks = m_module->num_chunk_ranges;
+    const auto* ranges = m_module->chunk_ranges;
+
+    const u32 cached = m_last_chunk_index;
+
+    if (cached < num_chunks)
+    {
+      const auto& chunk = ranges[cached];
+
+      if (address >= chunk.start &&
+          address < chunk.end &&
+          m_chunk_rel_sections[cached] < 0)
+      {
+        return m_chunk_state[cached] == CHUNK_VERIFIED;
+      }
+    }
+
+    /*
+     * GHSE69 / regular DOL fast path.
+     *
+     * text1 is emitted as regular 0x4000-byte chunks:
+     *
+     *   4096 PPC instructions * 4 = 0x4000
+     */
+    if (num_chunks >= 3)
+    {
+      const u32 text1_base = ranges[1].start;
+
+      if (ranges[2].start - text1_base == 0x4000u &&
+          address >= text1_base)
+      {
+        const u32 candidate =
+            1u + ((address - text1_base) >> 14);
+
+        if (candidate < num_chunks)
+        {
+          const auto& chunk = ranges[candidate];
+
+          if (address >= chunk.start &&
+              address < chunk.end &&
+              m_chunk_rel_sections[candidate] < 0)
+          {
+            m_last_chunk_index = candidate;
+            return m_chunk_state[candidate] == CHUNK_VERIFIED;
+          }
+        }
+      }
+      else
+      {
+        const auto& chunk0 = ranges[0];
+
+        if (address >= chunk0.start &&
+            address < chunk0.end &&
+            m_chunk_rel_sections[0] < 0)
+        {
+          m_last_chunk_index = 0;
+          return m_chunk_state[0] == CHUNK_VERIFIED;
+        }
+      }
+    }
+  }
+
+  // REL / irregular-layout fallback.
   const int index = ChunkIndexOf(address);
-  return index >= 0 && m_chunk_state[index] == CHUNK_VERIFIED;
+
+  if (index < 0)
+    return false;
+
+  m_last_chunk_index = static_cast<u32>(index);
+  return m_chunk_state[index] == CHUNK_VERIFIED;
 }
 
 bool StaticRecompCore::DispatchableAt(u32 address)
