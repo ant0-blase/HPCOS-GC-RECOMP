@@ -45,3 +45,9 @@ Thumbs.db
 
 # This helper itself
 /vendor_upstreams_and_push.py
+
+# Generated build artifacts
+/module/build-info.txt
+/module/gGHSE69_recomp.so
+/runtime/build-info.txt
+/runtime/moderngekko-run
