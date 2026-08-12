@@ -207,6 +207,12 @@ static u32 chassis_dispatch_burst(
     return blocks;
 }
 
+/* The linker defines these for any section whose name is a C identifier. */
+#if defined(GXRUNTIME_FASTMEM)
+extern const char __start___fastmem_ex[];
+extern const char __stop___fastmem_ex[];
+#endif
+
 static const StaticRecompModuleDesc s_desc = {
     STATICRECOMP_ABI_VERSION,
     GXRUNTIME_CPU_ABI_VERSION,
@@ -225,6 +231,15 @@ static const StaticRecompModuleDesc s_desc = {
     0,
     0,
     chassis_dispatch_burst,
+#if defined(GXRUNTIME_FASTMEM)
+    1u,
+    (const void*)__start___fastmem_ex,
+    (const void*)__stop___fastmem_ex,
+#else
+    0u,
+    (const void*)0,
+    (const void*)0,
+#endif
 };
 
 #if defined(_WIN32)

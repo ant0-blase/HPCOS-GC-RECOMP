@@ -71,16 +71,20 @@ u64 StaticRecompCore::HookExternalRead(CPUState* cpu, u32 ea, u8 size)
 void StaticRecompCore::HookExternalWrite(CPUState* cpu, u32 ea, u64 value, u8 size)
 {
   auto* core = static_cast<StaticRecompCore*>(cpu->external_user_data);
-  ea = core->TranslateRelAddress(ea);
-  if (ea == 0)
-    std::fprintf(stderr, "[zero-access] write size=%u guest_pc=%08x ppc_pc=%08x lr=%08x\n", size,
-                 cpu->pc, core->m_system.GetPPCState().pc, cpu->lr);
 
   // Gather-pipe fast path: stores to the write-gather pipe page at effective
   // 0xCC008000 go straight to GPFifo, mirroring the MMU's masked-write
   // special case without an MMU round trip. Keying on the effective page is
   // the same shortcut Dolphin's JITs take (optimizeGatherPipe). GPFifo
   // maintains ppc_state.gather_pipe_ptr internally.
+  //
+  // Tested before TranslateRelAddress: RefreshRelSections discovers REL
+  // ranges from section tables living in guest RAM, so a relocated range
+  // never covers the 0xCC008000 hardware page and translation is the
+  // identity here. Every GX command word the game emits reaches this hook,
+  // making it the hottest MMIO path in the runtime; the runtime is built
+  // without LTO, so TranslateRelAddress is an out-of-line call into
+  // StaticRecompCore_SMC.cpp that this ordering skips entirely.
   if ((ea & 0xFFFFF000) == 0xCC008000u)
   {
     if (core->m_lockstep_verifier->m_ls_journaling)
@@ -106,6 +110,11 @@ void StaticRecompCore::HookExternalWrite(CPUState* cpu, u32 ea, u64 value, u8 si
       return;
     }
   }
+
+  ea = core->TranslateRelAddress(ea);
+  if (ea == 0)
+    std::fprintf(stderr, "[zero-access] write size=%u guest_pc=%08x ppc_pc=%08x lr=%08x\n", size,
+                 cpu->pc, core->m_system.GetPPCState().pc, cpu->lr);
 
   core->PropagateGuestMSR();
   auto& mmu = core->m_system.GetMMU();

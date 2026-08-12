@@ -428,6 +428,22 @@ void emit_header_for_cpu(FILE* out, DolRecompCPU cpu) {
         "#define DOLRECOMP_C_LOOP_CYCLE_BUDGET 256\n"
         "#endif\n"
         "\n"
+        "/* Fastmem: route guest accesses through the arena base that each\n"
+        " * function caches in a register via GXRUNTIME_FASTMEM_PROLOGUE.\n"
+        " * Emitted per generated unit rather than in cpu.h so the interpreter\n"
+        " * and cpu.c, which are built with the same define and have no such\n"
+        " * local, keep the bounds-checked helpers. */\n"
+        "#if defined(GXRUNTIME_FASTMEM)\n"
+        "#define mem_read8(c, a)      fastmem_read8((c), gxr_fm_base, (a))\n"
+        "#define mem_read16(c, a)     fastmem_read16((c), gxr_fm_base, (a))\n"
+        "#define mem_read32(c, a)     fastmem_read32((c), gxr_fm_base, (a))\n"
+        "#define mem_read64(c, a)     fastmem_read64((c), gxr_fm_base, (a))\n"
+        "#define mem_write8(c, a, v)  fastmem_write8((c), gxr_fm_base, (a), (v))\n"
+        "#define mem_write16(c, a, v) fastmem_write16((c), gxr_fm_base, (a), (v))\n"
+        "#define mem_write32(c, a, v) fastmem_write32((c), gxr_fm_base, (a), (v))\n"
+        "#define mem_write64(c, a, v) fastmem_write64((c), gxr_fm_base, (a), (v))\n"
+        "#endif\n"
+        "\n"
         "static inline u32 dolrecomp_rotl32(u32 value, u32 sh) {\n"
         "    sh &= 31u;\n"
         "    return sh ? ((value << sh) | (value >> (32u - sh))) : value;\n"
@@ -1677,6 +1693,9 @@ static void emit_instruction_with_range(FILE* out, const PPCInst* inst,
 
     case PPC_OP_MTMSR:
         fprintf(out, "    ctx->msr = ctx->gpr[%u];\n", inst->rS);
+        /* MSR[DR] may have flipped, swapping which fastmem view is
+         * valid; unlike rfi this instruction does not leave the chunk. */
+        fprintf(out, "    GXRUNTIME_FASTMEM_REFRESH\n");
         break;
 
     case PPC_OP_MFSR:
@@ -1814,6 +1833,7 @@ static void emit_counted_loop(FILE* out, const PPCInst* insts,
     u32 continuation = insts[last].address + 4u;
 
     fprintf(out, "static void loop_%08X(CPUState* ctx) {\n", loop_address);
+    fprintf(out, "    GXRUNTIME_FASTMEM_PROLOGUE\n");
     fprintf(out, "label_%08X:\n", loop_address);
     fprintf(out, "    ctx->downcount -= %u;\n", cfg->block_cycles[first]);
     for (u32 i = first; i <= last; ++i) {
@@ -1845,6 +1865,7 @@ bool emit_function(FILE* out, const PPCInst* insts, u32 count, u32 func_addr) {
     }
 
     fprintf(out, "void func_%08X(CPUState* ctx) {\n", func_addr);
+    fprintf(out, "    GXRUNTIME_FASTMEM_PROLOGUE\n");
     fprintf(out, "    switch (ctx->pc) {\n");
     for (u32 i = 0; i < count; i++) {
         fprintf(out, "    case 0x%08Xu: goto label_%08X;\n",

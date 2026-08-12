@@ -10,6 +10,7 @@
 
 #include "Core/MachineContext.h"
 #include "Core/PowerPC/JitInterface.h"
+#include "Core/PowerPC/StaticRecomp/StaticRecompFastmem.h"
 #include "Core/System.h"
 
 #if defined(__FreeBSD__) || defined(__NetBSD__)
@@ -292,6 +293,13 @@ static void sigsegv_handler(int sig, siginfo_t* info, void* raw_context)
 #else
   SContext* const ctx = &context->uc_mcontext;
 #endif
+  // A StaticRecomp module built with GXRUNTIME_FASTMEM indexes the arena with
+  // no range check, so its guest accesses to unbacked pages land here. Checked
+  // before the JIT: the two use disjoint code ranges, and this lookup only
+  // matches PCs the module registered.
+  if (StaticRecompFastmem::HandleFault(ctx))
+    return;
+
   if (Core::System::GetInstance().GetJitInterface().HandleFault(bad_address, ctx))
     return;
 

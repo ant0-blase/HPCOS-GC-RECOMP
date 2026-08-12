@@ -24,7 +24,8 @@ extern "C" {
 
 #ifndef MODERNGEKKO_MODULE_ABI_H
 
-#define STATICRECOMP_ABI_VERSION 4u
+/* 5: wants_fastmem + __fastmem_ex bounds. */
+#define STATICRECOMP_ABI_VERSION 5u
 
 typedef struct StaticRecompRange
 {
@@ -99,6 +100,23 @@ typedef struct StaticRecompModuleDesc
       u64 timebase_origin,
       u64 timebase_cycles_before,
       u32 timebase_ratio);
+
+  // ABI v5: fastmem.
+  //
+  // Non-zero when the module indexes the chassis fastmem arena directly
+  // instead of range-checking every guest access. Such a module dereferences
+  // CPUState::fastmem_physical / fastmem_logical on its first access, so the
+  // chassis must refuse to activate it when no arena exists.
+  u32 wants_fastmem;
+
+  // Half-open range of the module's __fastmem_ex section, empty when
+  // wants_fastmem is 0. Each 8-byte entry holds two self-relative 32-bit
+  // offsets: at entry address E, E + entry[0] is an instruction that may fault
+  // on a guest access, and E + 4 + entry[1] is where execution must resume to
+  // take the slow path instead. The chassis SIGSEGV handler looks the faulting
+  // RIP up here and rewrites RIP, so nothing decodes instructions at run time.
+  const void* fastmem_ex_start;
+  const void* fastmem_ex_end;
 } StaticRecompModuleDesc;
 
 // The single symbol a module must export:

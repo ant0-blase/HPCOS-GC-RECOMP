@@ -17,6 +17,7 @@
 #include "Core/Config/StaticRecompSettings.h"
 #include "Core/Config/ConfigManager.h"
 #include "Core/PowerPC/StaticRecomp/StaticRecompLockstep.h"
+#include "Core/PowerPC/StaticRecomp/StaticRecompFastmem.h"
 #include "Core/System.h"
 
 #ifdef _M_X86_64
@@ -179,6 +180,22 @@ void StaticRecompCore::Init()
 
   std::fprintf(stderr, "[staticrecomp] core init\n");
 
+  // Reserve the fastmem arena before the module is validated. LoadModule
+  // rejects a module built with GXRUNTIME_FASTMEM when no arena exists, and the
+  // fallback Jit64 whose Init would otherwise reserve it is not constructed
+  // until further down this function -- so without this the check always saw
+  // "no arena", rejected the module, and silently dropped the whole game onto
+  // the interpreter. InitFastmemArena is idempotent, so the JIT's later call is
+  // a no-op.
+  {
+    auto& memory = m_system.GetMemory();
+    memory.InitFastmemArena();
+    m_fastmem_available =
+        memory.GetPhysicalBase() != nullptr && memory.GetLogicalBase() != nullptr;
+    INFO_LOG_FMT(POWERPC, "StaticRecomp: fastmem arena {}available.",
+                 m_fastmem_available ? "" : "un");
+  }
+
   LoadModule();
   m_idle_pc = Config::Get(Config::MAIN_STATICRECOMP_IDLE_PC);
   m_native_cycle_quantum = std::clamp(
@@ -217,6 +234,11 @@ void StaticRecompCore::Shutdown()
                (unsigned long long)m_smc_interpreter_steps,
                (unsigned long long)m_verifications, (unsigned long long)m_reverify_events,
                (unsigned long long)m_bursts, (unsigned long long)m_charged_cycles);
+  if (m_module && m_module->wants_fastmem)
+  {
+    std::fprintf(stderr, "[staticrecomp] fastmem recovered faults = %llu\n",
+                 (unsigned long long)StaticRecompFastmem::RecoveredFaults());
+  }
   std::vector<std::pair<u32, u64>> dispatch_samples(m_dispatch_samples.begin(),
                                                     m_dispatch_samples.end());
   std::sort(dispatch_samples.begin(), dispatch_samples.end(),
@@ -305,6 +327,21 @@ void StaticRecompCore::LoadModule()
     return reject("chunk ranges do not exactly tile code ranges");
   if (!RelModulesValid(*desc))
     return reject("malformed REL module metadata");
+  if (desc->wants_fastmem)
+  {
+    // A fastmem module indexes the arena unchecked, so without one its first
+    // guest access would dereference a null base. Refuse it here rather than
+    // fault later, and refuse it if its recovery table is unusable: an access
+    // to an unbacked guest page would then raise a SIGSEGV nothing can repair.
+    if (!m_fastmem_available)
+      return reject("module wants fastmem but the chassis has no arena");
+    if (!StaticRecompFastmem::Register(desc->fastmem_ex_start, desc->fastmem_ex_end))
+      return reject("module has a malformed __fastmem_ex recovery table");
+  }
+  else
+  {
+    StaticRecompFastmem::Unregister();
+  }
   if (!AddressIsCovered(desc->code_ranges, desc->num_code_ranges, desc->entry_point))
     return reject("entry point is not covered by the module");
   if (!game_id.empty() && game_id != desc->game_id)

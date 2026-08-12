@@ -33,7 +33,8 @@ extern "C" {
 // - ABI v4 adds persistent native cycle/guard budgets at the end of the
 //   generated-code prefix, before host-specific SPR callbacks. They survive
 //   MMIO and helper callbacks which materialize the local accumulator.
-#define GXRUNTIME_CPU_ABI_VERSION 4u
+/* 5: added CPUState::fastmem_physical / fastmem_logical. */
+#define GXRUNTIME_CPU_ABI_VERSION 5u
 #define DOLRECOMP_CPU_ABI_VERSION GXRUNTIME_CPU_ABI_VERSION
 #define GXRUNTIME_CPU_ABI_DOLRECOMP_PREFIX 1u
 #define GXRUNTIME_CPU_ABI_EXTERNAL_POINTER_EXTENSION 1u
@@ -164,13 +165,55 @@ struct CPUState {
     PPCSPRRead spr_read;
     PPCSPRWrite spr_write;
     PPCCacheControl cache_control;
+    /* See moderngekko/cpu_state.h: host views of the guest address space,
+     * host = view + u32(guest_address), MSR.DR selecting which. NULL when
+     * unavailable. */
+    u8* fastmem_physical;
+    u8* fastmem_logical;
 };
 
 #include <stdio.h>
 
+/*
+ * Lockstep RAM journal.
+ *
+ * Every guest store tests g_mem_write_journal, and the compiler cannot fold
+ * that test away: ppc_set_mem_write_journal is marked visibility("default"),
+ * so it looks externally callable even though module.exports demotes it with
+ * `local: *` and the module ends up exporting staticrecomp_get_module alone.
+ * The pointer is therefore unreachable from outside and permanently NULL,
+ * while the load-test-branch is still paid on the hottest path in the port.
+ *
+ * Compiling the journal out removes that cost. The setter disappears with it,
+ * so StaticRecompLockstepVerifier::Init fails its dlsym and disables lockstep
+ * with its existing "module lacks ppc_set_mem_write_journal export" message —
+ * loud, never a silently empty journal. Build with
+ * -DGXRUNTIME_ENABLE_MEM_JOURNAL to get lockstep back.
+ */
+#if defined(GXRUNTIME_ENABLE_MEM_JOURNAL)
 typedef void (*PPCMemWriteJournal)(u32 offset, u32 size, void* user);
 extern PPCMemWriteJournal g_mem_write_journal;
 extern void* g_mem_write_journal_user;
+#define GXRUNTIME_JOURNAL_WRITE(off, sz)                                       \
+    do {                                                                       \
+        if (g_mem_write_journal && (off) != (u32)-1)                            \
+            g_mem_write_journal((off), (sz), g_mem_write_journal_user);         \
+    } while (0)
+#else
+#define GXRUNTIME_JOURNAL_WRITE(off, sz) ((void)(off))
+#endif
+
+#if defined(__clang__)
+#define GXRUNTIME_ASSUME(cond) __builtin_assume(cond)
+#elif defined(__GNUC__)
+#define GXRUNTIME_ASSUME(cond)                                                 \
+    do {                                                                       \
+        if (!(cond))                                                           \
+            __builtin_unreachable();                                            \
+    } while (0)
+#else
+#define GXRUNTIME_ASSUME(cond) ((void)0)
+#endif
 
 static GXRUNTIME_ALWAYS_INLINE u8* get_ram_ptr(CPUState* cpu, u32 addr, u32 size, u32* out_offset) {
     const u32 masked_addr = addr & ~0x40000000u;
@@ -190,6 +233,16 @@ static GXRUNTIME_ALWAYS_INLINE u8* get_ram_ptr(CPUState* cpu, u32 addr, u32 size
     if (offset <= GC_MAIN_RAM_SIZE - size) {
         if (out_offset)
             *out_offset = offset;
+        /*
+         * The bounds test above already decided this access is RAM, so the
+         * NULL test the callers apply to the result is dead — but only the
+         * chassis knows cpu->ram is populated, and it is in a different
+         * translation unit. Stating it here lets the compiler drop a compare
+         * and a branch from every guest load and store. StaticRecompCore_Run
+         * refuses to attach a module when ram is null or not the 24 MiB
+         * GameCube layout, which is what makes this safe to assert.
+         */
+        GXRUNTIME_ASSUME(cpu->ram != NULL);
         return cpu->ram + offset;
     }
 
@@ -218,12 +271,190 @@ static GXRUNTIME_ALWAYS_INLINE u8* get_ram_ptr(CPUState* cpu, u32 addr, u32 size
 #endif
 }
 
+/*
+ * Reservation handling on plain stores.
+ *
+ * Dolphin only touches the reservation in lwarx (Interpreter_LoadStore.cpp
+ * sets reserve/reserve_address) and in stwcx (tests and clears it). An ordinary
+ * store never clears it there. This module used to be stricter than the
+ * implementation it is lockstep-verified against, and paid a load, a compare
+ * and two branches for it on every single guest store — roughly a third of the
+ * whole fast path, on the 39% of guest instructions that touch memory.
+ *
+ * Matching Dolphin makes the two consistent. Real hardware would drop the
+ * reservation on a same-block store, but the GameCube is single-processor and
+ * lwarx/stwcx only appears in OS lock primitives, which never store into the
+ * reserved line between the pair. Build with
+ * -DGXRUNTIME_STORE_CLEARS_RESERVATION to restore the strict behaviour.
+ */
+#if defined(GXRUNTIME_STORE_CLEARS_RESERVATION)
 static GXRUNTIME_ALWAYS_INLINE void clear_matching_reservation(CPUState* cpu, u32 addr) {
     u32 reserve_addr = cpu->reserve_addr & ~0x40000000u;
     u32 store_addr = addr & ~0x40000000u;
     if (cpu->reserve_valid && ((reserve_addr ^ store_addr) & ~31u) == 0)
         cpu->reserve_valid = false;
 }
+#else
+static GXRUNTIME_ALWAYS_INLINE void clear_matching_reservation(CPUState* cpu, u32 addr) {
+    (void)cpu;
+    (void)addr;
+}
+#endif
+
+/*
+ * Fastmem accessors.
+ *
+ * host = cpu->fastmem_base + u32(guest_address), with the chassis arena laid
+ * out like the guest memory map, so a guest access is one indexed instruction
+ * and no range check at all. Guest pages that are not backed by host memory
+ * (MMIO, unmapped) fault instead.
+ *
+ * Recovery uses an exception table rather than instruction emulation. Each
+ * access records its own faulting address and a fixup address in the
+ * __fastmem_ex section, exactly like the kernel's __ex_table: the SIGSEGV
+ * handler looks the faulting RIP up and sets RIP to the fixup, which is the
+ * ordinary external_read/external_write path. Nothing decodes instructions at
+ * run time, and an unhandled access form cannot exist because these asm blocks
+ * are the only thing that emits one.
+ *
+ * Entries are two self-relative 32-bit offsets so the section needs no
+ * relocation processing at load time:
+ *   entry[0] at address E  ->  faulting instruction at E + entry[0]
+ *   entry[1] at address E+4 ->  fixup at E + 4 + entry[1]
+ */
+#if defined(GXRUNTIME_FASTMEM)
+
+#define GXRUNTIME_FASTMEM_EX(fault_label, fixup_label)                         \
+    ".pushsection __fastmem_ex,\"a\",@progbits\n"                              \
+    ".balign 8\n"                                                              \
+    ".long " fault_label " - .\n"                                              \
+    ".long " fixup_label " - .\n"                                              \
+    ".popsection\n"
+
+/*
+ * Hardware register space is pre-filtered instead of being left to fault.
+ *
+ * A signal costs thousands of cycles, so fastmem only pays when faults are
+ * rare -- and they would not be: the game pushes every GX command word through
+ * the write-gather pipe at 0xCC008000, so leaving MMIO unmapped would trade a
+ * seven-instruction decode for a SIGSEGV per command word and land far behind
+ * the JIT. Dolphin avoids this by backpatching its own emitted code, which is
+ * not available to us over compiler-generated code.
+ *
+ * One unsigned compare separates the two worlds: everything at or above
+ * 0xCC000000 (hardware registers, locked cache) takes the external path
+ * directly, everything below reaches the arena with no range check at all.
+ * Faults then only happen for genuinely unmapped guest pages, which are rare,
+ * and the exception table catches those.
+ */
+#define GXRUNTIME_MMIO_FLOOR 0xCC000000u
+
+/*
+ * The arena base is a parameter, not a cpu->fastmem_base read, because the
+ * "memory" clobber above forces a reload of anything living in memory after
+ * every access. A chunk that loads it once into a local keeps it in a register
+ * across the whole function -- the clobber invalidates memory, not registers --
+ * which is what the JIT does with RMEM. Chunks declare that local in their
+ * prologue; everything else keeps the ordinary bounds-checked helpers.
+ */
+/*
+ * The slow paths are out-of-line and cold.
+ *
+ * Every access site carries one, and none of them ever run in a normal frame:
+ * inlined, they interleave a null test, argument setup and an indirect call
+ * with the hot code, and across ~186k sites that is over a megabyte of dead
+ * instructions diluting the instruction cache. noinline+cold packs them into
+ * .text.unlikely and leaves the fast paths dense.
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#define GXRUNTIME_COLD __attribute__((noinline, cold))
+#else
+#define GXRUNTIME_COLD
+#endif
+
+static GXRUNTIME_COLD void gxr_fastmem_slow_write(CPUState* cpu, u32 addr, u64 value, u8 size) {
+    if (cpu->external_write)
+        cpu->external_write(cpu, addr, value, size);
+}
+
+static GXRUNTIME_COLD u64 gxr_fastmem_slow_read(CPUState* cpu, u32 addr, u8 size) {
+    return cpu->external_read ? cpu->external_read(cpu, addr, size) : 0u;
+}
+
+#define GXRUNTIME_FASTMEM_STORE(suffix, ctype, insn)                           \
+    static GXRUNTIME_ALWAYS_INLINE void fastmem_write##suffix(                  \
+        CPUState* cpu, u8* base, u32 addr, ctype value) {                       \
+        if (addr >= GXRUNTIME_MMIO_FLOOR)                                       \
+            goto slow;                                                          \
+        asm goto("1: " insn " %[v], (%[b],%[o],1)\n"                            \
+                 GXRUNTIME_FASTMEM_EX("1b", "%l[slow]")                         \
+                 :                                                              \
+                 : [v] "r"(value), [b] "r"(base), [o] "r"((u64)addr)            \
+                 : "memory"                                                     \
+                 : slow);                                                       \
+        return;                                                                 \
+    slow:                                                                       \
+        gxr_fastmem_slow_write(cpu, addr, (u64)value, (u8)sizeof(ctype));       \
+    }
+
+#define GXRUNTIME_FASTMEM_LOAD(suffix, ctype, insn)                            \
+    static GXRUNTIME_ALWAYS_INLINE ctype fastmem_read##suffix(                  \
+        CPUState* cpu, u8* base, u32 addr) {                                    \
+        ctype value;                                                            \
+        if (addr >= GXRUNTIME_MMIO_FLOOR)                                       \
+            goto slow;                                                          \
+        asm goto("1: " insn " (%[b],%[o],1), %[v]\n"                            \
+                 GXRUNTIME_FASTMEM_EX("1b", "%l[slow]")                         \
+                 : [v] "=r"(value)                                              \
+                 : [b] "r"(base), [o] "r"((u64)addr)                            \
+                 : "memory"                                                     \
+                 : slow);                                                       \
+        return value;                                                           \
+    slow:                                                                       \
+        return (ctype)gxr_fastmem_slow_read(cpu, addr, (u8)sizeof(ctype));      \
+    }
+
+/* movbe supplies the big-endian swap for 16/32/64; single bytes need none. */
+GXRUNTIME_FASTMEM_STORE(64, u64, "movbe")
+GXRUNTIME_FASTMEM_STORE(32, u32, "movbe")
+GXRUNTIME_FASTMEM_STORE(16, u16, "movbe")
+GXRUNTIME_FASTMEM_STORE(8, u8, "movb")
+GXRUNTIME_FASTMEM_LOAD(64, u64, "movbe")
+GXRUNTIME_FASTMEM_LOAD(32, u32, "movbe")
+GXRUNTIME_FASTMEM_LOAD(16, u16, "movbe")
+GXRUNTIME_FASTMEM_LOAD(8, u8, "movb")
+
+/* MSR[DR], PowerPC bit 27: address translation for data accesses. */
+#define GXRUNTIME_MSR_DR 0x10u
+
+#define GXRUNTIME_FASTMEM_SELECT(ctx)                                          \
+    (((ctx)->msr & GXRUNTIME_MSR_DR) ? (ctx)->fastmem_logical                  \
+                                     : (ctx)->fastmem_physical)
+
+/*
+ * Declared at the top of every generated chunk function, so the arena base
+ * lives in a register for the whole function instead of being reloaded after
+ * each access.
+ *
+ * Not const, and not selected once and forgotten: rfi leaves the chunk, but
+ * mtmsr does not -- the emitter turns it into a plain ctx->msr assignment and
+ * carries on -- so MSR[DR] can flip mid-function and swap which view is
+ * correct. DolRecomp emits GXRUNTIME_FASTMEM_REFRESH right after every mtmsr.
+ *
+ * The redirection of mem_* onto the fastmem helpers is emitted by DolRecomp
+ * into the generated translation units themselves, not here: cpu.c and
+ * cpu_interpreter*.c are built with the same -DGXRUNTIME_FASTMEM and have no
+ * such local, so they must keep seeing the bounds-checked helpers.
+ */
+#define GXRUNTIME_FASTMEM_PROLOGUE u8* gxr_fm_base = GXRUNTIME_FASTMEM_SELECT(ctx);
+#define GXRUNTIME_FASTMEM_REFRESH gxr_fm_base = GXRUNTIME_FASTMEM_SELECT(ctx);
+
+#else /* !GXRUNTIME_FASTMEM */
+
+#define GXRUNTIME_FASTMEM_PROLOGUE
+#define GXRUNTIME_FASTMEM_REFRESH
+
+#endif /* GXRUNTIME_FASTMEM */
 
 static GXRUNTIME_ALWAYS_INLINE u64 mem_read64(CPUState* cpu, u32 addr) {
     u8* ptr = get_ram_ptr(cpu, addr, 8, NULL);
@@ -245,7 +476,7 @@ static GXRUNTIME_ALWAYS_INLINE void mem_write64(CPUState* cpu, u32 addr, u64 val
         return;
     }
     clear_matching_reservation(cpu, addr);
-    if (g_mem_write_journal && offset != (u32)-1) g_mem_write_journal(offset, 8, g_mem_write_journal_user);
+    GXRUNTIME_JOURNAL_WRITE(offset, 8);
     write_be64(ptr, value);
 }
 
@@ -269,7 +500,7 @@ static GXRUNTIME_ALWAYS_INLINE void mem_write32(CPUState* cpu, u32 addr, u32 val
         return;
     }
     clear_matching_reservation(cpu, addr);
-    if (g_mem_write_journal && offset != (u32)-1) g_mem_write_journal(offset, 4, g_mem_write_journal_user);
+    GXRUNTIME_JOURNAL_WRITE(offset, 4);
     write_be32(ptr, value);
 }
 
@@ -293,7 +524,7 @@ static GXRUNTIME_ALWAYS_INLINE void mem_write16(CPUState* cpu, u32 addr, u16 val
         return;
     }
     clear_matching_reservation(cpu, addr);
-    if (g_mem_write_journal && offset != (u32)-1) g_mem_write_journal(offset, 2, g_mem_write_journal_user);
+    GXRUNTIME_JOURNAL_WRITE(offset, 2);
     write_be16(ptr, value);
 }
 
@@ -317,7 +548,7 @@ static GXRUNTIME_ALWAYS_INLINE void mem_write8(CPUState* cpu, u32 addr, u8 value
         return;
     }
     clear_matching_reservation(cpu, addr);
-    if (g_mem_write_journal && offset != (u32)-1) g_mem_write_journal(offset, 1, g_mem_write_journal_user);
+    GXRUNTIME_JOURNAL_WRITE(offset, 1);
     *ptr = value;
 }
 
