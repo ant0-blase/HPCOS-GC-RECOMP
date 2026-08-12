@@ -536,7 +536,7 @@ static void emit_instruction_with_range(FILE* out, const PPCInst* inst,
     }
 
     if (ppc_op_uses_fpu(inst->op))
-        fprintf(out, "    if (!ppc_fp_available(ctx, 0x%08Xu)) return;\n", inst->address);
+        fprintf(out, "    if (!(ctx->msr & (1u << 13)) && !ppc_fp_available(ctx, 0x%08Xu)) return;\n", inst->address);
 
     switch (inst->op) {
     case PPC_OP_MULLI:

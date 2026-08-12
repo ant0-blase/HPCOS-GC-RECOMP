@@ -1,6 +1,8 @@
 // Copyright 2023 Dolphin Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <cstdio>
+#include <cstdlib>
 #include "VideoCommon/Present.h"
 
 #include "Common/ChunkFile.h"
@@ -23,6 +25,7 @@
 #include "VideoCommon/VideoConfig.h"
 #include "VideoCommon/VideoEvents.h"
 #include "VideoCommon/Widescreen.h"
+#include <chrono>
 
 std::unique_ptr<VideoCommon::Presenter> g_presenter;
 
@@ -327,6 +330,14 @@ void Presenter::SetBackbuffer(int backbuffer_width, int backbuffer_height)
       (m_backbuffer_width != backbuffer_width || m_backbuffer_height != backbuffer_height);
   m_backbuffer_width = backbuffer_width;
   m_backbuffer_height = backbuffer_height;
+  // HPCOS host aspect update: integer backbuffer
+  if (backbuffer_width > 0 && backbuffer_height > 0)
+  {
+    m_hpcos_host_aspect.store(
+        static_cast<float>(backbuffer_width) /
+            static_cast<float>(backbuffer_height),
+        std::memory_order_relaxed);
+  }
   UpdateDrawRectangle();
 
   OnBackbufferSet(size_changed, is_first);
@@ -339,6 +350,14 @@ void Presenter::SetBackbuffer(SurfaceInfo info)
       (m_backbuffer_width != (int)info.width || m_backbuffer_height != (int)info.height);
   m_backbuffer_width = info.width;
   m_backbuffer_height = info.height;
+  // HPCOS host aspect update: surface backbuffer
+  if (info.width > 0 && info.height > 0)
+  {
+    m_hpcos_host_aspect.store(
+        static_cast<float>(info.width) /
+            static_cast<float>(info.height),
+        std::memory_order_relaxed);
+  }
   m_backbuffer_scale = info.scale;
   m_backbuffer_format = info.format;
   if (m_onscreen_ui)
@@ -901,6 +920,7 @@ void Presenter::RenderXFBToScreen(const MathUtil::Rectangle<int>& target_rc,
 
 void Presenter::Present(PresentInfo* present_info)
 {
+
   m_present_count++;
 
   if (g_gfx->IsHeadless() || (!m_onscreen_ui && !m_xfb_entry))
@@ -940,6 +960,121 @@ void Presenter::Present(PresentInfo* present_info)
     MathUtil::Rectangle<int> render_source_rc = AdjustForCustomCrop(m_xfb_rect);
     AdjustRectanglesToFitBounds(&render_target_rc, &render_source_rc, m_backbuffer_width,
                                 m_backbuffer_height);
+    // HPCOS: dynamic widescreen must consume the complete host
+    // backbuffer. Do this AFTER AdjustRectanglesToFitBounds(), so
+    // nothing can restore Dolphin's pillarbox/letterbox target.
+    if (const char* env = std::getenv("HPCOS_DYNAMIC_ASPECT");
+        env != nullptr && env[0] == '1')
+    {
+      const auto original_target = render_target_rc;
+
+
+      // HPCOS-XFB-OVERSCAN
+      //
+      // GHSE69 renders a small black overscan border INTO the XFB.
+      // Presenter itself is already using the complete host backbuffer.
+      //
+      // Measured native border:
+      //   left   14 px
+      //   right  15 px
+      //   top     8 px
+      //   bottom  8 px
+      //
+      // Scale those native GameCube values to whatever internal
+      // resolution Dolphin is currently using.
+      const int hpcos_xfb_width = m_xfb_rect.GetWidth();
+      const int hpcos_xfb_height = m_xfb_rect.GetHeight();
+
+      const int hpcos_crop_left =
+          (hpcos_xfb_width * 14 + 320) / 640;
+
+      const int hpcos_crop_right =
+          (hpcos_xfb_width * 15 + 320) / 640;
+
+      const int hpcos_crop_top =
+          (hpcos_xfb_height * 8 + 224) / 448;
+
+      const int hpcos_crop_bottom =
+          (hpcos_xfb_height * 8 + 224) / 448;
+
+      render_source_rc.left += hpcos_crop_left;
+      render_source_rc.right -= hpcos_crop_right;
+      render_source_rc.top += hpcos_crop_top;
+      render_source_rc.bottom -= hpcos_crop_bottom;
+
+      static bool hpcos_crop_logged = false;
+
+      if (!hpcos_crop_logged)
+      {
+        std::fprintf(
+            stderr,
+            "[HPCOS-XFB-CROP] "
+            "xfb=%dx%d crop=(L%d R%d T%d B%d) "
+            "source=(%d,%d)-(%d,%d)\n",
+            hpcos_xfb_width,
+            hpcos_xfb_height,
+            hpcos_crop_left,
+            hpcos_crop_right,
+            hpcos_crop_top,
+            hpcos_crop_bottom,
+            render_source_rc.left,
+            render_source_rc.top,
+            render_source_rc.right,
+            render_source_rc.bottom);
+
+        hpcos_crop_logged = true;
+      }
+
+      render_target_rc = MathUtil::Rectangle<int>{
+          0,
+          0,
+          m_backbuffer_width,
+          m_backbuffer_height,
+      };
+
+      static int last_bb_width = -1;
+      static int last_bb_height = -1;
+      static int last_target_left = -1;
+      static int last_target_top = -1;
+      static int last_target_right = -1;
+      static int last_target_bottom = -1;
+
+      if (last_bb_width != m_backbuffer_width ||
+          last_bb_height != m_backbuffer_height ||
+          last_target_left != original_target.left ||
+          last_target_top != original_target.top ||
+          last_target_right != original_target.right ||
+          last_target_bottom != original_target.bottom)
+      {
+        std::fprintf(
+            stderr,
+            "[HPCOS-PRESENT] "
+            "bb=%dx%d "
+            "target-before=(%d,%d)-(%d,%d) "
+            "target-forced=(0,0)-(%d,%d) "
+            "xfb=(%d,%d)-(%d,%d)\n",
+            m_backbuffer_width,
+            m_backbuffer_height,
+            original_target.left,
+            original_target.top,
+            original_target.right,
+            original_target.bottom,
+            m_backbuffer_width,
+            m_backbuffer_height,
+            m_xfb_rect.left,
+            m_xfb_rect.top,
+            m_xfb_rect.right,
+            m_xfb_rect.bottom);
+
+        last_bb_width = m_backbuffer_width;
+        last_bb_height = m_backbuffer_height;
+        last_target_left = original_target.left;
+        last_target_top = original_target.top;
+        last_target_right = original_target.right;
+        last_target_bottom = original_target.bottom;
+      }
+    }
+
     RenderXFBToScreen(render_target_rc, m_xfb_entry->texture.get(), render_source_rc);
   }
 

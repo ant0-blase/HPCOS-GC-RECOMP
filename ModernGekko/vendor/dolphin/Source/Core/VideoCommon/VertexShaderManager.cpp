@@ -17,6 +17,7 @@
 #include "VideoCommon/CPMemory.h"
 #include "VideoCommon/FramebufferManager.h"
 #include "VideoCommon/FreeLookCamera.h"
+#include "VideoCommon/Present.h"
 #include "VideoCommon/GraphicsModSystem/Runtime/GraphicsModActionData.h"
 #include "VideoCommon/GraphicsModSystem/Runtime/GraphicsModManager.h"
 #include "VideoCommon/Statistics.h"
@@ -25,6 +26,7 @@
 #include "VideoCommon/VideoConfig.h"
 #include "VideoCommon/XFMemory.h"
 #include "VideoCommon/XFStateManager.h"
+#include <cstdlib>
 
 void VertexShaderManager::Init()
 {
@@ -46,17 +48,102 @@ Common::Matrix44 VertexShaderManager::LoadProjectionMatrix()
   {
   case ProjectionType::Perspective:
   {
+
+    // HPCOS v4 dynamic perspective aspect.
+    //
+    // Original rendering space is 4:3. The final XFB is stretched
+    // to the host drawable, therefore compensate the 3D projection
+    // so geometry keeps its correct physical proportions while gaining
+    // horizontal field of view.
+    //
+    // Examples:
+    //   16:10 -> X * 0.833333
+    //   16:9  -> X * 0.750000
+    //   21:9  -> X * 0.571429
+    float hpcos_3d_scale_x = 1.0f;
+    float hpcos_3d_scale_y = 1.0f;
+
+    if (const char* env = std::getenv("HPCOS_DYNAMIC_ASPECT");
+        env != nullptr && env[0] == '1' && g_presenter)
+    {
+      constexpr float original_aspect = 4.0f / 3.0f;
+      const float host_aspect = g_presenter->GetHpcosHostAspect();
+
+      if (host_aspect > original_aspect + 0.0001f)
+      {
+        hpcos_3d_scale_x = original_aspect / host_aspect;
+      }
+      else if (host_aspect < original_aspect - 0.0001f)
+      {
+        hpcos_3d_scale_y = host_aspect / original_aspect;
+      }
+    }
+
+
     const Common::Vec2 fov_multiplier = g_freelook_camera.IsActive() ?
                                             g_freelook_camera.GetFieldOfViewMultiplier() :
                                             Common::Vec2{1, 1};
-    m_projection_matrix[0] = rawProjection[0] * g_ActiveConfig.fAspectRatioHackW * fov_multiplier.x;
+
+    /*
+     * HPCOS runtime FOV override.
+     *
+     * HPCOS_FOV is interpreted as target horizontal FOV in degrees.
+     * The same correction factor is applied to X and Y so the projection
+     * keeps its aspect ratio instead of stretching the image.
+     *
+     * Orthographic projections are untouched, so normal 2D/HUD rendering
+     * remains on the original path.
+     */
+    static const float hpcos_target_hfov = [] {
+      const char* env = std::getenv("HPCOS_FOV");
+
+      if (!env || !*env)
+        return 0.0f;
+
+      char* end = nullptr;
+      const float value = std::strtof(env, &end);
+
+      if (end == env || *end != '\0' ||
+          value < 30.0f || value > 150.0f)
+      {
+        return 0.0f;
+      }
+
+      return value;
+    }();
+
+    float hpcos_fov_projection_scale = 1.0f;
+
+    if (hpcos_target_hfov > 0.0f)
+    {
+      const float current_x_scale =
+          std::fabs(rawProjection[0] *
+                    g_ActiveConfig.fAspectRatioHackW *
+                    fov_multiplier.x);
+
+      if (current_x_scale > 1.0e-6f)
+      {
+        constexpr float pi = 3.14159265358979323846f;
+
+        const float half_angle =
+            0.5f * hpcos_target_hfov * pi / 180.0f;
+
+        const float target_x_scale =
+            1.0f / std::tan(half_angle);
+
+        hpcos_fov_projection_scale =
+            target_x_scale / current_x_scale;
+      }
+    }
+
+    m_projection_matrix[0] = (rawProjection[0] * g_ActiveConfig.fAspectRatioHackW * fov_multiplier.x * hpcos_fov_projection_scale) * hpcos_3d_scale_x;
     m_projection_matrix[1] = 0.0f;
-    m_projection_matrix[2] = rawProjection[1] * g_ActiveConfig.fAspectRatioHackW * fov_multiplier.x;
+    m_projection_matrix[2] = (rawProjection[1] * g_ActiveConfig.fAspectRatioHackW * fov_multiplier.x * hpcos_fov_projection_scale) * hpcos_3d_scale_x;
     m_projection_matrix[3] = 0.0f;
 
     m_projection_matrix[4] = 0.0f;
-    m_projection_matrix[5] = rawProjection[2] * g_ActiveConfig.fAspectRatioHackH * fov_multiplier.y;
-    m_projection_matrix[6] = rawProjection[3] * g_ActiveConfig.fAspectRatioHackH * fov_multiplier.y;
+    m_projection_matrix[5] = (rawProjection[2] * g_ActiveConfig.fAspectRatioHackH * fov_multiplier.y * hpcos_fov_projection_scale) * hpcos_3d_scale_y;
+    m_projection_matrix[6] = (rawProjection[3] * g_ActiveConfig.fAspectRatioHackH * fov_multiplier.y * hpcos_fov_projection_scale) * hpcos_3d_scale_y;
     m_projection_matrix[7] = 0.0f;
 
     m_projection_matrix[8] = 0.0f;
@@ -76,15 +163,42 @@ Common::Matrix44 VertexShaderManager::LoadProjectionMatrix()
 
   case ProjectionType::Orthographic:
   {
-    m_projection_matrix[0] = rawProjection[0];
+
+    // HPCOS v3 dynamic 2D preservation.
+    //
+    // Perspective is handled by the game's own dynamic aspect values.
+    // Orthographic content must keep its original proportions because
+    // the final XFB is stretched to the real host backbuffer.
+    float hpcos_ui_scale_x = 1.0f;
+    float hpcos_ui_scale_y = 1.0f;
+
+    if (const char* env = std::getenv("HPCOS_DYNAMIC_ASPECT");
+        env != nullptr && env[0] == '1' && g_presenter)
+    {
+      constexpr float original_aspect = 4.0f / 3.0f;
+      const float host_aspect = g_presenter->GetHpcosHostAspect();
+
+      if (host_aspect > original_aspect + 0.0001f)
+      {
+        // Wide display: counter the final horizontal stretch.
+        hpcos_ui_scale_x = original_aspect / host_aspect;
+      }
+      else if (host_aspect < original_aspect - 0.0001f)
+      {
+        // Narrow display: counter the final vertical stretch.
+        hpcos_ui_scale_y = host_aspect / original_aspect;
+      }
+    }
+
+    m_projection_matrix[0] = rawProjection[0] * hpcos_ui_scale_x;
     m_projection_matrix[1] = 0.0f;
     m_projection_matrix[2] = 0.0f;
-    m_projection_matrix[3] = rawProjection[1];
+    m_projection_matrix[3] = rawProjection[1] * hpcos_ui_scale_x;
 
     m_projection_matrix[4] = 0.0f;
-    m_projection_matrix[5] = rawProjection[2];
+    m_projection_matrix[5] = rawProjection[2] * hpcos_ui_scale_y;
     m_projection_matrix[6] = 0.0f;
-    m_projection_matrix[7] = rawProjection[3];
+    m_projection_matrix[7] = rawProjection[3] * hpcos_ui_scale_y;
 
     m_projection_matrix[8] = 0.0f;
     m_projection_matrix[9] = 0.0f;
