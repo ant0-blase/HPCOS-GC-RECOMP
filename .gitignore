@@ -12,6 +12,7 @@
 /.releases/
 /.publish.*/
 .build.lock
+/module/
 
 # Local runtime/user state
 /user/
