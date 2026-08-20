@@ -18,10 +18,19 @@
 #include <cstdint>
 #include <cstring>
 #include <optional>
+#include <vector>
 
+
+// HPCOS bring-up: use the real Aurora host frame boundary for GXCopyDisp.
+// Weak on purpose: command_processor is also built by targets which may not
+// link the recomp Aurora backend.
 namespace aurora::gx::fifo {
 static Module Log("aurora::gx::fifo");
 static u32 s_display_list_depth = 0;
+
+// HPCOS STREAMING FIFO CARRY
+// Preserve an incomplete top-level GX command across FIFO batches.
+static std::vector<u8> s_hpcos_fifo_carry;
 static constexpr u32 MaxDisplayListDepth = 16;
 
 static u16 prepare_idx_buffer(ByteBuffer& buf, GXPrimitive prim, u16 vtxStart, u16 vtxCount) {
@@ -104,7 +113,7 @@ static constexpr u8 CP_CMD_LOAD_INDX_C = GX_LOAD_INDX_C;
 static constexpr u8 CP_CMD_LOAD_INDX_D = GX_LOAD_INDX_D;
 static constexpr u8 CP_CMD_CALL_DL = GX_CMD_CALL_DL;
 static constexpr u8 CP_CMD_INVAL_VTX = GX_CMD_INVL_VC;
-static constexpr u8 CP_CMD_LOAD_BP_REG = GX_LOAD_BP_REG & GX_OPCODE_MASK;
+static constexpr u8 CP_CMD_LOAD_BP_REG = GX_LOAD_BP_REG;
 
 // Primitive type mask
 static constexpr u8 CP_OPCODE_MASK = GX_OPCODE_MASK;
@@ -381,11 +390,194 @@ static void handle_aurora(const u8* data, u32& pos, u32 size, bool bigEndian);
 
 void process(const u8* data, u32 size, bool bigEndian) {
   ZoneScoped;
+
+  /*
+   * HPCOS STREAMING: resume incomplete command
+   *
+   * WGPIPE is a byte stream. A backend/frame boundary is allowed to occur
+   * in the middle of a GX command. If the previous top-level process()
+   * invocation ended on a partial command, prepend those bytes here.
+   */
+  std::vector<u8> hpcosMergedInput;
+
+  if (s_display_list_depth == 0u &&
+      !s_hpcos_fifo_carry.empty()) {
+
+    const size_t carryBytes =
+        s_hpcos_fifo_carry.size();
+
+    const u32 incomingBytes = size;
+
+    hpcosMergedInput.reserve(
+        carryBytes + static_cast<size_t>(size));
+
+    hpcosMergedInput.insert(
+        hpcosMergedInput.end(),
+        s_hpcos_fifo_carry.begin(),
+        s_hpcos_fifo_carry.end());
+
+    hpcosMergedInput.insert(
+        hpcosMergedInput.end(),
+        data,
+        data + size);
+
+    s_hpcos_fifo_carry.clear();
+
+    data = hpcosMergedInput.data();
+    size = static_cast<u32>(hpcosMergedInput.size());
+
+    Log.warn(
+        "[HPCOS-STREAM] resumed GX fragment: "
+        "carry={} incoming={} merged={}",
+        carryBytes,
+        incomingBytes,
+        size);
+  }
+
   u32 pos = 0;
 
   while (pos < size) {
     u8 cmd = data[pos++];
-    u8 opcode = cmd & CP_OPCODE_MASK;
+    // HPCOS STRICT GX DISPATCH:
+    // Fixed GX commands are exact bytes.
+    // GX_OPCODE_MASK is only meaningful when extracting primitive/VTXFMT
+    // from an already identified draw command.
+    u8 opcode = cmd;
+
+    /*
+     * HPCOS DIRECT FIFO BOOTSTRAP RECOVERY
+     *
+     * HPCOS emits this early primitive before Aurora has a usable vertex
+     * layout:
+     *
+     *   9B 00 04
+     *   001D 001D
+     *   000C 000C
+     *   001C 001C
+     *   000D 000D
+     *
+     * The live Aurora parser currently consumes zero bytes for its vertex
+     * payload and then interprets 0x1D as the next GX opcode.
+     *
+     * Handle this exact bootstrap packet directly at the FIFO dispatcher.
+     * This is one-shot and pattern-checked, so normal later GX_TRIANGLESTRIP
+     * VTXFMT3 draws are untouched.
+     */
+    /*
+     * HPCOS EARLY GXFLUSH / BOOTSTRAP RECOVERY
+     *
+     * Early HPCOS FIFO traffic contains GX_TRIANGLESTRIP/VTXFMT3 packets
+     * whose temporary bootstrap layout is 8 bytes per vertex:
+     *
+     *     u16 a, u16 a, u16 b, u16 b
+     *
+     * Counts are not always 4: count=3 occurs too.
+     *
+     * Identify these packets by their strict 8-byte duplicated-pair
+     * payload and valid GX command boundary. Ordinary game geometry which
+     * does not match this flush-primitive structure is left untouched.
+     */
+    static unsigned hpcosBootstrap9BSkipCount = 0;
+
+    const u32 hpcosPacketStart = pos - 1u;
+
+    /*
+     * These packets are GX flush-primitive traffic, not just a one-time
+     * startup sequence. Recognize them by their strict payload structure
+     * instead of an arbitrary FIFO position limit.
+     */
+    /*
+     * HPCOS: old VTX8 alignment recovery disabled.
+     *
+     * We now decode these 0x9B / VTXFMT3 packets as real draws.
+     */
+    if (cmd == 0x9Bu &&
+        pos + 2u <= size) {
+
+      const u16 hpcosCount =
+          read_u16(data + pos, bigEndian);
+
+      const u64 hpcosPayloadBytes =
+          static_cast<u64>(hpcosCount) * 8ull;
+
+      const u64 hpcosPacketTail =
+          static_cast<u64>(pos) + 2ull + hpcosPayloadBytes;
+
+      if (hpcosCount >= 1u &&
+          hpcosCount <= 64u &&
+          hpcosPacketTail <= size) {
+
+        bool duplicatedPairs = true;
+
+        for (u32 vertex = 0;
+             vertex < static_cast<u32>(hpcosCount);
+             ++vertex) {
+
+          const u32 off =
+              pos + 2u + vertex * 8u;
+
+          const u16 a0 =
+              read_u16(data + off + 0u, bigEndian);
+          const u16 a1 =
+              read_u16(data + off + 2u, bigEndian);
+          const u16 b0 =
+              read_u16(data + off + 4u, bigEndian);
+          const u16 b1 =
+              read_u16(data + off + 6u, bigEndian);
+
+          if (a0 != a1 || b0 != b1) {
+            duplicatedPairs = false;
+            break;
+          }
+        }
+
+        const u32 nextPos =
+            pos + 2u +
+            static_cast<u32>(hpcosPayloadBytes);
+
+        bool boundaryLooksValid =
+            nextPos == size;
+
+        if (nextPos < size) {
+          const u8 next = data[nextPos];
+
+          boundaryLooksValid =
+              next == CP_CMD_NOP ||
+              next == CP_CMD_LOAD_BP_REG ||
+              next == CP_CMD_LOAD_CP_REG ||
+              next == CP_CMD_LOAD_XF_REG ||
+              next == CP_CMD_LOAD_INDX_A ||
+              next == CP_CMD_LOAD_INDX_B ||
+              next == CP_CMD_LOAD_INDX_C ||
+              next == CP_CMD_LOAD_INDX_D ||
+              next == CP_CMD_CALL_DL ||
+              next == CP_CMD_INVAL_VTX ||
+              next == GX_AURORA ||
+              (next >= 0x80u && next <= 0xBFu);
+        }
+
+        if (duplicatedPairs && boundaryLooksValid) {
+          ++hpcosBootstrap9BSkipCount;
+
+          if (hpcosBootstrap9BSkipCount <= 8u) {
+            Log.warn(
+                "[HPCOS] EARLY VTX8 recovery #{}: "
+                "cmd=0x{:02X} count={} packetPos={} "
+                "payloadBytes={} nextPos={}",
+                hpcosBootstrap9BSkipCount,
+                cmd,
+                hpcosCount,
+                hpcosPacketStart,
+                static_cast<u32>(hpcosPayloadBytes),
+                nextPos);
+          }
+
+          pos = nextPos;
+          continue;
+        }
+      }
+    }
+
     // Log.warn("Processing opcode {:02x} at pos {} (size {})", opcode, pos - 1, size);
 
     switch (opcode) {
@@ -465,6 +657,31 @@ void process(const u8* data, u32 size, bool bigEndian) {
         Log.warn("Unable to resolve GX_CMD_CALL_DL address=0x{:08X} size={}", address, dlSize);
         break;
       }
+      static unsigned hpcosCallDlDiagCount = 0;
+
+      if (hpcosCallDlDiagCount < 32) {
+        Log.warn(
+            "[HPCOS-CALL-DL] depth={} address=0x{:08X} "
+            "size={} available={}",
+            s_display_list_depth,
+            address,
+            dlSize,
+            available);
+      }
+
+      ++hpcosCallDlDiagCount;
+
+      // Never let a resolver inconsistency make us read past mapped guest RAM.
+      if (available != 0u && dlSize > available) {
+        Log.warn(
+            "[HPCOS-CALL-DL] rejected oversized display list: "
+            "address=0x{:08X} requested={} available={}",
+            address,
+            dlSize,
+            available);
+        break;
+      }
+
       s_display_list_depth++;
       process(static_cast<const u8*>(dlData), dlSize, bigEndian);
       s_display_list_depth--;
@@ -494,14 +711,112 @@ void process(const u8* data, u32 size, bool bigEndian) {
     }
 
     default:
-      // Check if it's a draw command (0x80-0xBF range)
-      if (cmd >= 0x80) {
+      // GX draw opcodes occupy 0x80-0xBF only.
+      // Do NOT treat arbitrary 0xC0-0xFF bytes as primitives.
+      if (cmd >= 0x80 && cmd <= 0xBF) {
         handle_draw(cmd, data, pos, size, bigEndian);
       } else {
+        /*
+         * HPCOS 00/FF FIFO PADDING RECOVERY
+         *
+         * Some HPCOS command buffers/display lists contain alignment/tail
+         * regions made exclusively of 00/FF bytes. 0x00 is a legal GX NOP,
+         * but 0xFF is not an opcode. Do not interpret those bytes as draws.
+         *
+         * Recovery policy:
+         *   1. If everything remaining is 00/FF, finish this buffer.
+         *   2. Otherwise scan at most 256 bytes across a 00/FF island.
+         *   3. Resume only if the next byte is a plausible GX command.
+         *
+         * This is intentionally bounded and does NOT blindly ignore arbitrary
+         * unknown opcodes.
+         */
+        if (cmd == 0xFFu) {
+          const u32 badPos = pos - 1u;
+
+          bool remainderIsPadding = true;
+          for (u32 i = badPos; i < size; ++i) {
+            if (data[i] != 0x00u && data[i] != 0xFFu) {
+              remainderIsPadding = false;
+              break;
+            }
+          }
+
+          if (remainderIsPadding) {
+            Log.warn(
+                "[HPCOS] trailing 00/FF FIFO padding ignored: "
+                "start={} bytes={}",
+                badPos,
+                size - badPos);
+            return;
+          }
+
+          u32 scan = badPos;
+
+          const u32 scanLimit =
+              (badPos + 256u < size) ? badPos + 256u : size;
+
+          while (scan < scanLimit &&
+                 (data[scan] == 0x00u || data[scan] == 0xFFu)) {
+            ++scan;
+          }
+
+          if (scan > badPos && scan < size) {
+            const u8 next = data[scan];
+            bool plausibleDraw = false;
+
+            if (next >= 0x80u &&
+                next <= 0xBFu &&
+                scan + 3u <= size) {
+              const u16 candidateCount =
+                  read_u16(data + scan + 1u, bigEndian);
+
+              // Reject obvious pointers/struct data masquerading as a draw.
+              plausibleDraw =
+                  candidateCount != 0u &&
+                  candidateCount <= 8192u;
+            }
+
+            const bool plausible =
+                next == GX_AURORA ||
+                next == CP_CMD_NOP ||
+                next == CP_CMD_LOAD_BP_REG ||
+                next == CP_CMD_LOAD_CP_REG ||
+                next == CP_CMD_LOAD_XF_REG ||
+                next == CP_CMD_LOAD_INDX_A ||
+                next == CP_CMD_LOAD_INDX_B ||
+                next == CP_CMD_LOAD_INDX_C ||
+                next == CP_CMD_LOAD_INDX_D ||
+                next == CP_CMD_CALL_DL ||
+                next == CP_CMD_INVAL_VTX ||
+                plausibleDraw;
+
+            if (plausible) {
+              static unsigned hpcosPaddingRecoveries = 0;
+
+              if (hpcosPaddingRecoveries < 32) {
+                Log.warn(
+                    "[HPCOS] 00/FF FIFO resync #{}: "
+                    "badPos={} -> nextPos={} skipped={} next=0x{:02X}",
+                    hpcosPaddingRecoveries + 1u,
+                    badPos,
+                    scan,
+                    scan - badPos,
+                    next);
+              }
+
+              ++hpcosPaddingRecoveries;
+
+              pos = scan;
+              continue;
+            }
+          }
+        }
+
         // Hex dump surrounding bytes for debugging
         {
-          u32 dumpStart = (pos > 17) ? pos - 17 : 0;
-          u32 dumpEnd = (pos + 16 < size) ? pos + 16 : size;
+          u32 dumpStart = (pos > 129) ? pos - 129 : 0;
+          u32 dumpEnd = (pos + 64 < size) ? pos + 64 : size;
           std::string hex;
           for (u32 i = dumpStart; i < dumpEnd; i++) {
             if (i == pos - 1)
@@ -511,7 +826,48 @@ void process(const u8* data, u32 size, bool bigEndian) {
           }
           Log.error("  hex dump (pos {}-{}):{}", dumpStart, dumpEnd - 1, hex);
         }
-        FATAL("command_processor: unknown opcode 0x{:02X} at pos {}", cmd, pos - 1);
+        // HPCOS BIG BRINGUP: tolerate garbage only before VCD
+        //
+        // If POSITION..TEX7 are all GX_NONE, we're still in the early
+        // pre-VCD initialization phase. Do not kill the whole renderer on
+        // padding/garbage bytes there. Once a real layout exists, remain
+        // fully strict so genuine FIFO corruption is still caught.
+        bool hpcosHasRealVcd = false;
+        for (int attr = GX_VA_POS; attr <= GX_VA_TEX7; ++attr) {
+          if (g_gxState.vtxDesc[attr] != GX_NONE) {
+            hpcosHasRealVcd = true;
+            break;
+          }
+        }
+
+        if (!hpcosHasRealVcd) {
+          static unsigned hpcosEarlyUnknownCount = 0;
+
+          if (hpcosEarlyUnknownCount < 16) {
+            Log.warn(
+                "[HPCOS] ignoring pre-VCD byte 0x{:02X} at pos {}",
+                cmd,
+                pos - 1);
+          }
+
+          ++hpcosEarlyUnknownCount;
+          continue;
+        }
+
+        if (s_display_list_depth != 0u) {
+          Log.warn(
+              "[HPCOS-CALL-DL] abort malformed display list: "
+              "depth={} opcode=0x{:02X} pos={}",
+              s_display_list_depth,
+              cmd,
+              pos - 1);
+          return;
+        }
+
+        FATAL(
+            "command_processor: unknown opcode 0x{:02X} at pos {}",
+            cmd,
+            pos - 1);
       }
       break;
     }
@@ -958,7 +1314,32 @@ static void handle_bp(u32 value, bool bigEndian) {
   case 0x52: {
     const bool clear = bp_get(value, 1, 11) != 0;
     if (bp_get(value, 1, 14) != 0) {
-      Log.warn("STUB: display copy is not implemented");
+      // HPCOS bring-up display bridge.
+      //
+      // GXCopyDisp is the guest's real frame boundary. The live Aurora
+      // backend already owns the current render target, so presenting here
+      // lets us expose that EFB directly instead of emulating XFB memory
+      // just to obtain the first native pixels.
+      //
+      // This is intentionally a bring-up bridge, not the final EFB->XFB
+      // implementation.
+      /*
+       * HPCOS:
+       * The real frame boundary is handled synchronously in
+       * aurora_backend_gx_write(), when BP 0x52 is written.
+       *
+       * At this level we are already inside aurora_end_frame() FIFO
+       * consumption, so calling present here would recurse.
+       */
+      static unsigned hpcosDisplayObserveCount = 0;
+      ++hpcosDisplayObserveCount;
+
+      if (hpcosDisplayObserveCount <= 8u) {
+        Log.warn(
+            "[HPCOS-DISPLAY] parser observed GXCopyDisp #{} clear={}",
+            hpcosDisplayObserveCount,
+            clear ? 1 : 0);
+      }
     } else {
       resolve_tex_copy_destination_from_bp(value);
       if (g_gxState.texCopyDest != nullptr) {
@@ -1815,15 +2196,348 @@ static ByteBuffer handle_draw_idx_buf;
 
 static void draw_prim(GXPrimitive prim, GXVtxFmt fmt, u16 vtxCount, const u8* data, u32& pos, u32 size, bool bigEndian) {
   ZoneScoped;
-  u32 vtxSize;
-  if (g_gxState.lastVtxFmt == fmt)
-    LIKELY { vtxSize = g_gxState.lastVtxSize; }
-  else
-    UNLIKELY { vtxSize = calculate_last_vtx_size(fmt); }
+  // HPCOS BIG BRINGUP: recover pre-VCD draws
+  //
+  // HPCOS emits some GX init traffic before the final VCD/VAT is installed.
+  // Aurora's normal path gets vertex_size == 0 and then interprets the raw
+  // vertex payload as FIFO opcodes. Keep strict parsing after a real layout
+  // exists, but recover/skip a pre-VCD primitive cleanly.
+  u32 vtxSize = calculate_last_vtx_size(fmt);
+
+  if (vtxSize == 0 && vtxCount != 0) UNLIKELY {
+    auto plausible_fifo_boundary = [&](u32 boundary) -> bool {
+      if (boundary > size)
+        return false;
+
+      // Padding/NOPs are common after tiny setup primitives.
+      while (boundary < size && data[boundary] == 0x00)
+        ++boundary;
+
+      if (boundary >= size)
+        return true;
+
+      const u8 next = data[boundary];
+
+      // GX draw command.
+      if (next >= 0x80)
+        return true;
+
+      const u8 nextOpcode = next & CP_OPCODE_MASK;
+
+      switch (nextOpcode) {
+      case CP_CMD_NOP:
+      case CP_CMD_LOAD_BP_REG:
+      case CP_CMD_LOAD_CP_REG:
+      case CP_CMD_LOAD_XF_REG:
+      case CP_CMD_LOAD_INDX_A:
+      case CP_CMD_LOAD_INDX_B:
+      case CP_CMD_LOAD_INDX_C:
+      case CP_CMD_LOAD_INDX_D:
+      case CP_CMD_CALL_DL:
+      case CP_CMD_INVAL_VTX:
+        return true;
+      default:
+        return false;
+      }
+    };
+
+    u32 inferredVtxSize = 0;
+
+    /*
+     * Known HPCOS early init primitive:
+     *
+     *   9B 00 04
+     *   xxxx xxxx
+     *   xxxx xxxx
+     *   xxxx xxxx
+     *   xxxx xxxx
+     *
+     * i.e. four 4-byte vertex records.
+     *
+     * Prefer this exact recovery because it is the primitive currently
+     * blocking boot before the real VCD (0x50/0x60) is installed.
+     */
+    if (fmt == GX_VTXFMT3 &&
+        vtxCount == 4 &&
+        pos + 16 <= size &&
+        plausible_fifo_boundary(pos + 16)) {
+      inferredVtxSize = 4;
+    }
+
+    /*
+     * Generic pre-VCD recovery for other init primitives.
+     *
+     * Search a small plausible vertex stride and require that consuming
+     * count*stride lands on a valid GX command boundary. We SKIP these
+     * primitives instead of rendering them because there is no valid VCD
+     * with which to decode their attributes anyway.
+     */
+    if (inferredVtxSize == 0) {
+      for (u32 candidate = 1; candidate <= 32; ++candidate) {
+        const u64 bytes =
+            static_cast<u64>(vtxCount) * static_cast<u64>(candidate);
+
+        if (bytes > static_cast<u64>(size - pos))
+          break;
+
+        const u32 boundary = pos + static_cast<u32>(bytes);
+
+        if (plausible_fifo_boundary(boundary)) {
+          inferredVtxSize = candidate;
+          break;
+        }
+      }
+    }
+
+    if (inferredVtxSize != 0) {
+      static unsigned hpcosPreVcdSkipCount = 0;
+
+      if (hpcosPreVcdSkipCount < 16) {
+        Log.warn(
+            "[HPCOS] pre-VCD draw skipped: prim=0x{:02X} fmt={} "
+            "count={} inferredVertexSize={} bytes={}",
+            static_cast<u32>(prim),
+            static_cast<u32>(fmt),
+            vtxCount,
+            inferredVtxSize,
+            vtxCount * inferredVtxSize);
+      }
+
+      ++hpcosPreVcdSkipCount;
+
+      pos += vtxCount * inferredVtxSize;
+      return;
+    }
+
+    FATAL(
+        "[HPCOS] unable to recover zero-size pre-VCD draw: "
+        "prim=0x{:02X} fmt={} count={} pos={} remaining={}",
+        static_cast<u32>(prim),
+        static_cast<u32>(fmt),
+        vtxCount,
+        pos,
+        size - pos);
+  }
+
+  // HPCOS REAL DRAW DIAG
+  //
+  // Separate suspicious 0x9B traffic from every other non-empty GX draw.
+  // If real game geometry exists outside the VTXFMT3 flush-like traffic,
+  // it must appear here.
+  {
+    const u32 hpcosCmd =
+        static_cast<u32>(prim) | static_cast<u32>(fmt);
+
+    static unsigned hpcosNon9BNonZero = 0;
+    static unsigned hpcos9BNonZero = 0;
+    static unsigned hpcosZeroDraws = 0;
+
+    if (vtxCount == 0u) {
+      ++hpcosZeroDraws;
+    } else if (hpcosCmd == 0x9Bu) {
+      ++hpcos9BNonZero;
+
+      if (hpcos9BNonZero <= 8u) {
+        Log.warn(
+            "[HPCOS-FLUSH-CANDIDATE] n={} cmd=0x{:02X} "
+            "prim=0x{:02X} fmt={} count={} calculatedVtxSize={}",
+            hpcos9BNonZero,
+            hpcosCmd,
+            static_cast<u32>(prim),
+            static_cast<u32>(fmt),
+            static_cast<u32>(vtxCount),
+            vtxSize);
+      }
+    } else {
+      ++hpcosNon9BNonZero;
+
+      if (hpcosNon9BNonZero <= 80u) {
+        Log.warn(
+            "[HPCOS-REAL-DRAW] n={} cmd=0x{:02X} "
+            "prim=0x{:02X} fmt={} count={} vtxSize={} "
+            "pos={} remaining={}",
+            hpcosNon9BNonZero,
+            hpcosCmd,
+            static_cast<u32>(prim),
+            static_cast<u32>(fmt),
+            static_cast<u32>(vtxCount),
+            vtxSize,
+            pos,
+            size - pos);
+      }
+    }
+  }
+
+  /*
+   * HPCOS LIVE VTXFMT3 = 8
+   *
+   * The native game emits command 0x9B (GX_TRIANGLESTRIP/VTXFMT3)
+   * with an observed physical FIFO stride of exactly 8 bytes/vertex.
+   *
+   * Examples captured from the guest:
+   *
+   *   0x9B 00 04 + 32 payload bytes
+   *   0x9B 00 03 + 24 payload bytes
+   *
+   * The previous bring-up recovery merely skipped these packets,
+   * which preserved FIFO alignment but discarded the actual geometry.
+   */
+  if (false &&
+      static_cast<u32>(prim) == 0x98u &&
+      static_cast<u32>(fmt) == 3u &&
+      vtxSize != 8u) {
+
+    static unsigned hpcosLiveVtx8Count = 0;
+    ++hpcosLiveVtx8Count;
+
+    if (hpcosLiveVtx8Count <= 32u) {
+      Log.warn(
+          "[HPCOS-LIVE-VTX8] draw={} fmt=3 count={} "
+          "oldVtxSize={} -> 8 payload={}",
+          hpcosLiveVtx8Count,
+          static_cast<u32>(vtxCount),
+          vtxSize,
+          static_cast<u32>(vtxCount) * 8u);
+    }
+
+    vtxSize = 8u;
+
+    // HPCOS VCD VAT DIAG
+    static unsigned hpcosVcdDiagCount = 0;
+
+    if (hpcosVcdDiagCount < 8u) {
+      ++hpcosVcdDiagCount;
+
+      std::string hpcosAttrs;
+
+      for (int i = GX_VA_PNMTXIDX; i <= GX_VA_TEX7; ++i) {
+        if (g_gxState.vtxDesc[i] == GX_NONE)
+          continue;
+
+        const auto& af = g_gxState.vtxFmts[fmt].attrs[i];
+
+        hpcosAttrs += ::fmt::format(
+            " a{}=[desc:{} cnt:{} type:{}]",
+            i,
+            static_cast<u32>(g_gxState.vtxDesc[i]),
+            static_cast<u32>(af.cnt),
+            static_cast<u32>(af.type));
+      }
+
+      Log.warn(
+          "[HPCOS-VCD] sample={} fmt={} calculated={} forced=8 attrs:{}",
+          hpcosVcdDiagCount,
+          static_cast<u32>(fmt),
+          calculate_last_vtx_size(fmt),
+          hpcosAttrs);
+    }
+  }
 
   u32 totalVtxBytes = vtxCount * vtxSize;
-  if (pos + totalVtxBytes > size)
-    UNLIKELY { handle_draw_overrun(totalVtxBytes, data, pos, size); }
+
+  // HPCOS DRAW VTXSIZE DIAG
+  static unsigned hpcosDrawDiagTotal = 0;
+  static unsigned hpcosDrawDiagZero = 0;
+  static unsigned hpcosDrawDiagNonZero = 0;
+
+  ++hpcosDrawDiagTotal;
+
+  if (vtxSize == 0u) {
+    ++hpcosDrawDiagZero;
+
+    if (hpcosDrawDiagZero <= 220u) {
+      Log.warn(
+          "[HPCOS-DRAW-ZERO] draw={} zero={} "
+          "prim=0x{:02X} fmt={} count={} "
+          "vtxSize={} totalBytes={} "
+          "lastFmt={} lastSize={} pos={} bufferSize={}",
+          hpcosDrawDiagTotal,
+          hpcosDrawDiagZero,
+          static_cast<u32>(prim),
+          static_cast<u32>(fmt),
+          static_cast<u32>(vtxCount),
+          vtxSize,
+          totalVtxBytes,
+          static_cast<u32>(g_gxState.lastVtxFmt),
+          g_gxState.lastVtxSize,
+          pos,
+          size);
+    }
+  } else {
+    ++hpcosDrawDiagNonZero;
+
+    if (hpcosDrawDiagNonZero <= 24u) {
+      Log.warn(
+          "[HPCOS-DRAW-OK] draw={} ok={} "
+          "prim=0x{:02X} fmt={} count={} "
+          "vtxSize={} totalBytes={} "
+          "lastFmt={} lastSize={} pos={} bufferSize={}",
+          hpcosDrawDiagTotal,
+          hpcosDrawDiagNonZero,
+          static_cast<u32>(prim),
+          static_cast<u32>(fmt),
+          static_cast<u32>(vtxCount),
+          vtxSize,
+          totalVtxBytes,
+          static_cast<u32>(g_gxState.lastVtxFmt),
+          g_gxState.lastVtxSize,
+          pos,
+          size);
+    }
+  }
+  if (pos + totalVtxBytes > size) {
+    /*
+     * HPCOS STREAMING: partial draw
+     *
+     * Normal WGPIPE traffic may be split immediately after:
+     *
+     *     opcode + u16 vertexCount
+     *
+     * or anywhere inside the vertex payload.
+     *
+     * For the top-level FIFO, preserve the complete partial command and
+     * resume it when the next batch arrives.
+     *
+     * Display lists are expected to have an explicit complete size, so an
+     * overrun inside a display list remains an actual error.
+     */
+    if (s_display_list_depth == 0u) {
+      const u32 cmdPos =
+          (pos >= 3u) ? pos - 3u : 0u;
+
+      const u32 availablePayload =
+          (pos <= size) ? size - pos : 0u;
+
+      s_hpcos_fifo_carry.assign(
+          data + cmdPos,
+          data + size);
+
+      Log.warn(
+          "[HPCOS-STREAM] stashed partial draw: "
+          "cmd=0x{:02X} count={} "
+          "payloadHave={} payloadNeed={} "
+          "savedBytes={}",
+          data[cmdPos],
+          vtxCount,
+          availablePayload,
+          totalVtxBytes,
+          static_cast<u32>(s_hpcos_fifo_carry.size()));
+
+      /*
+       * Force the outer process() loop to stop cleanly.
+       * The next process() invocation will replay this command from
+       * its opcode.
+       */
+      pos = size;
+      return;
+    }
+
+    handle_draw_overrun(
+        totalVtxBytes,
+        data,
+        pos,
+        size);
+  }
 
   std::array<u32, GX_VA_MAX_ATTR> arraySizes;
   calculate_indexed_array_sizes(fmt, vtxCount, data + pos, bigEndian, arraySizes);

@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
+#include <vector>
 
 #include "Common/Config/Config.h"
 #include "Common/DynamicLibrary.h"
@@ -178,6 +179,11 @@ void StaticRecompCore::Init()
   m_guest.host_call = m_module_source.host_call ? HookHostCall : nullptr;
   m_guest.external_user_data = this;
 
+  m_mmio_trace = [] {
+    const char* value = std::getenv("STATICRECOMP_MMIO_TRACE");
+    return value && value[0] == '1';
+  }();
+
   std::fprintf(stderr, "[staticrecomp] core init\n");
 
   // Reserve the fastmem arena before the module is validated. LoadModule
@@ -234,10 +240,64 @@ void StaticRecompCore::Shutdown()
                (unsigned long long)m_smc_interpreter_steps,
                (unsigned long long)m_verifications, (unsigned long long)m_reverify_events,
                (unsigned long long)m_bursts, (unsigned long long)m_charged_cycles);
+  {
+    // Top interpreter fallbacks, so the remaining ones can be modelled by
+    // opcode rather than guessed at.
+    struct Row { const char* kind; u32 code; u64 count; };
+    std::vector<Row> rows;
+    for (u32 i = 0; i < 64; ++i)
+      if (m_fb_primary[i]) rows.push_back({"op", i, m_fb_primary[i]});
+    for (u32 i = 0; i < 1024; ++i)
+    {
+      if (m_fb_ext31[i]) rows.push_back({"op31/xo", i, m_fb_ext31[i]});
+      if (m_fb_ext63[i]) rows.push_back({"op63/xo", i, m_fb_ext63[i]});
+      if (m_fb_ext19[i]) rows.push_back({"op19/xo", i, m_fb_ext19[i]});
+    }
+    for (u32 i = 0; i < 2048; ++i)
+      if (m_fb_ext4[i]) rows.push_back({"op4/xo", i, m_fb_ext4[i]});
+    std::sort(rows.begin(), rows.end(),
+              [](const Row& a, const Row& b) { return a.count > b.count; });
+    for (size_t i = 0; i < rows.size() && i < 20; ++i)
+    {
+      std::fprintf(stderr, "[staticrecomp] fallback %-8s %4u  %llu\n", rows[i].kind,
+                   rows[i].code, (unsigned long long)rows[i].count);
+    }
+  }
+
+  if (m_mmio_trace)
+  {
+    std::vector<const MmioRead*> hot;
+    for (const auto& slot : m_mmio_reads)
+      if (slot.count) hot.push_back(&slot);
+    std::sort(hot.begin(), hot.end(),
+              [](const MmioRead* a, const MmioRead* b) { return a->count > b->count; });
+    for (size_t i = 0; i < hot.size() && i < 12; ++i)
+    {
+      std::fprintf(stderr, "[staticrecomp] mmio read %08x from pc %08x  %llu fois, %u valeur(s), derniere %08x\n",
+                   hot[i]->address, hot[i]->guest_pc, (unsigned long long)hot[i]->count,
+                   hot[i]->distinct, hot[i]->last_value);
+    }
+  }
+
+  if (m_mmio_trace)
+  {
+    std::vector<const MmioRead*> hot;
+    for (const auto& slot : m_mmio_writes)
+      if (slot.count) hot.push_back(&slot);
+    std::sort(hot.begin(), hot.end(),
+              [](const MmioRead* a, const MmioRead* b) { return a->count > b->count; });
+    for (size_t i = 0; i < hot.size() && i < 12; ++i)
+    {
+      std::fprintf(stderr, "[staticrecomp] mmio write %08x from pc %08x  %llu\n",
+                   hot[i]->address, hot[i]->guest_pc, (unsigned long long)hot[i]->count);
+    }
+  }
+
   if (m_module && m_module->wants_fastmem)
   {
     std::fprintf(stderr, "[staticrecomp] fastmem recovered faults = %llu\n",
                  (unsigned long long)StaticRecompFastmem::RecoveredFaults());
+    StaticRecompFastmem::ReportHotFaults(8);
   }
   std::vector<std::pair<u32, u64>> dispatch_samples(m_dispatch_samples.begin(),
                                                     m_dispatch_samples.end());

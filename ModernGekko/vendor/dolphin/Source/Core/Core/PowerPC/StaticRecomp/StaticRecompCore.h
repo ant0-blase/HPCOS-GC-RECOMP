@@ -151,6 +151,32 @@ private:
   // GXRUNTIME_FASTMEM can index them.
   bool m_fastmem_available = false;
 
+  // MMIO read sampler, armed by STATICRECOMP_MMIO_TRACE. Names the register a
+  // stuck game is polling and the guest PC polling it.
+  // last_value / distinct: a poll loop that never ends is usually reading the
+  // same value forever, so recording whether it ever changed separates
+  // "the hardware never answered" from "the game did not like the answer".
+  struct MmioRead { u32 address; u32 guest_pc; u64 count; u32 last_value; u32 distinct; };
+  bool m_mmio_trace = false;
+  MmioRead m_mmio_reads[64] = {};
+  void RecordMmioRead(u32 ea, u32 guest_pc, u32 value);
+  // Writes are recorded separately: they say what the game asked the hardware
+  // to do just before it started waiting, which is what names a missing
+  // interrupt. Gather-pipe traffic never reaches here -- it returns from the
+  // fast path above -- so the table only holds real register writes.
+  MmioRead m_mmio_writes[64] = {};
+  void RecordMmioWrite(u32 ea, u32 guest_pc);
+
+  // Which guest instructions still leave native code for the interpreter.
+  // Plain arrays rather than a map because this is counted on a path taken
+  // millions of times per session; the histogram is reported at shutdown so
+  // the remaining fallbacks can be modelled by opcode instead of guessed at.
+  u64 m_fb_primary[64] = {};
+  u64 m_fb_ext31[1024] = {};
+  u64 m_fb_ext63[1024] = {};
+  u64 m_fb_ext19[1024] = {};
+  u64 m_fb_ext4[2048] = {};
+
   EmptyBlockCache m_block_cache{*this};
 
   CPUState m_guest{};

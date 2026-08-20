@@ -105,6 +105,7 @@ private:
   // This is completely arbitrary. If we find that we need lower latency,
   // we can just increase this number.
   int m_ipc_hle_period = 0;
+  u32 m_gpu_sleeper_frequency_hz = 1000;
 
   // Custom RTC
   s64 m_localtime_rtc_offset = 0;

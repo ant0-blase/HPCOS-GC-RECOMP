@@ -1,3 +1,4 @@
+#include <stdio.h>
 // DolRecomp output
 #include "../generated.h"
 
@@ -6181,6 +6182,40 @@ label_8019F470:
 
 label_8019F474:
     ctx->pc = 0x8019F474u;
+
+    {
+        static unsigned long long n = 0;
+        ++n;
+
+        if (n <= 20) {
+            const u32 f = ctx->gpr[31];
+
+            fprintf(stderr,
+                "[HPCOS-DLFIFO-BEFORE] "
+                "#%llu fifo=%08X "
+                "base=%08X end=%08X size=%08X "
+                "hi=%08X lo=%08X "
+                "rd=%08X wr=%08X count=%08X "
+                "f20=%08X "
+                "PI0C=%08X PI10=%08X "
+                "PI14=%08X PI18=%08X\\n",
+                n,
+                f,
+                mem_read32(ctx, f + 0x00),
+                mem_read32(ctx, f + 0x04),
+                mem_read32(ctx, f + 0x08),
+                mem_read32(ctx, f + 0x0C),
+                mem_read32(ctx, f + 0x10),
+                mem_read32(ctx, f + 0x14),
+                mem_read32(ctx, f + 0x18),
+                mem_read32(ctx, f + 0x1C),
+                mem_read32(ctx, f + 0x20),
+                mem_read32(ctx, 0xCC00300Cu),
+                mem_read32(ctx, 0xCC003010u),
+                mem_read32(ctx, 0xCC003014u),
+                mem_read32(ctx, 0xCC003018u));
+        }
+    }
     // 8019F474: bl      0x80196D04
     {
             ctx->lr = 0x8019F478u;
@@ -6190,6 +6225,40 @@ label_8019F474:
 
 label_8019F478:
     ctx->pc = 0x8019F478u;
+
+    {
+        static unsigned long long n = 0;
+        ++n;
+
+        if (n <= 20) {
+            const u32 f = ctx->gpr[31];
+
+            fprintf(stderr,
+                "[HPCOS-DLFIFO-AFTER] "
+                "#%llu fifo=%08X "
+                "base=%08X end=%08X size=%08X "
+                "hi=%08X lo=%08X "
+                "rd=%08X wr=%08X count=%08X "
+                "f20=%08X "
+                "PI0C=%08X PI10=%08X "
+                "PI14=%08X PI18=%08X\\n",
+                n,
+                f,
+                mem_read32(ctx, f + 0x00),
+                mem_read32(ctx, f + 0x04),
+                mem_read32(ctx, f + 0x08),
+                mem_read32(ctx, f + 0x0C),
+                mem_read32(ctx, f + 0x10),
+                mem_read32(ctx, f + 0x14),
+                mem_read32(ctx, f + 0x18),
+                mem_read32(ctx, f + 0x1C),
+                mem_read32(ctx, f + 0x20),
+                mem_read32(ctx, 0xCC00300Cu),
+                mem_read32(ctx, 0xCC003010u),
+                mem_read32(ctx, 0xCC003014u),
+                mem_read32(ctx, 0xCC003018u));
+        }
+    }
     ctx->downcount -= 2;
     // 8019F478: lwz     r3, -26072(r13)
     {

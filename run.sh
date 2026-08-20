@@ -167,6 +167,10 @@ PYCFG
 
 if (( DYNAMIC_WIDESCREEN )); then
   export HPCOS_DYNAMIC_ASPECT=1
+  # Overscan border measured on GHSE69 only. Other games built from this
+  # tree share the runtime but not the measurement, so their run.sh must
+  # not set this.
+  export HPCOS_XFB_OVERSCAN=1
   echo "[HPCOS] dynamic widescreen enabled"
 else
   unset HPCOS_DYNAMIC_ASPECT || true

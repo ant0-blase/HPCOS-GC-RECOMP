@@ -1,3 +1,4 @@
+#include <cstdio>
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "gxruntime/aurora_recomp/retail_gx_frontend.hpp"
 #include "gxruntime/aurora_recomp/retail_gx_frontend_c.h"
@@ -343,6 +344,13 @@ bool RetailGxFrontend::load_cp_reg(std::uint8_t reg, std::uint32_t value) {
 bool RetailGxFrontend::set_cp_array(std::uint8_t attr,
                                     std::uint32_t physical_base,
                                     std::uint8_t stride) {
+  std::fprintf(stderr,
+               "[HPCOS-SETCP] attr=%u base=%08X stride=%u\n",
+               static_cast<unsigned>(attr),
+               static_cast<unsigned>(physical_base),
+               static_cast<unsigned>(stride));
+  std::fflush(stderr);
+
   if (attr >= DOL_GX_RECOMP_CP_ARRAY_COUNT)
     return false;
   return load_cp_reg(static_cast<std::uint8_t>(DOL_GX_CP_REG_ARRAYBASE + attr),
@@ -661,6 +669,23 @@ bool RetailGxFrontend::parse_stream(std::span<const std::uint8_t> bytes,
       if (!state_.vertex_layouts[vtx_fmt].valid &&
           !dol_gx_recomp_derive_vertex_layout(&state_, vtx_fmt))
         return fail_parse("draw vertex layout unavailable", cmd, pos);
+      /*
+       * HPCOS VTXFMT3 payload-size fix
+       *
+       * Retail HPCOS emits four GX_INDEX16 attributes for format 3:
+       *     4 * 2 bytes = 8 bytes per vertex.
+       *
+       * The generic VCD/VAT derivation currently produces 4 here,
+       * causing the FIFO parser to terminate the draw too early and
+       * interpret a remaining vertex index (0x02) as a FIFO opcode.
+       *
+       * Keep this narrowly scoped to the observed HPCOS fmt3 layout.
+       */
+      if (vtx_fmt == 3u &&
+          state_.vertex_layouts[vtx_fmt].vertex_size == 4u) {
+        state_.vertex_layouts[vtx_fmt].vertex_size = 8u;
+      }
+
       const std::uint32_t vertex_size =
           state_.vertex_layouts[vtx_fmt].vertex_size;
       const std::size_t vertex_bytes =

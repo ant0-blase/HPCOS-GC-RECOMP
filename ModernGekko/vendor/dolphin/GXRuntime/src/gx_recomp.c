@@ -1,3 +1,4 @@
+#include <stdio.h>
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "gxruntime/gx_recomp.h"
 #include "gx_recomp_internal.h"
@@ -506,6 +507,15 @@ bool dol_gx_recomp_call_display_list(DolGxRecompState* gx, u32 address,
 }
 
 bool dol_gx_recomp_load_cp_reg(DolGxRecompState* gx, u8 reg, u32 value) {
+    /* HPCOS temporary CP array diagnostic */
+    if ((reg >= 0xA0u && reg <= 0xBFu)) {
+        fprintf(stderr,
+                "[HPCOS-CP] reg=0x%02X value=0x%08X kind=%s attr=%u\n",
+                reg, value,
+                reg >= 0xB0u ? "stride" : "base",
+                (unsigned)(reg & 0x0Fu));
+    }
+
     if (gx == NULL)
         return false;
     if (reg == DOL_GX_CP_REG_MATRIX_INDEX_A) {

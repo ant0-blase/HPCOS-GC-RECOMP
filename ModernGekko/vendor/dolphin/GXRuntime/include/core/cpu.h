@@ -341,13 +341,19 @@ static GXRUNTIME_ALWAYS_INLINE void clear_matching_reservation(CPUState* cpu, u3
  * the JIT. Dolphin avoids this by backpatching its own emitted code, which is
  * not available to us over compiler-generated code.
  *
- * One unsigned compare separates the two worlds: everything at or above
- * 0xCC000000 (hardware registers, locked cache) takes the external path
- * directly, everything below reaches the arena with no range check at all.
- * Faults then only happen for genuinely unmapped guest pages, which are rare,
- * and the exception table catches those.
+ * One unsigned compare separates the two worlds: everything at or above the
+ * floor takes the external path directly, everything below reaches the arena
+ * with no range check at all. Faults then only happen for genuinely unmapped
+ * guest pages, which are rare, and the exception table catches those.
+ *
+ * The floor is 0xC8000000, not the 0xCC000000 hardware-register base: the
+ * embedded framebuffer lives at 0xC8000000 and games do address it directly.
+ * Uncached MEM1 ends at 0xC1800000, so nothing legitimate sits between the two
+ * and the wider range costs nothing. With the floor at 0xCC000000, Disney's
+ * Magical Mirror took 675841 recovered faults in a 40s session -- a SIGSEGV per
+ * EFB access, far worse than the range check fastmem replaced.
  */
-#define GXRUNTIME_MMIO_FLOOR 0xCC000000u
+#define GXRUNTIME_MMIO_FLOOR 0xC8000000u
 
 /*
  * The arena base is a parameter, not a cpu->fastmem_base read, because the

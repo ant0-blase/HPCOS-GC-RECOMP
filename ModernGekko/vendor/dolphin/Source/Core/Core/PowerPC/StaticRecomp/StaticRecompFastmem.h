@@ -22,7 +22,15 @@ void Unregister();
 
 // Called from the SIGSEGV handler. Returns true when the faulting PC was one of
 // ours and the context has been redirected to the slow path.
-bool HandleFault(SContext* ctx);
+bool HandleFault(uintptr_t fault_address, SContext* ctx);
+
+// Arena bases, so a recovered fault can be reported as the guest address the
+// game actually used rather than a raw host pointer.
+void SetArenaBases(const void* physical, const void* logical);
+
+// Guest addresses that faulted most, worst first. Fastmem only pays while
+// these stay rare, so naming them is what turns "it is slow" into a fix.
+void ReportHotFaults(int max_rows);
 
 // How many faults were recovered. Fastmem is only a win while this stays small
 // relative to the number of guest memory accesses.

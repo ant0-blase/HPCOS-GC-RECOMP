@@ -541,7 +541,19 @@ int RunNetplayLobby(RuntimeConfig runtime_config, ConfigResult frontend_config,
     return static_cast<int>(NetplayExitCode::InvalidConfiguration);
   }
 
-  const GameInspectResult inspected = InspectGame(runtime_config.game_root);
+  std::error_code root_error;
+  const std::filesystem::path canonical_root =
+      std::filesystem::weakly_canonical(runtime_config.game_root, root_error);
+  const bool can_reuse_inspection =
+      runtime_config.inspected_game && !root_error &&
+      runtime_config.inspected_game->root == canonical_root &&
+      !runtime_config.inspected_game->assets_sha256.empty();
+
+  GameInspectResult inspected;
+  if (can_reuse_inspection)
+    inspected.metadata = runtime_config.inspected_game;
+  else
+    inspected = InspectGame(runtime_config.game_root);
   if (!inspected) {
     detail::SetExternalUICommon(false);
     UICommon::Shutdown();
