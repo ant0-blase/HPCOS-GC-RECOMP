@@ -18,8 +18,10 @@ static constexpr auto X_None = None;
 #include "Core/State.h"
 #include "Core/System.h"
 
+#include <algorithm>
 #include <cctype>
 #include <cstring>
+#include <memory>
 #include <string>
 #include <thread>
 
@@ -74,6 +76,8 @@ private:
   int m_window_y = Config::Get(Config::MAIN_RENDER_WINDOW_YPOS);
   unsigned int m_window_width = Config::Get(Config::MAIN_RENDER_WINDOW_WIDTH);
   unsigned int m_window_height = Config::Get(Config::MAIN_RENDER_WINDOW_HEIGHT);
+  std::shared_ptr<RenderSurfaceSize> m_render_surface_size =
+      std::make_shared<RenderSurfaceSize>(m_window_width, m_window_height);
   u32 m_mouse_button_mask = 0;
   int m_last_mouse_x = 0;
   int m_last_mouse_y = 0;
@@ -148,7 +152,8 @@ bool PlatformX11::Init()
   // Enter fullscreen if enabled.
   if (Config::Get(Config::MAIN_FULLSCREEN))
   {
-    m_window_fullscreen = X11Utils::ToggleFullscreen(m_display, m_window);
+    if (X11Utils::SetFullscreen(m_display, m_window, true))
+      m_window_fullscreen = true;
 #ifdef HAVE_XRANDR
     m_xrr_config->ToggleDisplayMode(True);
 #endif
@@ -171,7 +176,6 @@ void PlatformX11::MainLoop()
     UpdateRunningFlag();
     Core::HostDispatchJobs(Core::System::GetInstance());
     ProcessEvents();
-    UpdateWindowPosition();
 
     // TODO: Is this sleep appropriate?
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -185,6 +189,7 @@ WindowSystemInfo PlatformX11::GetWindowSystemInfo() const
   wsi.display_connection = static_cast<void*>(m_display);
   wsi.render_window = reinterpret_cast<void*>(m_window);
   wsi.render_surface = reinterpret_cast<void*>(m_window);
+  wsi.render_surface_size = m_render_surface_size;
   return wsi;
 }
 
@@ -197,6 +202,7 @@ void PlatformX11::UpdateWindowPosition()
   unsigned int borderDummy, depthDummy;
   XGetGeometry(m_display, m_window, &winDummy, &m_window_x, &m_window_y, &m_window_width,
                &m_window_height, &borderDummy, &depthDummy);
+  m_render_surface_size->Set(m_window_width, m_window_height);
 }
 
 void PlatformX11::ProcessEvents()
@@ -244,12 +250,13 @@ void PlatformX11::ProcessEvents()
       }
       else if ((key == XK_Return) && (event.xkey.state & Mod1Mask))
       {
-        m_window_fullscreen = !m_window_fullscreen;
-        X11Utils::ToggleFullscreen(m_display, m_window);
+        const bool fullscreen = !m_window_fullscreen;
+        if (!X11Utils::SetFullscreen(m_display, m_window, fullscreen))
+          break;
+        m_window_fullscreen = fullscreen;
 #ifdef HAVE_XRANDR
         m_xrr_config->ToggleDisplayMode(m_window_fullscreen);
 #endif
-        UpdateWindowPosition();
       }
       else if (key >= XK_F1 && key <= XK_F8)
       {
@@ -319,7 +326,18 @@ void PlatformX11::ProcessEvents()
         Stop();
       break;
     case ConfigureNotify:
-      if (g_presenter) g_presenter->ResizeSurface();
+    {
+      const unsigned int width = static_cast<unsigned int>(std::max(event.xconfigure.width, 1));
+      const unsigned int height = static_cast<unsigned int>(std::max(event.xconfigure.height, 1));
+      const bool resized = width != m_window_width || height != m_window_height;
+      m_window_x = event.xconfigure.x;
+      m_window_y = event.xconfigure.y;
+      m_window_width = width;
+      m_window_height = height;
+      m_render_surface_size->Set(width, height);
+      if (resized && g_presenter)
+        g_presenter->ResizeSurface();
+    }
       break;
     }
   }

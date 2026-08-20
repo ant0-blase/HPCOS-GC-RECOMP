@@ -3,6 +3,11 @@
 
 #pragma once
 
+#include <atomic>
+#include <cstdint>
+#include <memory>
+#include <utility>
+
 enum class WindowSystemType
 {
   Headless,
@@ -13,6 +18,32 @@ enum class WindowSystemType
   Wayland,
   FBDev,
   Haiku,
+};
+
+// Thread-safe dimensions supplied by window systems where the application
+// chooses the render-surface extent (most notably Wayland Vulkan). The state
+// is shared because WindowSystemInfo is copied into the video backend while
+// the platform continues receiving resize events on another thread.
+class RenderSurfaceSize final
+{
+public:
+  RenderSurfaceSize() = default;
+  RenderSurfaceSize(std::uint32_t width, std::uint32_t height) { Set(width, height); }
+
+  void Set(std::uint32_t width, std::uint32_t height)
+  {
+    const std::uint64_t packed = (static_cast<std::uint64_t>(width) << 32) | height;
+    m_packed.store(packed, std::memory_order_release);
+  }
+
+  std::pair<std::uint32_t, std::uint32_t> Get() const
+  {
+    const std::uint64_t packed = m_packed.load(std::memory_order_acquire);
+    return {static_cast<std::uint32_t>(packed >> 32), static_cast<std::uint32_t>(packed)};
+  }
+
+private:
+  std::atomic<std::uint64_t> m_packed{0};
 };
 
 struct WindowSystemInfo
@@ -43,4 +74,8 @@ struct WindowSystemInfo
 
   // Scale of the render surface. For hidpi systems, this will be >1.
   float render_surface_scale = 1.0f;
+
+  // Live client-selected surface dimensions. Fixed-extent window systems can
+  // leave this empty and let their graphics API report the current extent.
+  std::shared_ptr<RenderSurfaceSize> render_surface_size;
 };
