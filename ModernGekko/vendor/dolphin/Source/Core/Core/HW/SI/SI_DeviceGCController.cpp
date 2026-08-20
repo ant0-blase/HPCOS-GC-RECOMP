@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "Core/HW/SI/SI_DeviceGCController.h"
+#include "Core/HPCOSSettings.h"
 
 #include "Common/ChunkFile.h"
 #include "Common/CommonTypes.h"
@@ -147,6 +148,8 @@ GCPadStatus CSIDevice_GCController::GetPadStatus()
   if (!NetPlay::IsNetPlayRunning())
   {
     pad_status = Pad::GetStatus(m_device_number);
+    if (m_device_number == 0)
+      pad_status = HPCOS::MergePadStatus(pad_status);
   }
 
   HandleMoviePadStatus(m_system.GetMovie(), m_device_number, &pad_status);

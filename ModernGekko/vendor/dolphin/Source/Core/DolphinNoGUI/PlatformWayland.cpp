@@ -16,6 +16,7 @@
 #include <thread>
 #include <unistd.h>
 
+#include <linux/input-event-codes.h>
 #include <wayland-client.h>
 #include <wayland-cursor.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -28,6 +29,7 @@
 
 #include "Core/Config/MainSettings.h"
 #include "Core/Core.h"
+#include "Core/HPCOSSettings.h"
 #include "Core/State.h"
 #include "Core/System.h"
 #include "UICommon/UICommon.h"
@@ -35,6 +37,16 @@
 
 namespace
 {
+std::string HpcosWaylandKeyToken(xkb_keysym_t symbol)
+{
+  char name[128] = {};
+  if (xkb_keysym_get_name(symbol, name, sizeof(name)) <= 0) return {};
+  std::string token(name);
+  if (token.size() == 1 && token[0] >= 'a' && token[0] <= 'z')
+    token[0] = static_cast<char>(token[0] - 'a' + 'A');
+  return token;
+}
+
 class PlatformWayland final : public Platform
 {
 public:
@@ -72,8 +84,8 @@ public:
   static void PointerEnter(void* data, wl_pointer*, uint32_t serial, wl_surface* surface,
                            wl_fixed_t, wl_fixed_t);
   static void PointerLeave(void* data, wl_pointer*, uint32_t, wl_surface* surface);
-  static void PointerMotion(void*, wl_pointer*, uint32_t, wl_fixed_t, wl_fixed_t) {}
-  static void PointerButton(void*, wl_pointer*, uint32_t, uint32_t, uint32_t, uint32_t) {}
+  static void PointerMotion(void* data, wl_pointer*, uint32_t, wl_fixed_t x, wl_fixed_t y);
+  static void PointerButton(void* data, wl_pointer*, uint32_t, uint32_t, uint32_t button, uint32_t state);
   static void PointerAxis(void*, wl_pointer*, uint32_t, uint32_t, wl_fixed_t) {}
   static void PointerFrame(void*, wl_pointer*) {}
   static void PointerAxisSource(void*, wl_pointer*, uint32_t) {}
@@ -115,6 +127,10 @@ private:
   wl_surface* m_cursor_surface = nullptr;
   uint32_t m_pointer_serial = 0;
   bool m_pointer_inside = false;
+  bool m_pointer_position_valid = false;
+  double m_pointer_x = 0.0;
+  double m_pointer_y = 0.0;
+  u32 m_mouse_button_mask = 0;
 
   std::thread::id m_owner_thread;
   std::mutex m_title_mutex;
@@ -585,6 +601,7 @@ void PlatformWayland::KeyboardLeave(void* data, wl_keyboard*, uint32_t, wl_surfa
   if (surface == platform->m_surface)
   {
     platform->m_window_focus = false;
+    HPCOS::ResetInput();
     platform->UpdateCursor();
   }
 }
@@ -593,9 +610,16 @@ void PlatformWayland::KeyboardKey(void* data, wl_keyboard*, uint32_t, uint32_t, 
                                   uint32_t state)
 {
   auto* platform = static_cast<PlatformWayland*>(data);
-  if (state != WL_KEYBOARD_KEY_STATE_PRESSED || !platform->m_xkb_state)
+  if (!platform->m_xkb_state) return;
+  const xkb_keysym_t symbol = xkb_state_key_get_one_sym(platform->m_xkb_state, key + 8);
+  const bool pressed = state == WL_KEYBOARD_KEY_STATE_PRESSED;
+  if (pressed && symbol == XKB_KEY_F10 && platform->ModifierActive(XKB_MOD_NAME_CTRL))
+  {
+    platform->HandleHotkey(symbol);
     return;
-  platform->HandleHotkey(xkb_state_key_get_one_sym(platform->m_xkb_state, key + 8));
+  }
+  HPCOS::OnHostToken(HpcosWaylandKeyToken(symbol), pressed);
+  if (pressed) platform->HandleHotkey(symbol);
 }
 
 void PlatformWayland::KeyboardModifiers(void* data, wl_keyboard*, uint32_t, uint32_t depressed,
@@ -620,6 +644,11 @@ void PlatformWayland::HandleHotkey(xkb_keysym_t symbol)
   if (symbol == XKB_KEY_Escape && ModifierActive(XKB_MOD_NAME_CTRL))
   {
     RequestShutdown();
+  }
+  else if (symbol == XKB_KEY_F10 && ModifierActive(XKB_MOD_NAME_CTRL))
+  {
+    HPCOS::ToggleOverlay();
+    UpdateCursor();
   }
   else if (symbol == XKB_KEY_F10)
   {
@@ -662,13 +691,18 @@ void PlatformWayland::HandleHotkey(xkb_keysym_t symbol)
 }
 
 void PlatformWayland::PointerEnter(void* data, wl_pointer*, uint32_t serial, wl_surface* surface,
-                                   wl_fixed_t, wl_fixed_t)
+                                   wl_fixed_t x, wl_fixed_t y)
 {
   auto* platform = static_cast<PlatformWayland*>(data);
   if (surface == platform->m_surface)
   {
     platform->m_pointer_inside = true;
     platform->m_pointer_serial = serial;
+    platform->m_pointer_x = wl_fixed_to_double(x);
+    platform->m_pointer_y = wl_fixed_to_double(y);
+    platform->m_pointer_position_valid = true;
+    if (g_presenter && HPCOS::OverlayVisible())
+      g_presenter->SetMousePos(static_cast<float>(platform->m_pointer_x), static_cast<float>(platform->m_pointer_y));
     platform->UpdateCursor();
   }
 }
@@ -677,7 +711,45 @@ void PlatformWayland::PointerLeave(void* data, wl_pointer*, uint32_t, wl_surface
 {
   auto* platform = static_cast<PlatformWayland*>(data);
   if (surface == platform->m_surface)
+  {
     platform->m_pointer_inside = false;
+    platform->m_pointer_position_valid = false;
+  }
+}
+
+void PlatformWayland::PointerMotion(void* data, wl_pointer*, uint32_t, wl_fixed_t x, wl_fixed_t y)
+{
+  auto* platform = static_cast<PlatformWayland*>(data);
+  const double px = wl_fixed_to_double(x);
+  const double py = wl_fixed_to_double(y);
+  if (platform->m_pointer_position_valid)
+    HPCOS::OnMouseMotion(static_cast<float>(px - platform->m_pointer_x), static_cast<float>(py - platform->m_pointer_y));
+  platform->m_pointer_x = px;
+  platform->m_pointer_y = py;
+  platform->m_pointer_position_valid = true;
+  if (g_presenter && HPCOS::OverlayVisible())
+    g_presenter->SetMousePos(static_cast<float>(px), static_cast<float>(py));
+}
+
+void PlatformWayland::PointerButton(void* data, wl_pointer*, uint32_t, uint32_t, uint32_t button,
+                                    uint32_t state)
+{
+  auto* platform = static_cast<PlatformWayland*>(data);
+  const bool down = state == WL_POINTER_BUTTON_STATE_PRESSED;
+  int imgui_button = -1;
+  std::string token;
+  if (button == BTN_LEFT) { imgui_button = 0; token = "Mouse1"; }
+  else if (button == BTN_RIGHT) { imgui_button = 1; token = "Mouse2"; }
+  else if (button == BTN_MIDDLE) { imgui_button = 2; token = "Mouse3"; }
+  else if (button == BTN_SIDE) { imgui_button = 3; token = "Mouse4"; }
+  else if (button == BTN_EXTRA) { imgui_button = 4; token = "Mouse5"; }
+  if (!token.empty()) HPCOS::OnHostToken(token, down);
+  if (imgui_button >= 0)
+  {
+    if (down) platform->m_mouse_button_mask |= (1u << imgui_button);
+    else platform->m_mouse_button_mask &= ~(1u << imgui_button);
+    if (g_presenter && HPCOS::OverlayVisible()) g_presenter->SetMousePress(platform->m_mouse_button_mask);
+  }
 }
 
 void PlatformWayland::UpdateCursor()
@@ -685,7 +757,7 @@ void PlatformWayland::UpdateCursor()
   if (!m_pointer || !m_pointer_inside)
     return;
 
-  const bool hide = m_window_focus &&
+  const bool hide = m_window_focus && !HPCOS::OverlayVisible() &&
                     Config::Get(Config::MAIN_SHOW_CURSOR) == Config::ShowCursor::Never &&
                     Core::GetState(Core::System::GetInstance()) != Core::State::Paused;
   if (hide || !m_cursor_surface || !m_default_cursor || m_default_cursor->image_count == 0)

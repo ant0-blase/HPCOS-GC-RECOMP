@@ -10,6 +10,7 @@
 #include "Core/Core.h"
 #include "Core/HW/GBACore.h"
 #include "Core/Host.h"
+#include "Core/HPCOSSettings.h"
 #include "Core/NetPlay/NetPlayClient.h"
 #include "Core/PowerPC/JitInterface.h"
 #include "Core/PowerPC/PowerPC.h"
@@ -89,7 +90,7 @@ std::string FormatWindowTitle(const std::string &title, double fps) {
 std::vector<std::string> Host_GetPreferredLocales() { return {}; }
 void Host_PPCSymbolsChanged() {}
 void Host_PPCBreakpointsChanged() {}
-bool Host_UIBlocksControllerState() { return false; }
+bool Host_UIBlocksControllerState() { return HPCOS::OverlayVisible(); }
 void Host_Message(HostMessageID id) {
   if (id == HostMessageID::WMUserStop && s_platform)
     s_platform->Stop();

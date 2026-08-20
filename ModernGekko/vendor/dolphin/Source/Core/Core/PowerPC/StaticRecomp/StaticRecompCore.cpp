@@ -183,6 +183,10 @@ void StaticRecompCore::Init()
     const char* value = std::getenv("STATICRECOMP_MMIO_TRACE");
     return value && value[0] == '1';
   }();
+  m_external_trace = [] {
+    const char* value = std::getenv("STATICRECOMP_EXTERNAL_TRACE");
+    return value && value[0] == '1';
+  }();
 
   std::fprintf(stderr, "[staticrecomp] core init\n");
 
@@ -290,6 +294,28 @@ void StaticRecompCore::Shutdown()
     {
       std::fprintf(stderr, "[staticrecomp] mmio write %08x from pc %08x  %llu\n",
                    hot[i]->address, hot[i]->guest_pc, (unsigned long long)hot[i]->count);
+    }
+  }
+
+  if (m_external_trace)
+  {
+    std::vector<const ExternalAccess*> hot;
+    for (const auto& slot : m_external_accesses)
+    {
+      if (slot.reads || slot.writes)
+        hot.push_back(&slot);
+    }
+    std::sort(hot.begin(), hot.end(), [](const ExternalAccess* a, const ExternalAccess* b) {
+      return (a->reads + a->writes) > (b->reads + b->writes);
+    });
+    for (size_t i = 0; i < hot.size() && i < 24; ++i)
+    {
+      std::fprintf(stderr,
+                   "[staticrecomp] extmem page=%08x pc=%08x reads=%llu writes=%llu "
+                   "ea=%08x-%08x rsz=%x wsz=%x\n",
+                   hot[i]->page, hot[i]->guest_pc,
+                   (unsigned long long)hot[i]->reads, (unsigned long long)hot[i]->writes,
+                   hot[i]->min_ea, hot[i]->max_ea, hot[i]->read_sizes, hot[i]->write_sizes);
     }
   }
 

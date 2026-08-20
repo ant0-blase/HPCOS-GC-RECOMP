@@ -13,6 +13,7 @@
 #include "Core/HW/CPU.h"
 #include "Core/Config/MainSettings.h"
 #include "Core/Config/ConfigManager.h"
+#include "Core/HPCOSSettings.h"
 #include "Core/HW/SystemTimers.h"
 
 #include <algorithm>
@@ -165,6 +166,7 @@ void StaticRecompCore::Run()
 
   const std::string initial_game_id = SConfig::GetInstance().GetGameID();
   m_module_active = m_module && (initial_game_id.empty() || initial_game_id == m_module->game_id);
+  m_hpcos_pi_poll_fastpath = initial_game_id == "GHSE69";
 
   // Modules built with GXRUNTIME_GAMECUBE_MEM1_ONLY decode guest addresses
   // against a hard-coded 24 MiB MEM1 and ignore EXRAM entirely. That is the
@@ -202,22 +204,8 @@ void StaticRecompCore::Run()
   // this Run(), so cache all game-id decisions once here.
   const bool guest_fov_supported = initial_game_id == "GHSE69";
 
-  // HPCOS_FOV is process configuration too, so parse it once instead of
-  // revisiting the static-local guard in the hot outer loop.
-  static const float hpcos_requested_hfov = [] {
-    const char* env = std::getenv("HPCOS_FOV");
+  // HPCOS FOV is live-editable from the Ctrl+F10 PC settings overlay.
 
-    if (!env || !*env)
-      return 0.0f;
-
-    char* end = nullptr;
-    const float value = std::strtof(env, &end);
-
-    if (end == env || *end != '\0' || value < 30.0f || value > 150.0f)
-      return 0.0f;
-
-    return value;
-  }();
 
   while (*state_ptr == CPU::State::Running)
   {
@@ -236,6 +224,7 @@ void StaticRecompCore::Run()
     // globals, so guest_fov_supported gates the patch using the cached
     // title id above.
 
+    const float hpcos_requested_hfov = HPCOS::Fov();
     if (hpcos_requested_hfov > 0.0f && guest_fov_supported)
     {
       constexpr u32 FOV_ADDRESS = 0x8049EC88u;

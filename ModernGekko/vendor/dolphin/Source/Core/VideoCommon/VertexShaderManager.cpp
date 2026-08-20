@@ -12,6 +12,7 @@
 #include "Common/CommonTypes.h"
 #include "Common/Logging/Log.h"
 #include "Common/Matrix.h"
+#include "Core/HPCOSSettings.h"
 #include "VideoCommon/BPFunctions.h"
 #include "VideoCommon/BPMemory.h"
 #include "VideoCommon/CPMemory.h"
@@ -63,8 +64,7 @@ Common::Matrix44 VertexShaderManager::LoadProjectionMatrix()
     float hpcos_3d_scale_x = 1.0f;
     float hpcos_3d_scale_y = 1.0f;
 
-    if (const char* env = std::getenv("HPCOS_DYNAMIC_ASPECT");
-        env != nullptr && env[0] == '1' && g_presenter)
+    if (HPCOS::DynamicAspectEnabled() && g_presenter)
     {
       constexpr float original_aspect = 4.0f / 3.0f;
       const float host_aspect = g_presenter->GetHpcosHostAspect();
@@ -94,23 +94,7 @@ Common::Matrix44 VertexShaderManager::LoadProjectionMatrix()
      * Orthographic projections are untouched, so normal 2D/HUD rendering
      * remains on the original path.
      */
-    static const float hpcos_target_hfov = [] {
-      const char* env = std::getenv("HPCOS_FOV");
-
-      if (!env || !*env)
-        return 0.0f;
-
-      char* end = nullptr;
-      const float value = std::strtof(env, &end);
-
-      if (end == env || *end != '\0' ||
-          value < 30.0f || value > 150.0f)
-      {
-        return 0.0f;
-      }
-
-      return value;
-    }();
+    const float hpcos_target_hfov = HPCOS::Fov();
 
     float hpcos_fov_projection_scale = 1.0f;
 
@@ -172,8 +156,7 @@ Common::Matrix44 VertexShaderManager::LoadProjectionMatrix()
     float hpcos_ui_scale_x = 1.0f;
     float hpcos_ui_scale_y = 1.0f;
 
-    if (const char* env = std::getenv("HPCOS_DYNAMIC_ASPECT");
-        env != nullptr && env[0] == '1' && g_presenter)
+    if (HPCOS::DynamicAspectEnabled() && g_presenter)
     {
       constexpr float original_aspect = 4.0f / 3.0f;
       const float host_aspect = g_presenter->GetHpcosHostAspect();

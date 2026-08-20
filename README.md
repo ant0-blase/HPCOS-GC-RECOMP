@@ -43,6 +43,36 @@ The current native build targets the original NTSC game timing.
 
 ## PC enhancements
 
+### In-game PC settings menu
+
+Press **Ctrl+F10** while the game is running to open the native HPCOS PC settings
+overlay. The normal **F10** Dolphin pause hotkey is kept separate.
+
+The overlay currently exposes live controls for:
+
+- internal rendering resolution from native 1x through 12x
+- V-Sync and the FPS performance overlay
+- original 4:3, automatic host aspect, 16:9, 16:10, 21:9 and 32:9 modes
+- horizontal FOV override, synchronized with the GHSE69 guest camera/frustum
+- optional host presentation FPS cap without changing guest game speed
+- keyboard + mouse input merged with the normal GameCube controller on Port 1
+- mouse sensitivity and Y-axis inversion
+- direct in-menu keyboard/mouse rebinding
+- runtime volume and mute controls
+
+Settings and custom bindings are persisted in `HPCOS_PC.ini` inside the runtime
+configuration directory.
+
+Default keyboard/mouse bindings are **WASD** for movement, mouse movement for the
+C-stick/camera, left/right/middle mouse for A/B/Z, **E/Q** for X/Y,
+**Left Shift/Left Ctrl** for L/R, **Enter** for Start and the arrow keys for the
+D-pad. Gamepad input remains enabled at the same time.
+
+> [!NOTE]
+> The FPS option is a host presentation cap, not a fake timing multiplier. A true
+> guest framerate unlock still requires game-specific timing work so animations,
+> audio and gameplay are not sped up.
+
 ### Dynamic widescreen
 
 HPCOS includes a runtime widescreen implementation rather than relying on a fixed

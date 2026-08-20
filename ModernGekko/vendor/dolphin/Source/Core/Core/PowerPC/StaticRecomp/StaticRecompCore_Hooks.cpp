@@ -9,9 +9,11 @@
 #include "Core/PowerPC/Interpreter/Interpreter.h"
 #include "Core/PowerPC/StaticRecomp/StaticRecompLockstep.h"
 #include "Core/HW/GPFifo.h"
+#include "Core/HW/ProcessorInterface.h"
 #include "Core/HW/SystemTimers.h"
 #include "Common/Logging/Log.h"
 
+#include <algorithm>
 #include <cstdio>
 
 namespace
@@ -69,6 +71,22 @@ u64 StaticRecompCore::HookExternalRead(CPUState* cpu, u32 ea, u8 size)
       }
     }
   }
+  if (core->m_external_trace) [[unlikely]]
+    core->RecordExternalAccess(ea, cpu->pc, size, false);
+
+  // GHSE69 polls PI_INTERRUPT_CAUSE and PI_INTERRUPT_MASK in its scheduler /
+  // interrupt path tens of thousands of times during loading. Dolphin registers
+  // both as DirectRead<u32>, so for the exact observed guest instructions the
+  // MMU/MMIO dispatcher adds no semantics. Keep lockstep on the canonical path.
+  if (core->m_hpcos_pi_poll_fastpath && !core->m_lockstep_verifier->m_ls_journaling && size == 4)
+  {
+    auto& pi = core->m_system.GetProcessorInterface();
+    if (cpu->pc == 0x801744C0u && ea == 0xCC003000u)
+      return pi.GetCause();
+    if (cpu->pc == 0x801744D4u && ea == 0xCC003004u)
+      return pi.GetMask();
+  }
+
   core->PropagateGuestMSR();
   auto& mmu = core->m_system.GetMMU();
   u64 value;
@@ -166,6 +184,46 @@ void StaticRecompCore::RecordMmioRead(u32 ea, u32 guest_pc, u32 value)
   }
 }
 
+void StaticRecompCore::RecordExternalAccess(u32 ea, u32 guest_pc, u8 size, bool write)
+{
+  const u32 page = ea & 0xFFFFF000u;
+  // Small open-addressed table. Trace mode is diagnostic-only, but keep the
+  // hot hook lightweight enough that loading behaviour remains representative.
+  u32 index = ((page >> 12) * 0x9E3779B1u ^ guest_pc * 0x85EBCA6Bu) & 255u;
+  for (u32 probe = 0; probe < 16; ++probe, index = (index + 1) & 255u)
+  {
+    auto& slot = m_external_accesses[index];
+    if ((slot.reads == 0 && slot.writes == 0) ||
+        (slot.page == page && slot.guest_pc == guest_pc))
+    {
+      if (slot.reads == 0 && slot.writes == 0)
+      {
+        slot.page = page;
+        slot.guest_pc = guest_pc;
+        slot.min_ea = ea;
+        slot.max_ea = ea;
+      }
+      else
+      {
+        slot.min_ea = std::min(slot.min_ea, ea);
+        slot.max_ea = std::max(slot.max_ea, ea);
+      }
+      const u32 size_bit = size <= 8 ? size : 0u;
+      if (write)
+      {
+        ++slot.writes;
+        slot.write_sizes |= size_bit;
+      }
+      else
+      {
+        ++slot.reads;
+        slot.read_sizes |= size_bit;
+      }
+      return;
+    }
+  }
+}
+
 void StaticRecompCore::HookExternalWrite(CPUState* cpu, u32 ea, u64 value, u8 size)
 {
   auto* core = static_cast<StaticRecompCore*>(cpu->external_user_data);
@@ -257,6 +315,9 @@ void StaticRecompCore::HookExternalWrite(CPUState* cpu, u32 ea, u64 value, u8 si
       }
     }
   }
+
+  if (core->m_external_trace) [[unlikely]]
+    core->RecordExternalAccess(ea, cpu->pc, size, true);
 
   if (core->m_mmio_trace) [[unlikely]]
     core->RecordMmioWrite(ea, cpu->pc);
