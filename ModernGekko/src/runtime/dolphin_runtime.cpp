@@ -182,7 +182,22 @@ RuntimeCreateResult Runtime::Create(RuntimeConfig config) {
         RuntimeError{RuntimeErrorCode::AlreadyActive,
                      "only one ModernGekko runtime may be active per process"}};
 
-  GameInspectResult inspected = InspectGame(config.game_root);
+  GameInspectResult inspected;
+  if (config.inspected_game) {
+    std::error_code ec;
+    const std::filesystem::path canonical_root =
+        std::filesystem::weakly_canonical(config.game_root, ec);
+    if (ec || canonical_root != config.inspected_game->root) {
+      return {
+          {},
+          RuntimeError{RuntimeErrorCode::InvalidGame,
+                       "pre-inspected game root does not match game_root"}};
+    }
+    inspected.metadata = std::move(config.inspected_game);
+    config.inspected_game.reset();
+  } else {
+    inspected = InspectGame(config.game_root);
+  }
   if (!inspected)
     return {{}, RuntimeError{RuntimeErrorCode::InvalidGame, inspected.error}};
 

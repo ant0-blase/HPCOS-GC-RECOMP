@@ -1,3 +1,4 @@
+#include <stdio.h>
 // DolRecomp output
 #include "../generated.h"
 
@@ -17775,6 +17776,23 @@ label_80198D94:
     }
 
 label_80198D98:
+    {
+        static unsigned hpcos_gxsetarray_n = 0;
+        if (hpcos_gxsetarray_n++ < 64) {
+            fprintf(stderr,
+                "[HPCOS-GXSETARRAY] #%u "
+                "lr=%08X attr=%u base=%08X stride=%u "
+                "r3=%08X r4=%08X r5=%08X\n",
+                hpcos_gxsetarray_n,
+                ctx->lr,
+                ctx->gpr[3],
+                ctx->gpr[4],
+                ctx->gpr[5],
+                ctx->gpr[3],
+                ctx->gpr[4],
+                ctx->gpr[5]);
+        }
+    }
     ctx->pc = 0x80198D98u;
     ctx->downcount -= 2;
     // 80198D98: cmpwi   r3, 25
@@ -23809,6 +23827,42 @@ label_80199940:
 
 label_80199944:
     ctx->pc = 0x80199944u;
+
+    {
+        const u32 dbg_r13 = ctx->gpr[13];
+        const u32 dbg_flag_addr =
+            dbg_r13 + (u32)(s32)-26088;
+        const u32 dbg_queue_addr =
+            dbg_r13 + (u32)(s32)-26084;
+        const u32 dbg_cb_addr =
+            dbg_r13 + (u32)(s32)-26092;
+
+        fprintf(stderr,
+            "[HPCOS-VIPATH:VI-ENTRY] "
+            "pc=%08X lr=%08X "
+            "r3=%08X r4=%08X r12=%08X "
+            "r13=%08X "
+            "flag@%08X=%02X "
+            "queue=%08X head=%08X tail=%08X "
+            "cb@%08X=%08X "
+            "PIcause=%08X PImask=%08X\n",
+            ctx->pc,
+            ctx->lr,
+            ctx->gpr[3],
+            ctx->gpr[4],
+            ctx->gpr[12],
+            dbg_r13,
+            dbg_flag_addr,
+            (unsigned)mem_read8(ctx, dbg_flag_addr),
+            dbg_queue_addr,
+            mem_read32(ctx, dbg_queue_addr + 0u),
+            mem_read32(ctx, dbg_queue_addr + 4u),
+            dbg_cb_addr,
+            mem_read32(ctx, dbg_cb_addr),
+            mem_read32(ctx, 0xCC003000u),
+            mem_read32(ctx, 0xCC003004u));
+    }
+
     // 80199944: stwu     r1, -736(r1)
     {
         u32 ea = ctx->gpr[1] + (u32)(s32)(-736);
@@ -23875,6 +23929,42 @@ label_80199964:
 
 label_80199968:
     ctx->pc = 0x80199968u;
+
+    {
+        const u32 dbg_r13 = ctx->gpr[13];
+        const u32 dbg_flag_addr =
+            dbg_r13 + (u32)(s32)-26088;
+        const u32 dbg_queue_addr =
+            dbg_r13 + (u32)(s32)-26084;
+        const u32 dbg_cb_addr =
+            dbg_r13 + (u32)(s32)-26092;
+
+        fprintf(stderr,
+            "[HPCOS-VIPATH:VI-FLAG] "
+            "pc=%08X lr=%08X "
+            "r3=%08X r4=%08X r12=%08X "
+            "r13=%08X "
+            "flag@%08X=%02X "
+            "queue=%08X head=%08X tail=%08X "
+            "cb@%08X=%08X "
+            "PIcause=%08X PImask=%08X\n",
+            ctx->pc,
+            ctx->lr,
+            ctx->gpr[3],
+            ctx->gpr[4],
+            ctx->gpr[12],
+            dbg_r13,
+            dbg_flag_addr,
+            (unsigned)mem_read8(ctx, dbg_flag_addr),
+            dbg_queue_addr,
+            mem_read32(ctx, dbg_queue_addr + 0u),
+            mem_read32(ctx, dbg_queue_addr + 4u),
+            dbg_cb_addr,
+            mem_read32(ctx, dbg_cb_addr),
+            mem_read32(ctx, 0xCC003000u),
+            mem_read32(ctx, 0xCC003004u));
+    }
+
     // 80199968: stb     r3, -26088(r13)
     {
         u32 ea = ctx->gpr[13] + (u32)(s32)(-26088);
@@ -23952,6 +24042,42 @@ label_80199988:
 
 label_8019998C:
     ctx->pc = 0x8019998Cu;
+
+    {
+        const u32 dbg_r13 = ctx->gpr[13];
+        const u32 dbg_flag_addr =
+            dbg_r13 + (u32)(s32)-26088;
+        const u32 dbg_queue_addr =
+            dbg_r13 + (u32)(s32)-26084;
+        const u32 dbg_cb_addr =
+            dbg_r13 + (u32)(s32)-26092;
+
+        fprintf(stderr,
+            "[HPCOS-VIPATH:VI-CALLBACK] "
+            "pc=%08X lr=%08X "
+            "r3=%08X r4=%08X r12=%08X "
+            "r13=%08X "
+            "flag@%08X=%02X "
+            "queue=%08X head=%08X tail=%08X "
+            "cb@%08X=%08X "
+            "PIcause=%08X PImask=%08X\n",
+            ctx->pc,
+            ctx->lr,
+            ctx->gpr[3],
+            ctx->gpr[4],
+            ctx->gpr[12],
+            dbg_r13,
+            dbg_flag_addr,
+            (unsigned)mem_read8(ctx, dbg_flag_addr),
+            dbg_queue_addr,
+            mem_read32(ctx, dbg_queue_addr + 0u),
+            mem_read32(ctx, dbg_queue_addr + 4u),
+            dbg_cb_addr,
+            mem_read32(ctx, dbg_cb_addr),
+            mem_read32(ctx, 0xCC003000u),
+            mem_read32(ctx, 0xCC003004u));
+    }
+
     // 8019998C: blrl
     {
         u32 target = ctx->lr & ~3u;
@@ -23998,12 +24124,84 @@ label_8019999C:
 
 label_801999A0:
     ctx->pc = 0x801999A0u;
+
+    {
+        const u32 dbg_r13 = ctx->gpr[13];
+        const u32 dbg_flag_addr =
+            dbg_r13 + (u32)(s32)-26088;
+        const u32 dbg_queue_addr =
+            dbg_r13 + (u32)(s32)-26084;
+        const u32 dbg_cb_addr =
+            dbg_r13 + (u32)(s32)-26092;
+
+        fprintf(stderr,
+            "[HPCOS-VIPATH:VI-BEFORE-WAKE] "
+            "pc=%08X lr=%08X "
+            "r3=%08X r4=%08X r12=%08X "
+            "r13=%08X "
+            "flag@%08X=%02X "
+            "queue=%08X head=%08X tail=%08X "
+            "cb@%08X=%08X "
+            "PIcause=%08X PImask=%08X\n",
+            ctx->pc,
+            ctx->lr,
+            ctx->gpr[3],
+            ctx->gpr[4],
+            ctx->gpr[12],
+            dbg_r13,
+            dbg_flag_addr,
+            (unsigned)mem_read8(ctx, dbg_flag_addr),
+            dbg_queue_addr,
+            mem_read32(ctx, dbg_queue_addr + 0u),
+            mem_read32(ctx, dbg_queue_addr + 4u),
+            dbg_cb_addr,
+            mem_read32(ctx, dbg_cb_addr),
+            mem_read32(ctx, 0xCC003000u),
+            mem_read32(ctx, 0xCC003004u));
+    }
+
     ctx->downcount -= 2;
     // 801999A0: addi    r3, r13, -26084
     ctx->gpr[3] = ctx->gpr[13] + (u32)(s32)(-26084);
 
 label_801999A4:
     ctx->pc = 0x801999A4u;
+
+    {
+        const u32 dbg_r13 = ctx->gpr[13];
+        const u32 dbg_flag_addr =
+            dbg_r13 + (u32)(s32)-26088;
+        const u32 dbg_queue_addr =
+            dbg_r13 + (u32)(s32)-26084;
+        const u32 dbg_cb_addr =
+            dbg_r13 + (u32)(s32)-26092;
+
+        fprintf(stderr,
+            "[HPCOS-VIPATH:VI-WAKE] "
+            "pc=%08X lr=%08X "
+            "r3=%08X r4=%08X r12=%08X "
+            "r13=%08X "
+            "flag@%08X=%02X "
+            "queue=%08X head=%08X tail=%08X "
+            "cb@%08X=%08X "
+            "PIcause=%08X PImask=%08X\n",
+            ctx->pc,
+            ctx->lr,
+            ctx->gpr[3],
+            ctx->gpr[4],
+            ctx->gpr[12],
+            dbg_r13,
+            dbg_flag_addr,
+            (unsigned)mem_read8(ctx, dbg_flag_addr),
+            dbg_queue_addr,
+            mem_read32(ctx, dbg_queue_addr + 0u),
+            mem_read32(ctx, dbg_queue_addr + 4u),
+            dbg_cb_addr,
+            mem_read32(ctx, dbg_cb_addr),
+            mem_read32(ctx, 0xCC003000u),
+            mem_read32(ctx, 0xCC003004u));
+    }
+
     // 801999A4: bl      0x80179564
     {
             ctx->lr = 0x801999A8u;

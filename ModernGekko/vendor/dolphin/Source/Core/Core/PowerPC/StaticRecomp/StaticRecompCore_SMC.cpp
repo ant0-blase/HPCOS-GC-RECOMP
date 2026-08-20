@@ -8,6 +8,7 @@
 #include "Common/Logging/Log.h"
 #include <algorithm>
 #include <cstdio>
+#include <string_view>
 
 namespace
 {
@@ -536,6 +537,17 @@ void StaticRecompCore::VerifyChunk(u32 index)
           break;
         }
       }
+    }
+
+    // GHSE69 enters its scheduler idle poll at 0x801789AC. Do not let a
+    // cross-chunk burst enter that chunk: returning to the chassis makes the
+    // RunQueueBits-aware idle fast path observable at the exact poll PC. The
+    // chunk remains natively dispatchable; only cross-chunk chaining stops.
+    constexpr u32 HPCOS_IDLE_PC = 0x801789ACu;
+    if (chainable && std::string_view(m_module->game_id) == "GHSE69" &&
+        chunk.start <= HPCOS_IDLE_PC && HPCOS_IDLE_PC < chunk.end)
+    {
+      chainable = false;
     }
 
     m_native_chain_state[index] = chainable ? 1 : 0;

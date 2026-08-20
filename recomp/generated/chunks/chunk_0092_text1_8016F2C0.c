@@ -1,3 +1,4 @@
+#include <stdio.h>
 // DolRecomp output
 #include "../generated.h"
 
@@ -24027,6 +24028,27 @@ label_801715A8:
 
 label_801715AC:
     ctx->pc = 0x801715ACu;
+
+    {
+        static unsigned long long dbg_dci_entry = 0;
+
+        ++dbg_dci_entry;
+
+        if (dbg_dci_entry <= 40 ||
+            ctx->lr == 0x80006F78u) {
+
+            fprintf(stderr,
+                "[HPCOS-DCI-ENTRY] "
+                "#%llu lr=%08X "
+                "addr=%08X size=%08X "
+                "ctr_before=%08X\n",
+                dbg_dci_entry,
+                ctx->lr,
+                ctx->gpr[3],
+                ctx->gpr[4],
+                ctx->ctr);
+        }
+    }
     ctx->downcount -= 2;
     // 801715AC: cmplwi  r4, 0x0000
     {
@@ -24102,6 +24124,27 @@ label_801715C8:
     ctx->pc = 0x801715C8u;
     // 801715C8: mtctr    r4
     ctx->ctr = ctx->gpr[4];
+
+    {
+        static unsigned long long dbg_dci_setup = 0;
+
+        ++dbg_dci_setup;
+
+        if (dbg_dci_setup <= 40 ||
+            ctx->lr == 0x80006F78u) {
+
+            fprintf(stderr,
+                "[HPCOS-DCI-SETUP] "
+                "#%llu lr=%08X "
+                "addr=%08X lines=%08X "
+                "ctr=%08X\n",
+                dbg_dci_setup,
+                ctx->lr,
+                ctx->gpr[3],
+                ctx->gpr[4],
+                ctx->ctr);
+        }
+    }
 
 label_801715CC:
     ctx->pc = 0x801715CCu;

@@ -36,6 +36,34 @@ std::atomic<size_t> s_count{0};
 // is visible as a number instead of as unexplained slowness.
 std::atomic<uint64_t> s_recovered{0};
 
+// Arena bases and a small histogram of faulting guest addresses, bucketed by
+// 64 KiB so a scattered range still collapses into one row.
+const uint8_t* s_physical_base = nullptr;
+const uint8_t* s_logical_base = nullptr;
+constexpr size_t FAULT_SLOTS = 32;
+struct FaultBucket { uint32_t guest_page; uint64_t count; };
+FaultBucket s_faults[FAULT_SLOTS] = {};
+
+void RecordFault(uintptr_t fault_address)
+{
+  // Whichever view it landed in, the low 32 bits are the guest address.
+  const uint8_t* addr = reinterpret_cast<const uint8_t*>(fault_address);
+  uint32_t guest = 0;
+  if (s_logical_base && addr >= s_logical_base && addr - s_logical_base < 0x1'0000'0000ll)
+    guest = static_cast<uint32_t>(addr - s_logical_base);
+  else if (s_physical_base && addr >= s_physical_base && addr - s_physical_base < 0x1'0000'0000ll)
+    guest = static_cast<uint32_t>(addr - s_physical_base);
+  else
+    return;
+
+  const uint32_t page = guest >> 16;
+  for (auto& slot : s_faults)
+  {
+    if (slot.count != 0 && slot.guest_page == page) { ++slot.count; return; }
+    if (slot.count == 0) { slot.guest_page = page; slot.count = 1; return; }
+  }
+}
+
 // An entry is two self-relative 32-bit offsets, so the section needs no
 // relocation processing: at entry address E, the faulting instruction is at
 // E + entry[0] and the fixup at E + 4 + entry[1].
@@ -96,7 +124,28 @@ void Unregister()
   s_entries.shrink_to_fit();
 }
 
-bool HandleFault(SContext* ctx)
+void SetArenaBases(const void* physical, const void* logical)
+{
+  s_physical_base = static_cast<const uint8_t*>(physical);
+  s_logical_base = static_cast<const uint8_t*>(logical);
+}
+
+void ReportHotFaults(int max_rows)
+{
+  std::vector<const FaultBucket*> hot;
+  for (const auto& slot : s_faults)
+    if (slot.count) hot.push_back(&slot);
+  std::sort(hot.begin(), hot.end(),
+            [](const FaultBucket* a, const FaultBucket* b) { return a->count > b->count; });
+  for (size_t i = 0; i < hot.size() && i < static_cast<size_t>(max_rows); ++i)
+  {
+    std::fprintf(stderr, "[staticrecomp] fastmem fault %08x-%08x  %llu\n",
+                 hot[i]->guest_page << 16, (hot[i]->guest_page << 16) | 0xFFFFu,
+                 (unsigned long long)hot[i]->count);
+  }
+}
+
+bool HandleFault(uintptr_t fault_address, SContext* ctx)
 {
   const Entry* table = s_table.load(std::memory_order_acquire);
   if (!table)
@@ -116,6 +165,7 @@ bool HandleFault(SContext* ctx)
   // friends) rather than a reference to it.
   ctx->CTX_PC = static_cast<decltype(+ctx->CTX_PC)>(found->fixup);
   s_recovered.fetch_add(1, std::memory_order_relaxed);
+  RecordFault(fault_address);
   return true;
 }
 }  // namespace StaticRecompFastmem

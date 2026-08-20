@@ -31,7 +31,17 @@ void interrupt_restore_fpu_context(CPUState* cpu, u32 context);
 // Called once per current generated-dispatch work unit. Advances the runtime
 // VI clock; when a retrace is due and external interrupts are enabled and
 // unmasked, delivers the VI interrupt to the guest.
+/*
+ * Deliver the PowerPC Decrementer exception (#8) through GHSE69's
+ * recompiled OSAlarm exception handler.
+ */
+bool interrupt_deliver_decrementer(CPUState* cpu);
+
 void interrupt_poll(CPUState* cpu);
+
+#ifdef HPCOS_VI_ONLY
+void interrupt_poll_vi_only(CPUState* cpu);
+#endif
 
 // Commit a Pixel Engine "finish" interrupt (PI cause bit 10). Called when a
 // thread blocks in GXWaitDrawDone (sleeps on FinishQueue), which only happens

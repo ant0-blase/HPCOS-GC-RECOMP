@@ -35,7 +35,17 @@ struct GameInspectResult
   explicit operator bool() const { return metadata.has_value(); }
 };
 
-GameInspectResult InspectGame(const std::filesystem::path& root);
+struct GameInspectOptions
+{
+  // Asset hashes are required for netplay compatibility and pinned asset
+  // releases, but local runtimes do not otherwise consume them. Keep the
+  // public API's existing validation behaviour unless a caller explicitly
+  // opts out.
+  bool hash_assets = true;
+};
+
+GameInspectResult InspectGame(const std::filesystem::path& root,
+                              GameInspectOptions options = {});
 std::optional<std::string> HashFileSha256(const std::filesystem::path& path);
 std::optional<std::string> HashDirectorySha256(const std::filesystem::path& root);
 }  // namespace moderngekko

@@ -7,56 +7,25 @@
 
 static bool instruction_uses_fallback(const PPCInst* inst) {
     switch (inst->op) {
-    case PPC_OP_DCBST:
-    case PPC_OP_DCBF:
-    case PPC_OP_DCBI:
-    case PPC_OP_ICBI:
+    /*
+     * dcbst/dcbf/dcbi/icbi are emitted inline through the cache_control hook
+     * rather than handed to the interpreter. They were the entirety of the
+     * interpreter traffic -- 15.1M calls in a 45s session, 72% of them dcbf --
+     * and each one also ended the block, so every single one cost a dispatcher
+     * round trip on top of the hook. They cannot fault on memory and only
+     * dcbi can raise (privilege), which ppc_cache_control handles.
+     */
     case PPC_OP_UNKNOWN:
         return true;
+    /*
+     * Every mfspr/mtspr is emitted inline: the ones the module models directly
+     * stay direct, and the rest go through ppc_mfspr/ppc_mtspr, which route to
+     * the chassis SPR hooks and raise the privilege/illegal exceptions
+     * themselves. Nothing here needs the interpreter.
+     */
     case PPC_OP_MFSPR:
-        switch (inst->spr) {
-        case 1:
-        case 8:
-        case 9:
-        case 26:
-        case 27:
-        case 268:
-        case 269:
-        case 282:
-        case 912:
-        case 913:
-        case 914:
-        case 915:
-        case 916:
-        case 917:
-        case 918:
-        case 919:
-        case 920:
-            return false;
-        default:
-            return true;
-        }
     case PPC_OP_MTSPR:
-        switch (inst->spr) {
-        case 1:
-        case 8:
-        case 9:
-        case 26:
-        case 27:
-        case 282:
-        case 912:
-        case 913:
-        case 914:
-        case 915:
-        case 916:
-        case 917:
-        case 918:
-        case 919:
-        case 920:
-            return false;
-        default:
-            return true;
-        }
+        return false;
     default:
         return false;
     }
@@ -102,6 +71,13 @@ static u32 instruction_cycles(const PPCInst* inst) {
         return 40;
     case PPC_OP_DCBZ:
         return 5;
+    /* Dolphin's PPCTables costs, previously charged by the fallback hook. */
+    case PPC_OP_DCBST:
+    case PPC_OP_DCBF:
+    case PPC_OP_DCBI:
+        return 5;
+    case PPC_OP_ICBI:
+        return 4;
     case PPC_OP_DCBTST:
     case PPC_OP_DCBT:
         return 2;

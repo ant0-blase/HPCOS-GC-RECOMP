@@ -62,10 +62,72 @@ u64 StaticRecompCore::HookExternalRead(CPUState* cpu, u32 ea, u8 size)
   /*
    * Diagnostic sampler for pathological MMIO polling loops.
    *
+   * A game that never leaves a loading screen is usually spinning on one
+   * hardware register that never reaches the value it wants. Set
+   * STATICRECOMP_MMIO_TRACE=1 to have the hottest read addresses, with the
+   * guest PC doing the reading, reported at shutdown -- that names the
+   * register and the code waiting on it instead of leaving it to guesswork.
+   *
    * Use a prime interval so a loop containing several external accesses
    * doesn't keep aliasing onto the exact same phase.
    */
+  if (core->m_mmio_trace) [[unlikely]]
+    core->RecordMmioRead(ea, cpu->pc, static_cast<u32>(value));
   return value;
+}
+
+void StaticRecompCore::RecordMmioWrite(u32 ea, u32 guest_pc)
+{
+  // The locked cache at 0xE0000000 is memory, not a hardware register, and it
+  // is touched at hundreds of distinct addresses -- left in, it fills the table
+  // and hides the register writes this sampler exists to show.
+  if (ea >= 0xE0000000u)
+    return;
+  for (auto& slot : m_mmio_writes)
+  {
+    if (slot.count != 0 && slot.address == ea && slot.guest_pc == guest_pc)
+    {
+      ++slot.count;
+      return;
+    }
+    if (slot.count == 0)
+    {
+      slot.address = ea;
+      slot.guest_pc = guest_pc;
+      slot.count = 1;
+      return;
+    }
+  }
+}
+
+void StaticRecompCore::RecordMmioRead(u32 ea, u32 guest_pc, u32 value)
+{
+  if (ea >= 0xE0000000u)
+    return;
+  // Small fixed table: a stuck game polls a handful of addresses, so this only
+  // has to hold the hot ones. Full table simply stops recording.
+  for (auto& slot : m_mmio_reads)
+  {
+    if (slot.count != 0 && slot.address == ea && slot.guest_pc == guest_pc)
+    {
+      ++slot.count;
+      if (value != slot.last_value)
+      {
+        slot.last_value = value;
+        ++slot.distinct;
+      }
+      return;
+    }
+    if (slot.count == 0)
+    {
+      slot.address = ea;
+      slot.guest_pc = guest_pc;
+      slot.count = 1;
+      slot.last_value = value;
+      slot.distinct = 1;
+      return;
+    }
+  }
 }
 
 void StaticRecompCore::HookExternalWrite(CPUState* cpu, u32 ea, u64 value, u8 size)
@@ -87,6 +149,28 @@ void StaticRecompCore::HookExternalWrite(CPUState* cpu, u32 ea, u64 value, u8 si
   // StaticRecompCore_SMC.cpp that this ordering skips entirely.
   if ((ea & 0xFFFFF000) == 0xCC008000u)
   {
+    /*
+     * HPCOS temporary WGPIPE origin probe.
+     * Keep it bounded: the gx-core failure currently happens at ~2479 bytes.
+     */
+    static unsigned long long s_hpcos_wgpipe_bytes = 0;
+
+    if (s_hpcos_wgpipe_bytes < 3072ull)
+    {
+      std::fprintf(stderr,
+                   "[HPCOS-WGPIPE] off=%llu pc=%08X lr=%08X "
+                   "ea=%08X size=%u value=%016llX\n",
+                   s_hpcos_wgpipe_bytes,
+                   cpu->pc,
+                   cpu->lr,
+                   ea,
+                   static_cast<unsigned>(size),
+                   static_cast<unsigned long long>(value));
+      std::fflush(stderr);
+    }
+
+    s_hpcos_wgpipe_bytes += size;
+
     if (core->m_lockstep_verifier->m_ls_journaling)
       core->m_lockstep_verifier->m_journal.native_mmio.push_back({ea, static_cast<u32>(value), size});
     auto& gpfifo = core->m_system.GetGPFifo();
@@ -115,6 +199,9 @@ void StaticRecompCore::HookExternalWrite(CPUState* cpu, u32 ea, u64 value, u8 si
   if (ea == 0)
     std::fprintf(stderr, "[zero-access] write size=%u guest_pc=%08x ppc_pc=%08x lr=%08x\n", size,
                  cpu->pc, core->m_system.GetPPCState().pc, cpu->lr);
+
+  if (core->m_mmio_trace) [[unlikely]]
+    core->RecordMmioWrite(ea, cpu->pc);
 
   core->PropagateGuestMSR();
   auto& mmu = core->m_system.GetMMU();
@@ -354,20 +441,40 @@ void StaticRecompCore::HookSPRWrite(CPUState* cpu, u16 spr, u32 value, u32 cia)
 void StaticRecompCore::HookCacheControl(CPUState* cpu, u8 operation, u32 ea, u32 cia)
 {
   auto* core = static_cast<StaticRecompCore*>(cpu->external_user_data);
+  auto& ppc = core->m_system.GetPPCState();
+
+  // dcbf/dcbst/dcbi with dcache emulation off, taken before any translation or
+  // MSR propagation because it is by far the hottest cache op: ~15M per session
+  // against 85 icbi.
+  //
+  // Dolphin's interpreter calls InvalidateICacheLine here, but its own comment
+  // says why: a heuristic compensating for the JIT's lack of precise L1 icache
+  // emulation, since games use dcbf where they should use icbi. HPCOS does not
+  // need the heuristic -- it verifies chunk hashes against guest RAM and retires
+  // mismatching chunks, an exact guard that icbi still drives below. Paying it
+  // anyway cost InvalidateICacheLine + OnICacheInvalidate on every one of those
+  // 15M calls.
+  //
+  // Set STATICRECOMP_DCBF_INVALIDATES=1 to restore Dolphin's heuristic.
+  if (operation != PPC_CACHE_ICBI && !ppc.m_enable_dcache)
+  {
+    static const bool dcbf_invalidates = [] {
+      const char* value = std::getenv("STATICRECOMP_DCBF_INVALIDATES");
+      return value && value[0] == '1';
+    }();
+    if (!dcbf_invalidates)
+      return;
+    core->m_system.GetJitInterface().InvalidateICacheLine(core->TranslateRelAddress(ea));
+    return;
+  }
+
   ea = core->TranslateRelAddress(ea);
   core->PropagateGuestMSR();
-  auto& ppc = core->m_system.GetPPCState();
   auto& mmu = core->m_system.GetMMU();
 
   if (operation == PPC_CACHE_ICBI)
   {
     ppc.iCache.Invalidate(core->m_system.GetMemory(), core->m_system.GetJitInterface(), ea);
-    return;
-  }
-
-  if (!ppc.m_enable_dcache)
-  {
-    core->m_system.GetJitInterface().InvalidateICacheLine(ea);
     return;
   }
 
@@ -393,6 +500,31 @@ void StaticRecompCore::HookInstructionFallback(CPUState* cpu, u32 raw, u32 cia)
   auto* core = static_cast<StaticRecompCore*>(cpu->external_user_data);
   cia = core->TranslateRelAddress(cia);
   ++core->m_hook_fallback_instructions;
+
+  // Histogram of what still escapes to the interpreter, keyed the way the
+  // PowerPC encoding is: a primary opcode, plus the extended field for the
+  // forms that carry one. Reported at shutdown.
+  {
+    const u32 primary = raw >> 26;
+    ++core->m_fb_primary[primary];
+    switch (primary)
+    {
+    case 31:
+      ++core->m_fb_ext31[(raw >> 1) & 0x3FFu];
+      break;
+    case 63:
+      ++core->m_fb_ext63[(raw >> 1) & 0x3FFu];
+      break;
+    case 19:
+      ++core->m_fb_ext19[(raw >> 1) & 0x3FFu];
+      break;
+    case 4:
+      ++core->m_fb_ext4[(raw >> 1) & 0x7FFu];
+      break;
+    default:
+      break;
+    }
+  }
 
   // Lockstep: a block that fell back to the interpreter for an unmodeled
   // instruction (DMA mtspr, cache op, ...) performed side effects not captured

@@ -1,3 +1,4 @@
+#include <stdio.h>
 // DolRecomp output
 #include "../generated.h"
 
@@ -15021,6 +15022,16 @@ label_800345AC:
     }
 
 label_800345B0:
+    fprintf(stderr,
+            "[HPCOS-LIST-FATAL] pc=800345B0 type=%08X obj=%08X lr=%08X "
+            "field28=%08X field32=%08X\n",
+            ctx->gpr[9],
+            ctx->gpr[31],
+            ctx->lr,
+            mem_read32(ctx, ctx->gpr[31] + 28u),
+            mem_read32(ctx, ctx->gpr[31] + 32u));
+    fflush(stderr);
+
     ctx->pc = 0x800345B0u;
     ctx->downcount -= 4;
     // 800345B0: lis     r3, -32738
