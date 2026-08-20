@@ -61,6 +61,7 @@ void SaveHpcosPcSettings()
   out << "aspect_override=" << HPCOS::AspectOverride() << '\n';
   out << "fov=" << HPCOS::Fov() << '\n';
   out << "fps_cap=" << HPCOS::FpsCap() << '\n';
+  out << "game_fps=" << HPCOS::GameFpsTarget() << '\n';
   out << "pc_input=" << (HPCOS::PcInputEnabled() ? 1 : 0) << '\n';
   out << "mouse_sensitivity=" << HPCOS::MouseSensitivity() << '\n';
   out << "mouse_invert_y=" << (HPCOS::MouseInvertY() ? 1 : 0) << '\n';
@@ -102,6 +103,8 @@ void LoadHpcosPcSettingsOnce()
       HPCOS::SetFov(std::strtof(value.c_str(), nullptr));
     else if (key == "fps_cap")
       HPCOS::SetFpsCap(std::atoi(value.c_str()));
+    else if (key == "game_fps")
+      HPCOS::SetGameFpsTarget(std::atoi(value.c_str()));
     else if (key == "pc_input")
       HPCOS::SetPcInputEnabled(std::atoi(value.c_str()) != 0);
     else if (key == "mouse_sensitivity")
@@ -224,18 +227,31 @@ void DrawHpcosPcSettings()
         }
       }
 
+      int game_fps = HPCOS::GameFpsTarget();
+      const int game_fps_values[] = {0, 60, 90, 120, 144, 165, 240};
+      const char* game_fps_labels[] = {"Original timing", "60", "90", "120", "144", "165", "240"};
+      int game_fps_index = 0;
+      for (int i = 0; i < 7; ++i)
+        if (game_fps == game_fps_values[i]) game_fps_index = i;
+      if (ImGui::Combo("Game FPS", &game_fps_index, game_fps_labels, 7))
+      {
+        HPCOS::SetGameFpsTarget(game_fps_values[game_fps_index]);
+        changed = true;
+      }
+      ImGui::TextDisabled("High-rate VI/render; gameplay + physics stays at native 59.94 Hz. Audio/DSP remains real-time.");
+
       int fps = HPCOS::FpsCap();
       const int fps_values[] = {0, 30, 60, 90, 120, 144, 165, 240};
-      const char* fps_labels[] = {"Original / uncapped host", "30", "60", "90", "120", "144", "165", "240"};
+      const char* fps_labels[] = {"Uncapped presentation", "30", "60", "90", "120", "144", "165", "240"};
       int fps_index = 0;
       for (int i = 0; i < 8; ++i)
         if (fps == fps_values[i]) fps_index = i;
-      if (ImGui::Combo("Host FPS cap", &fps_index, fps_labels, 8))
+      if (ImGui::Combo("Presentation FPS cap", &fps_index, fps_labels, 8))
       {
         HPCOS::SetFpsCap(fps_values[fps_index]);
         changed = true;
       }
-      ImGui::TextDisabled("The host cap can limit presentation; it does not fake a guest FPS unlock.");
+      ImGui::TextDisabled("Presentation cap only; it does not alter the guest simulation clock.");
       ImGui::EndTabItem();
     }
 

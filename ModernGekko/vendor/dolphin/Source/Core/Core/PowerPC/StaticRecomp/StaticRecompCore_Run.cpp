@@ -82,7 +82,7 @@ static bool HpcosReadGuestU32BE(const u8* ram, std::size_t ram_size,
   return true;
 }
 
-static bool HpcosWriteGuestFovFloatBE(u8* ram, std::size_t ram_size,
+static bool HpcosWriteGuestFloatBE(u8* ram, std::size_t ram_size,
                                       u32 address, float value)
 {
   constexpr u32 MEM1_BASE = 0x80000000u;
@@ -206,10 +206,125 @@ void StaticRecompCore::Run()
 
   // HPCOS FOV is live-editable from the Ctrl+F10 PC settings overlay.
 
+  // GHSE69 is a fixed-step ~59.94 Hz game. Raising VI/VBlank alone makes its
+  // phase-1 gameplay update run once per high-rate retrace, which accelerates
+  // movement, animation and physics. Keep that update at native cadence while
+  // leaving the later render phase at the requested VI rate.
+  constexpr double HPCOS_NATIVE_SIM_HZ = 59.94005994005994;
+  constexpr u32 HPCOS_SIM_UPDATE_PC = 0x80038DACu;
+  constexpr u32 HPCOS_MAIN_FRAME_COUNTER = 0x8041EA58u;
+  int hpcos_sim_target = -1;
+  double hpcos_sim_accumulator = 1.0;
+  u32 hpcos_sim_last_frame = 0;
+  bool hpcos_sim_have_frame = false;
+  bool hpcos_sim_run_this_frame = true;
+  u64 hpcos_sim_updates = 0;
+  u64 hpcos_sim_skips = 0;
 
   while (*state_ptr == CPU::State::Running)
   {
     core_timing.Advance();
+
+    // HPCOS high-FPS presentation clock.
+    //
+    // Never change global emulation speed for an FPS patch: doing that also
+    // scales DSP/audio and every guest timer.  Dolphin's VI overclock changes
+    // the VBlank/render cadence while CoreTiming, CPU clock and DSP/audio keep
+    // their normal real-time clocks. GHSE69 gameplay itself is fixed-step, so
+    // its native update phase is independently gated to ~59.94 Hz below.
+    {
+      constexpr double NTSC_VPS = 59.94005994005994;
+      const int game_fps_target = HPCOS::GameFpsTarget();
+      static int last_game_fps_target = -1;
+
+      if (game_fps_target != last_game_fps_target)
+      {
+        // 60 means native timing. Do not overclock 59.94 -> 60 merely for a
+        // 0.1% difference; native simulation can then run every update call.
+        if (game_fps_target > 60)
+        {
+          const float vi_factor =
+              static_cast<float>(static_cast<double>(game_fps_target) / NTSC_VPS);
+          Config::SetCurrent(Config::MAIN_VI_OVERCLOCK, vi_factor);
+          Config::SetCurrent(Config::MAIN_VI_OVERCLOCK_ENABLE, true);
+          Config::SetCurrent(Config::MAIN_PRECISION_FRAME_TIMING, true);
+          std::fprintf(stderr,
+                       "[HPCOS-FPS] render/VI=%d Hz factor=%.6f; simulation fixed at %.6f Hz; "
+                       "CPU/DSP/audio unchanged\n",
+                       game_fps_target, vi_factor, HPCOS_NATIVE_SIM_HZ);
+        }
+        else
+        {
+          Config::SetCurrent(Config::MAIN_VI_OVERCLOCK_ENABLE, false);
+          Config::SetCurrent(Config::MAIN_VI_OVERCLOCK, 1.0f);
+          std::fprintf(stderr,
+                       "[HPCOS-FPS] original VI/simulation timing restored (%.6f Hz)\n",
+                       HPCOS_NATIVE_SIM_HZ);
+        }
+
+        // Reset the phase on a live Ctrl+F10 change so the first post-change
+        // simulation update is immediate and no old fractional remainder leaks.
+        hpcos_sim_target = game_fps_target;
+        hpcos_sim_accumulator = 1.0;
+        hpcos_sim_have_frame = false;
+        hpcos_sim_run_this_frame = true;
+        hpcos_sim_updates = 0;
+        hpcos_sim_skips = 0;
+        last_game_fps_target = game_fps_target;
+      }
+    }
+
+    // HPCOS guest-side widescreen synchronization.
+    //
+    // The official GHSE69 widescreen patch changes three separate aspect
+    // constants.  Only stretching the host XFB leaves the guest at 4:3, so
+    // its visibility/culling code still removes objects near the new screen
+    // edges.  Keep all three game-side values synchronized with the selected
+    // PC aspect instead.
+    //
+    // These are GHSE69-only addresses and are deliberately gated by game id.
+    if (guest_fov_supported)
+    {
+      constexpr float native_aspect = 4.0f / 3.0f;
+      constexpr u32 ASPECT_GLOBALS[] = {0x8042788Cu, 0x80427A74u, 0x8049EC8Cu};
+
+      static bool hpcos_aspect_was_active = false;
+      const bool aspect_active = HPCOS::DynamicAspectEnabled();
+      float target_aspect = native_aspect;
+
+      if (aspect_active && g_presenter)
+      {
+        const float host_aspect = g_presenter->GetHpcosHostAspect();
+        if (std::isfinite(host_aspect) && host_aspect >= 1.0f && host_aspect <= 5.0f)
+          target_aspect = host_aspect;
+      }
+
+      if (aspect_active || hpcos_aspect_was_active)
+      {
+        for (const u32 address : ASPECT_GLOBALS)
+        {
+          float current = 0.0f;
+          const bool have_current =
+              HpcosReadGuestFloatBE(m_guest.ram, m_guest.ram_size, address, &current);
+          if (!have_current || !std::isfinite(current) ||
+              std::fabs(current - target_aspect) > 0.0001f)
+          {
+            HpcosWriteGuestFloatBE(m_guest.ram, m_guest.ram_size, address, target_aspect);
+          }
+        }
+
+        static float hpcos_last_logged_aspect = -1.0f;
+        if (std::fabs(target_aspect - hpcos_last_logged_aspect) > 0.0001f)
+        {
+          std::fprintf(stderr,
+                       "[HPCOS-GUEST-ASPECT] aspect=%.6f globals=8042788C/80427A74/8049EC8C\n",
+                       target_aspect);
+          hpcos_last_logged_aspect = target_aspect;
+        }
+      }
+
+      hpcos_aspect_was_active = aspect_active;
+    }
 
     // HPCOS guest-side FOV/frustum synchronization.
     //
@@ -225,8 +340,10 @@ void StaticRecompCore::Run()
     // title id above.
 
     const float hpcos_requested_hfov = HPCOS::Fov();
+    static bool hpcos_fov_was_active = false;
     if (hpcos_requested_hfov > 0.0f && guest_fov_supported)
     {
+      hpcos_fov_was_active = true;
       constexpr u32 FOV_ADDRESS = 0x8049EC88u;
       constexpr u32 ASPECT_ADDRESS = 0x8049EC8Cu;
       constexpr float pi = 3.14159265358979323846f;
@@ -248,9 +365,11 @@ void StaticRecompCore::Run()
 
       // Recalculate trig only if the guest aspect actually changes.
       static float hpcos_cached_aspect = -1.0f;
+      static float hpcos_cached_requested_hfov = -1.0f;
       static float hpcos_guest_vfov = 0.0f;
 
-      if (std::fabs(guest_aspect - hpcos_cached_aspect) > 0.00001f)
+      if (std::fabs(guest_aspect - hpcos_cached_aspect) > 0.00001f ||
+          std::fabs(hpcos_requested_hfov - hpcos_cached_requested_hfov) > 0.001f)
       {
         const float half_h =
             hpcos_requested_hfov * pi / 360.0f;
@@ -261,8 +380,9 @@ void StaticRecompCore::Run()
             180.0f / pi;
 
         hpcos_cached_aspect = guest_aspect;
+        hpcos_cached_requested_hfov = hpcos_requested_hfov;
 
-        // Diagnostic ONCE per aspect change, not every CPU quantum.
+        // Diagnostic once per FOV/aspect change, not every CPU quantum.
         std::fprintf(
             stderr,
             "[HPCOS-GUEST-FOV] "
@@ -289,12 +409,27 @@ void StaticRecompCore::Run()
           (!have_current ||
            std::fabs(current_guest_fov - hpcos_guest_vfov) > 0.001f))
       {
-        HpcosWriteGuestFovFloatBE(
+        HpcosWriteGuestFloatBE(
             m_guest.ram,
             m_guest.ram_size,
             FOV_ADDRESS,
             hpcos_guest_vfov);
       }
+    }
+    else if (guest_fov_supported && hpcos_fov_was_active)
+    {
+      // If the live override was disabled, restore GHSE69's native camera
+      // value immediately instead of waiting for a scene reload.
+      constexpr u32 FOV_ADDRESS = 0x8049EC88u;
+      constexpr float NATIVE_FOV = 55.0f;
+      float current_guest_fov = 0.0f;
+      if (HpcosReadGuestFloatBE(m_guest.ram, m_guest.ram_size, FOV_ADDRESS, &current_guest_fov) &&
+          std::isfinite(current_guest_fov) &&
+          std::fabs(current_guest_fov - NATIVE_FOV) > 0.001f)
+      {
+        HpcosWriteGuestFloatBE(m_guest.ram, m_guest.ram_size, FOV_ADDRESS, NATIVE_FOV);
+      }
+      hpcos_fov_was_active = false;
     }
 
     do
@@ -369,6 +504,48 @@ void StaticRecompCore::Run()
           if (!m_active_rel_sections.empty())
             ResolveNativeAddress(runtime_dispatch_address, &linked_dispatch_address, nullptr);
 
+          // GHSE69 fixed-step simulation decoupling.
+          //
+          // The retail main loop at 0x8000BF70 calls 0x80038DAC for its
+          // phase-1 gameplay/physics update and later calls 0x80038E4C for the
+          // render phase. With a VI overclock, the former would otherwise run
+          // once per high-rate retrace and speed the whole game up.
+          bool hpcos_skip_sim_update = false;
+          if (hpcos_module && linked_dispatch_address == HPCOS_SIM_UPDATE_PC &&
+              hpcos_sim_target > 60)
+          {
+            u32 frame_id = 0;
+            const bool have_frame =
+                HpcosReadGuestU32BE(m_guest.ram, m_guest.ram_size,
+                                    HPCOS_MAIN_FRAME_COUNTER, &frame_id);
+
+            if (!have_frame || !hpcos_sim_have_frame || frame_id != hpcos_sim_last_frame)
+            {
+              hpcos_sim_have_frame = have_frame;
+              if (have_frame)
+                hpcos_sim_last_frame = frame_id;
+
+              hpcos_sim_accumulator +=
+                  HPCOS_NATIVE_SIM_HZ / static_cast<double>(hpcos_sim_target);
+              hpcos_sim_run_this_frame = hpcos_sim_accumulator >= 1.0;
+              if (hpcos_sim_run_this_frame)
+                hpcos_sim_accumulator -= 1.0;
+            }
+            else
+            {
+              // The original loop has catch-up paths that can call the update
+              // phase more than once before one render. Never allow a second
+              // physics step inside the same high-rate presentation frame.
+              hpcos_sim_run_this_frame = false;
+            }
+
+            hpcos_skip_sim_update = !hpcos_sim_run_this_frame;
+            if (hpcos_skip_sim_update)
+              ++hpcos_sim_skips;
+            else
+              ++hpcos_sim_updates;
+          }
+
           m_guest.pc = linked_dispatch_address;
 
           /*
@@ -387,6 +564,16 @@ void StaticRecompCore::Run()
 
           u32 dispatched_blocks = 0;
 
+          if (hpcos_skip_sim_update)
+          {
+            // Retire the call without touching phase-1 gameplay state. LR was
+            // set by the original caller, so returning to it preserves the
+            // main loop and lets the render phase continue at the high VI rate.
+            m_guest.pc = m_guest.lr;
+            m_guest.downcount = -1;
+            dispatched_blocks = 1;
+          }
+
           /*
            * ABI v4 native burst:
            *
@@ -394,7 +581,7 @@ void StaticRecompCore::Run()
            * For the normal DOL gameplay path, execute multiple verified chunks
            * inside the native module before returning to the C++ chassis.
            */
-          if (!do_ls &&
+          if (dispatched_blocks == 0 && !do_ls &&
               m_module->dispatch_burst &&
               m_active_rel_sections.empty() &&
               !m_native_chain_state.empty())
@@ -556,6 +743,15 @@ void StaticRecompCore::Run()
         }
       }
     } while (ppc.downcount > 0 && *state_ptr == CPU::State::Running);
+  }
+
+  if (hpcos_sim_updates != 0 || hpcos_sim_skips != 0)
+  {
+    std::fprintf(stderr,
+                 "[HPCOS-FPS] fixed-step summary: updates=%llu skipped-high-rate=%llu target=%d\n",
+                 static_cast<unsigned long long>(hpcos_sim_updates),
+                 static_cast<unsigned long long>(hpcos_sim_skips),
+                 hpcos_sim_target);
   }
 
   if (hpcos_idle_trace)

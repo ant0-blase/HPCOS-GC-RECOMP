@@ -183,7 +183,7 @@ unsigned EffectiveChunkSize(const char* name, unsigned default_value)
   char* end = nullptr;
   errno = 0;
   const unsigned long parsed = std::strtoul(value, &end, 10);
-  if (errno || !end || *end || parsed < 128 || parsed > 4096)
+  if (errno || !end || *end || parsed < 128 || parsed > 32768)
     return default_value;
   return static_cast<unsigned>(parsed);
 }

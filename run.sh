@@ -24,10 +24,15 @@ Display:
 Camera:
   --fov <degrees>    Optional horizontal FOV override.
 
+Timing:
+  --fps <fps>        High-rate render/VI target (60-1000).
+                     Gameplay/physics remains at native 59.94 Hz; audio is independent.
+
 Examples:
   ./run.sh
   ./run.sh --widescreen
   ./run.sh --widescreen --fov 90
+  ./run.sh --widescreen --fov 90 --fps 120
 EOF
 }
 
@@ -46,6 +51,19 @@ while (($#)); do
       }
 
       export HPCOS_FOV="$2"
+      shift 2
+      ;;
+
+    --fps)
+      [[ $# -ge 2 ]] || {
+        echo "run.sh: --fps requires a target FPS" >&2
+        exit 2
+      }
+      [[ "$2" =~ ^[0-9]+$ ]] && (( $2 >= 60 && $2 <= 1000 )) || {
+        echo "run.sh: --fps must be an integer between 60 and 1000" >&2
+        exit 2
+      }
+      export HPCOS_FPS_TARGET="$2"
       shift 2
       ;;
 

@@ -51,6 +51,7 @@ inline std::atomic<bool> s_dynamic_aspect{false};
 inline std::atomic<float> s_aspect_override{0.0f};
 inline std::atomic<float> s_fov{0.0f};
 inline std::atomic<int> s_fps_cap{0};
+inline std::atomic<int> s_game_fps_target{0};
 inline std::atomic<bool> s_pc_input_enabled{true};
 inline std::atomic<float> s_mouse_sensitivity{1.0f};
 inline std::atomic<bool> s_mouse_invert_y{false};
@@ -77,6 +78,14 @@ inline void EnsureInitialized()
       const float value = std::strtof(env, &end);
       if (end != env && *end == '\0' && value >= 30.0f && value <= 150.0f)
         s_fov.store(value, std::memory_order_relaxed);
+    }
+
+    if (const char* env = std::getenv("HPCOS_FPS_TARGET"))
+    {
+      char* end = nullptr;
+      const long value = std::strtol(env, &end, 10);
+      if (end != env && *end == '\0' && value >= 30 && value <= 1000)
+        s_game_fps_target.store(static_cast<int>(value), std::memory_order_relaxed);
     }
   });
 }
@@ -134,6 +143,18 @@ inline void SetFov(float fov)
 }
 inline int FpsCap() { return s_fps_cap.load(std::memory_order_relaxed); }
 inline void SetFpsCap(int fps) { s_fps_cap.store(std::max(0, fps), std::memory_order_relaxed); }
+inline int GameFpsTarget()
+{
+  EnsureInitialized();
+  return s_game_fps_target.load(std::memory_order_relaxed);
+}
+inline void SetGameFpsTarget(int fps)
+{
+  EnsureInitialized();
+  if (fps != 0)
+    fps = std::clamp(fps, 30, 1000);
+  s_game_fps_target.store(fps, std::memory_order_relaxed);
+}
 inline bool PcInputEnabled() { return s_pc_input_enabled.load(std::memory_order_relaxed); }
 inline void SetPcInputEnabled(bool enabled)
 {

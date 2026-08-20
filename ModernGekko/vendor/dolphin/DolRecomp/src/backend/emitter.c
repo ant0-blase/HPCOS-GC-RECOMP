@@ -308,11 +308,13 @@ static bool branch_target_is_local(u32 func_start, u32 func_end, u32 target) {
 }
 
 static void emit_direct_branch(FILE* out, const PPCInst* inst,
-                               bool local_target, bool direct_backedge) {
+                               bool local_target, bool direct_backedge,
+                               u32 func_end) {
     bool local_backward = local_target && inst->branch_target <= inst->address;
 
     if (inst->lk) {
-        fprintf(out, "            ctx->lr = 0x%08Xu;\n", inst->address + 4);
+        const u32 return_address = inst->address + 4u;
+        fprintf(out, "            ctx->lr = 0x%08Xu;\n", return_address);
         if (local_target) {
             if (local_backward) {
                 fprintf(out, "            if (ctx->downcount <= -(s64)DOLRECOMP_C_LOOP_CYCLE_BUDGET) {\n");
@@ -322,7 +324,23 @@ static void emit_direct_branch(FILE* out, const PPCInst* inst,
             }
             fprintf(out, "            goto label_%08X;\n", inst->branch_target);
         } else {
-            fprintf(out, "            ctx->pc = 0x%08Xu;\n", inst->branch_target);
+            /*
+             * Static cross-chunk calls used to bounce out to the chassis for
+             * both the call and the return. Chain the call through the
+             * generated dispatcher helper instead. dolrecomp_call preserves
+             * replacements/host calls. If the callee returns to our next
+             * instruction, resume locally and avoid a second chassis trip.
+             */
+            fprintf(out, "            if (ctx->downcount <= -(s64)DOLRECOMP_C_LOOP_CYCLE_BUDGET) {\n");
+            fprintf(out, "                ctx->pc = 0x%08Xu;\n", inst->branch_target);
+            fprintf(out, "                return;\n");
+            fprintf(out, "            }\n");
+            fprintf(out, "            if (!dolrecomp_call(ctx, 0x%08Xu) || ctx->exception) return;\n",
+                    inst->branch_target);
+            if (return_address < func_end) {
+                fprintf(out, "            if (ctx->pc == 0x%08Xu) goto label_%08X;\n",
+                        return_address, return_address);
+            }
             fprintf(out, "            return;\n");
         }
         return;
@@ -1599,7 +1617,7 @@ static void emit_instruction_with_range(FILE* out, const PPCInst* inst,
         fprintf(out, "    {\n");
         emit_direct_branch(out, inst,
                            branch_target_is_local(func_start, func_end, inst->branch_target),
-                           direct_backedge);
+                           direct_backedge, func_end);
         fprintf(out, "    }\n");
         break;
 
@@ -1609,7 +1627,7 @@ static void emit_instruction_with_range(FILE* out, const PPCInst* inst,
         fprintf(out, "        if (ctr_ok && cr_ok) {\n");
         emit_direct_branch(out, inst,
                            branch_target_is_local(func_start, func_end, inst->branch_target),
-                           direct_backedge);
+                           direct_backedge, func_end);
         fprintf(out, "        }\n");
         fprintf(out, "    }\n");
         break;

@@ -40,9 +40,9 @@ static u32 c_chunk_instructions(void) {
     char* end = NULL;
     errno = 0;
     unsigned long value = strtoul(configured, &end, 10);
-    if (errno || !end || *end || value < 128u || value > 4096u) {
+    if (errno || !end || *end || value < 128u || value > 32768u) {
         fprintf(stderr,
-                "warning: DOLRECOMP_C_CHUNK_INSTRUCTIONS must be 128..4096; "
+                "warning: DOLRECOMP_C_CHUNK_INSTRUCTIONS must be 128..32768; "
                 "using %u\n",
                 DOLC_DEFAULT_CHUNK_INSTRUCTIONS);
         return DOLC_DEFAULT_CHUNK_INSTRUCTIONS;
