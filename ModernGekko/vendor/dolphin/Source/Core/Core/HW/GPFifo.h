@@ -44,6 +44,15 @@ public:
   void Write32(u32 value);
   void Write64(u64 value);
 
+  // StaticRecomp write-gather fast path. These preserve the hardware-visible
+  // 32-byte burst boundary, but skip JIT FIFO-write profiling and the nested
+  // FastWrite*/CheckGatherPipe calls that are unnecessary for a precompiled
+  // module.
+  void StaticRecompWrite8(u8 value);
+  void StaticRecompWrite16(u16 value);
+  void StaticRecompWrite32(u32 value);
+  void StaticRecompWrite64(u64 value);
+
   // These expect pre-byteswapped values
   // Also there's an upper limit of about 512 per batch
   // Most likely these should be inlined into JIT instead

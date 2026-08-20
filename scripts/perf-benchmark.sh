@@ -29,6 +29,7 @@ CONTEXT_PID=""
 PERF_PID=""
 TEMP_ROOT=""
 EXTRA_ARGS=()
+FAST_DIRECTORY_IO="${MODERNGEKKO_FAST_DIRECTORY_IO:-1}"
 
 usage() {
   cat <<'EOF'
@@ -47,7 +48,7 @@ Inputs:
 Protocol:
   --warmup SECONDS         Unmeasured warmup after launch (default: 30).
   --stat-seconds SECONDS   perf stat window (default: 30).
-  --record-seconds SECONDS perf record window (default: 30).
+  --record-seconds SECONDS perf record window (default: 30; 0 disables).
   --frametime-seconds N    Separate MangoHud capture (default: 0, disabled).
                            It reuses --warmup before logging presented frames.
                            A zero warmup becomes one second for MangoHud.
@@ -167,7 +168,7 @@ done
 [[ -n "$OUTPUT_ROOT" ]] || die "--output DIR is required"
 is_nonnegative_integer "$WARMUP_SECONDS" || die "--warmup must be a non-negative integer"
 is_positive_integer "$STAT_SECONDS" || die "--stat-seconds must be a positive integer"
-is_positive_integer "$RECORD_SECONDS" || die "--record-seconds must be a positive integer"
+is_nonnegative_integer "$RECORD_SECONDS" || die "--record-seconds must be a non-negative integer"
 is_nonnegative_integer "$FRAMETIME_SECONDS" ||
   die "--frametime-seconds must be a non-negative integer"
 case "$PLATFORM" in
@@ -344,6 +345,7 @@ GIT_DIRTY_COUNT="${GIT_DIRTY_COUNT//[[:space:]]/}"
   printf 'audio=%s\n' "$AUDIO"
   printf 'recomp_spam_start=1\n'
   printf 'recomp_spam_a=1\n'
+  printf 'fast_directory_io=%s\n' "$FAST_DIRECTORY_IO"
   printf 'warmup_seconds=%s\n' "$WARMUP_SECONDS"
   printf 'stat_seconds=%s\n' "$STAT_SECONDS"
   printf 'record_seconds=%s\n' "$RECORD_SECONDS"
@@ -358,6 +360,7 @@ GIT_DIRTY_COUNT="${GIT_DIRTY_COUNT//[[:space:]]/}"
   printf 'command='
   printf ' %q' taskset -c "$CPUSET" env -u MANGOHUD -u MANGOHUD_CONFIG \
     -u MANGOHUD_CONFIGFILE RECOMP_SPAM_START=1 RECOMP_SPAM_A=1 \
+    MODERNGEKKO_FAST_DIRECTORY_IO="$FAST_DIRECTORY_IO" \
     "$RUNTIME" "${RUNTIME_ARGS[@]}"
   printf '\n'
 } >"$RESULT_DIR/metadata.txt"
@@ -375,6 +378,7 @@ printf 'Launching %s on CPUs %s (platform=%s)...\n' "$PROJECT_NAME" "$CPUSET" "$
 GAME_LOG="$RESULT_DIR/runtime.log"
 taskset -c "$CPUSET" env -u MANGOHUD -u MANGOHUD_CONFIG -u MANGOHUD_CONFIGFILE \
   RECOMP_SPAM_START=1 RECOMP_SPAM_A=1 \
+  MODERNGEKKO_FAST_DIRECTORY_IO="$FAST_DIRECTORY_IO" \
   "$RUNTIME" "${RUNTIME_ARGS[@]}" >"$GAME_LOG" 2>&1 &
 GAME_PID=$!
 printf 'pid=%s\n' "$GAME_PID" >>"$RESULT_DIR/metadata.txt"
@@ -450,29 +454,33 @@ awk -v requested_window="$STAT_SECONDS" '
   die "could not summarize pidstat output"
 ensure_game_running
 
-printf 'perf record: %s seconds.\n' "$RECORD_SECONDS"
-perf record \
-  -o "$RESULT_DIR/perf.data" \
-  -F 499 \
-  -e "$SAMPLE_EVENT" \
-  -g \
-  --call-graph dwarf,8192 \
-  -p "$GAME_PID" \
-  -- sleep "$RECORD_SECONDS" \
-  >"$RESULT_DIR/perf-record.log" 2>&1 &
-PERF_PID=$!
-perf_status=0
-wait "$PERF_PID" || perf_status=$?
-PERF_PID=""
-((perf_status == 0)) || die "perf record failed with status $perf_status"
-ensure_game_running
+if ((RECORD_SECONDS > 0)); then
+  printf 'perf record: %s seconds.\n' "$RECORD_SECONDS"
+  perf record \
+    -o "$RESULT_DIR/perf.data" \
+    -F 499 \
+    -e "$SAMPLE_EVENT" \
+    -g \
+    --call-graph dwarf,8192 \
+    -p "$GAME_PID" \
+    -- sleep "$RECORD_SECONDS" \
+    >"$RESULT_DIR/perf-record.log" 2>&1 &
+  PERF_PID=$!
+  perf_status=0
+  wait "$PERF_PID" || perf_status=$?
+  PERF_PID=""
+  ((perf_status == 0)) || die "perf record failed with status $perf_status"
+  ensure_game_running
 
-perf report \
-  --stdio \
-  --sort comm,dso,symbol \
-  --percent-limit 0.5 \
-  -i "$RESULT_DIR/perf.data" >"$RESULT_DIR/perf-report.txt"
-perf buildid-list -i "$RESULT_DIR/perf.data" >"$RESULT_DIR/perf-buildids.txt"
+  perf report \
+    --stdio \
+    --sort comm,dso,symbol \
+    --percent-limit 0.5 \
+    -i "$RESULT_DIR/perf.data" >"$RESULT_DIR/perf-report.txt"
+  perf buildid-list -i "$RESULT_DIR/perf.data" >"$RESULT_DIR/perf-buildids.txt"
+else
+  printf 'perf record: disabled (--record-seconds 0).\n'
+fi
 
 stop_game
 
@@ -504,6 +512,7 @@ if ((FRAMETIME_SECONDS > 0)); then
     printf 'frametime_command='
     printf ' %q' taskset -c "$CPUSET" env -u MANGOHUD_CONFIG \
       RECOMP_SPAM_START=1 RECOMP_SPAM_A=1 \
+      MODERNGEKKO_FAST_DIRECTORY_IO="$FAST_DIRECTORY_IO" \
       "MANGOHUD_CONFIGFILE=$MANGOHUD_CONFIG_PATH" mangohud "$RUNTIME" "${RUNTIME_ARGS[@]}"
     printf '\n'
   } >>"$RESULT_DIR/metadata.txt"
@@ -512,6 +521,7 @@ if ((FRAMETIME_SECONDS > 0)); then
     "$FRAMETIME_DELAY_SECONDS" "$FRAMETIME_SECONDS"
   GAME_LOG="$RESULT_DIR/frametime-runtime.log"
   taskset -c "$CPUSET" env -u MANGOHUD_CONFIG RECOMP_SPAM_START=1 RECOMP_SPAM_A=1 \
+    MODERNGEKKO_FAST_DIRECTORY_IO="$FAST_DIRECTORY_IO" \
     "MANGOHUD_CONFIGFILE=$MANGOHUD_CONFIG_PATH" \
     mangohud "$RUNTIME" "${RUNTIME_ARGS[@]}" >"$GAME_LOG" 2>&1 &
   GAME_PID=$!

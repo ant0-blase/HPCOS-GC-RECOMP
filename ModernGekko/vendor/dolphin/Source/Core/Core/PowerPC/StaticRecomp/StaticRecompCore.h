@@ -151,6 +151,12 @@ private:
   // GXRUNTIME_FASTMEM can index them.
   bool m_fastmem_available = false;
 
+  // Locked-L1 mapping cached for the lifetime of Run(). The backing allocation
+  // is stable while emulation is running, so hot PSQ external accesses do not
+  // need to call System::GetMemory() for every byte/word.
+  u8* m_l1_cache = nullptr;
+  u32 m_l1_cache_size = 0;
+
   // MMIO read sampler, armed by STATICRECOMP_MMIO_TRACE. Names the register a
   // stuck game is polling and the guest PC polling it.
   // last_value / distinct: a poll loop that never ends is usually reading the
