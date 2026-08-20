@@ -142,6 +142,8 @@ private:
   int32_t m_height = std::max(Config::Get(Config::MAIN_RENDER_WINDOW_HEIGHT), 1);
   int32_t m_pending_width = m_width;
   int32_t m_pending_height = m_height;
+  std::shared_ptr<RenderSurfaceSize> m_render_surface_size =
+      std::make_shared<RenderSurfaceSize>(m_width, m_height);
 };
 
 constexpr wl_registry_listener s_registry_listener = {PlatformWayland::RegistryGlobal,
@@ -402,7 +404,9 @@ void PlatformWayland::SaveWindowGeometry()
 
 WindowSystemInfo PlatformWayland::GetWindowSystemInfo() const
 {
-  return {WindowSystemType::Wayland, m_display, m_surface, m_surface};
+  WindowSystemInfo wsi{WindowSystemType::Wayland, m_display, m_surface, m_surface};
+  wsi.render_surface_size = m_render_surface_size;
+  return wsi;
 }
 
 void PlatformWayland::RegistryGlobal(void* data, wl_registry* registry, uint32_t name,
@@ -457,6 +461,8 @@ void PlatformWayland::SurfaceConfigure(void* data, xdg_surface* surface, uint32_
     platform->m_height = platform->m_pending_height;
     xdg_surface_set_window_geometry(platform->m_xdg_surface, 0, 0, platform->m_width,
                                     platform->m_height);
+    platform->m_render_surface_size->Set(static_cast<uint32_t>(platform->m_width),
+                                         static_cast<uint32_t>(platform->m_height));
     platform->m_resize_pending = false;
     if (g_presenter)
       g_presenter->ResizeSurface();

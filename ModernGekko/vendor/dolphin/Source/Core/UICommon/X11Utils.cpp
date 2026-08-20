@@ -18,16 +18,20 @@ extern char** environ;
 
 namespace X11Utils
 {
-bool ToggleFullscreen(Display* dpy, Window win)
+bool SetFullscreen(Display* dpy, Window win, bool fullscreen)
 {
   // Init X event structure for _NET_WM_STATE_FULLSCREEN client message
-  XEvent event;
+  XEvent event{};
   event.xclient.type = ClientMessage;
+  event.xclient.display = dpy;
   event.xclient.message_type = XInternAtom(dpy, "_NET_WM_STATE", False);
   event.xclient.window = win;
   event.xclient.format = 32;
-  event.xclient.data.l[0] = _NET_WM_STATE_TOGGLE;
+  event.xclient.data.l[0] = fullscreen ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
   event.xclient.data.l[1] = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
+  event.xclient.data.l[2] = 0;
+  event.xclient.data.l[3] = 1;  // Source indication: normal application.
+  event.xclient.data.l[4] = 0;
 
   // Send the event
   if (!XSendEvent(dpy, DefaultRootWindow(dpy), False,
@@ -37,6 +41,7 @@ bool ToggleFullscreen(Display* dpy, Window win)
     return false;
   }
 
+  XFlush(dpy);
   return true;
 }
 

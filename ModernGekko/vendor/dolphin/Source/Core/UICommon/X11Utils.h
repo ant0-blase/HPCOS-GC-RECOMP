@@ -19,7 +19,7 @@
 
 namespace X11Utils
 {
-bool ToggleFullscreen(Display* dpy, Window win);
+bool SetFullscreen(Display* dpy, Window win, bool fullscreen);
 
 #ifdef HAVE_XRANDR
 class XRRConfiguration

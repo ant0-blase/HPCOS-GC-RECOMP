@@ -324,12 +324,22 @@ bool SwapChain::CreateSwapChain()
   VkExtent2D size = surface_capabilities.currentExtent;
   if (size.width == UINT32_MAX)
   {
-    // Wayland surfaces usually leave the extent to the client. The presenter
-    // does not exist yet during the initial Vulkan swap-chain creation.
-    size.width = g_presenter ? std::max(g_presenter->GetBackbufferWidth(), 1) :
-                               Config::Get(Config::MAIN_RENDER_WINDOW_WIDTH);
-    size.height = g_presenter ? std::max(g_presenter->GetBackbufferHeight(), 1) :
-                                Config::Get(Config::MAIN_RENDER_WINDOW_HEIGHT);
+    // Wayland leaves the extent to the client. Use the latest compositor
+    // configure rather than the presenter's old backbuffer size; the presenter
+    // does not exist at all during initial swap-chain creation.
+    if (m_wsi.render_surface_size)
+    {
+      const auto [width, height] = m_wsi.render_surface_size->Get();
+      size.width = width;
+      size.height = height;
+    }
+    if (size.width == 0 || size.height == 0)
+    {
+      size.width = g_presenter ? std::max(g_presenter->GetBackbufferWidth(), 1) :
+                                 Config::Get(Config::MAIN_RENDER_WINDOW_WIDTH);
+      size.height = g_presenter ? std::max(g_presenter->GetBackbufferHeight(), 1) :
+                                  Config::Get(Config::MAIN_RENDER_WINDOW_HEIGHT);
+    }
   }
   size.width = std::clamp(size.width, surface_capabilities.minImageExtent.width,
                           surface_capabilities.maxImageExtent.width);

@@ -206,32 +206,46 @@ void StaticRecompCore::Run()
 
   // HPCOS FOV is live-editable from the Ctrl+F10 PC settings overlay.
 
-  // GHSE69 is a fixed-step ~59.94 Hz game. Raising VI/VBlank alone makes its
-  // phase-1 gameplay update run once per high-rate retrace, which accelerates
-  // movement, animation and physics. Keep that update at native cadence while
-  // leaving the later render phase at the requested VI rate.
+  // GHSE69 derives its main-loop time directly from the VI post-retrace
+  // callback at 0x8000BF30.  Dolphin VI overclock intentionally raises the
+  // *real* callback/retrace rate for extra rendered frames, but passing that
+  // raw high-rate retrace number into the game also makes its fixed-step
+  // simulation, animation and physics run too fast.  Maintain a second,
+  // virtual ~59.94 Hz retrace clock for the game while leaving the SDK/VI
+  // clock itself untouched for presentation and audio.
   constexpr double HPCOS_NATIVE_SIM_HZ = 59.94005994005994;
+  constexpr u32 HPCOS_VI_CALLBACK_PC = 0x8000BF30u;
   constexpr u32 HPCOS_SIM_UPDATE_PC = 0x80038DACu;
-  constexpr u32 HPCOS_MAIN_FRAME_COUNTER = 0x8041EA58u;
-  int hpcos_sim_target = -1;
-  double hpcos_sim_accumulator = 1.0;
-  u32 hpcos_sim_last_frame = 0;
-  bool hpcos_sim_have_frame = false;
-  bool hpcos_sim_run_this_frame = true;
-  u64 hpcos_sim_updates = 0;
-  u64 hpcos_sim_skips = 0;
+  constexpr u32 HPCOS_GAME_RETRACE_ADDRESS = 0x8041EA60u;
+
+  int hpcos_clock_target = -1;
+  bool hpcos_virtual_retrace_ready = false;
+  u32 hpcos_last_real_retrace = 0;
+  u32 hpcos_virtual_retrace = 0;
+  double hpcos_virtual_retrace_fraction = 0.0;
+  bool hpcos_update_retrace_ready = false;
+  u32 hpcos_last_update_retrace = 0;
+  u64 hpcos_real_retrace_callbacks = 0;
+  u64 hpcos_virtual_retrace_advances = 0;
+  u64 hpcos_update_runs = 0;
+  u64 hpcos_update_skips = 0;
+  const bool hpcos_fps_trace = [] {
+    const char* value = std::getenv("HPCOS_FPS_TRACE");
+    return value != nullptr && value[0] == '1' && value[1] == '\0';
+  }();
 
   while (*state_ptr == CPU::State::Running)
   {
     core_timing.Advance();
 
-    // HPCOS high-FPS presentation clock.
+    // HPCOS experimental high-FPS path (phase 1).
     //
     // Never change global emulation speed for an FPS patch: doing that also
     // scales DSP/audio and every guest timer.  Dolphin's VI overclock changes
     // the VBlank/render cadence while CoreTiming, CPU clock and DSP/audio keep
-    // their normal real-time clocks. GHSE69 gameplay itself is fixed-step, so
-    // its native update phase is independently gated to ~59.94 Hz below.
+    // their normal real-time clocks.  This is the same host-side mechanism
+    // used by the MOH Frontline timing patch; GHSE69 simulation-specific delta
+    // compensation can be layered on top without touching audio.
     {
       constexpr double NTSC_VPS = 59.94005994005994;
       const int game_fps_target = HPCOS::GameFpsTarget();
@@ -239,8 +253,6 @@ void StaticRecompCore::Run()
 
       if (game_fps_target != last_game_fps_target)
       {
-        // 60 means native timing. Do not overclock 59.94 -> 60 merely for a
-        // 0.1% difference; native simulation can then run every update call.
         if (game_fps_target > 60)
         {
           const float vi_factor =
@@ -249,27 +261,27 @@ void StaticRecompCore::Run()
           Config::SetCurrent(Config::MAIN_VI_OVERCLOCK_ENABLE, true);
           Config::SetCurrent(Config::MAIN_PRECISION_FRAME_TIMING, true);
           std::fprintf(stderr,
-                       "[HPCOS-FPS] render/VI=%d Hz factor=%.6f; simulation fixed at %.6f Hz; "
-                       "CPU/DSP/audio unchanged\n",
-                       game_fps_target, vi_factor, HPCOS_NATIVE_SIM_HZ);
+                       "[HPCOS-FPS] VI target=%d Hz factor=%.6f; CPU/DSP/audio clock unchanged\n",
+                       game_fps_target, vi_factor);
         }
         else
         {
           Config::SetCurrent(Config::MAIN_VI_OVERCLOCK_ENABLE, false);
           Config::SetCurrent(Config::MAIN_VI_OVERCLOCK, 1.0f);
-          std::fprintf(stderr,
-                       "[HPCOS-FPS] original VI/simulation timing restored (%.6f Hz)\n",
-                       HPCOS_NATIVE_SIM_HZ);
+          std::fprintf(stderr, "[HPCOS-FPS] native 59.94 Hz VI/game timing restored\n");
         }
 
-        // Reset the phase on a live Ctrl+F10 change so the first post-change
-        // simulation update is immediate and no old fractional remainder leaks.
-        hpcos_sim_target = game_fps_target;
-        hpcos_sim_accumulator = 1.0;
-        hpcos_sim_have_frame = false;
-        hpcos_sim_run_this_frame = true;
-        hpcos_sim_updates = 0;
-        hpcos_sim_skips = 0;
+        // Any live target change starts a fresh virtual-clock epoch.  The
+        // first callback seeds from the game's current real retrace number so
+        // menus/gameplay never observe a backwards jump.
+        hpcos_clock_target = game_fps_target;
+        hpcos_virtual_retrace_ready = false;
+        hpcos_update_retrace_ready = false;
+        hpcos_virtual_retrace_fraction = 0.0;
+        hpcos_real_retrace_callbacks = 0;
+        hpcos_virtual_retrace_advances = 0;
+        hpcos_update_runs = 0;
+        hpcos_update_skips = 0;
         last_game_fps_target = game_fps_target;
       }
     }
@@ -504,46 +516,97 @@ void StaticRecompCore::Run()
           if (!m_active_rel_sections.empty())
             ResolveNativeAddress(runtime_dispatch_address, &linked_dispatch_address, nullptr);
 
-          // GHSE69 fixed-step simulation decoupling.
+          // GHSE69 high-FPS clock virtualization.
           //
-          // The retail main loop at 0x8000BF70 calls 0x80038DAC for its
-          // phase-1 gameplay/physics update and later calls 0x80038E4C for the
-          // render phase. With a VI overclock, the former would otherwise run
-          // once per high-rate retrace and speed the whole game up.
+          // 0x8000BF30 is the game's VI post-retrace callback. Its r3 argument
+          // is the SDK's real retrace count. Keep the real SDK counter running
+          // at the requested render rate, but replace only the argument visible
+          // to the game with a monotonically increasing native-rate clock.
+          // This fixes every GHSE69 subsystem that consumes the main-loop
+          // retrace delta, rather than trying to scale individual forces.
+          if (hpcos_module && linked_dispatch_address == HPCOS_VI_CALLBACK_PC &&
+              hpcos_clock_target > 60)
+          {
+            const u32 real_retrace = m_guest.gpr[3];
+            ++hpcos_real_retrace_callbacks;
+
+            if (!hpcos_virtual_retrace_ready)
+            {
+              hpcos_virtual_retrace_ready = true;
+              hpcos_last_real_retrace = real_retrace;
+              hpcos_virtual_retrace = real_retrace;
+              hpcos_virtual_retrace_fraction = 0.0;
+              hpcos_update_retrace_ready = false;
+            }
+            else
+            {
+              // Unsigned subtraction deliberately handles the normal u32 wrap.
+              const u32 real_delta = real_retrace - hpcos_last_real_retrace;
+              hpcos_last_real_retrace = real_retrace;
+
+              // A callback can occasionally be delayed by the guest and arrive
+              // with delta > 1. Preserve elapsed real presentation time instead
+              // of assuming exactly one callback. Clamp pathological jumps so
+              // reset/state transitions cannot fast-forward gameplay.
+              const u32 clamped_delta = std::min<u32>(real_delta, 16u);
+              hpcos_virtual_retrace_fraction +=
+                  static_cast<double>(clamped_delta) * HPCOS_NATIVE_SIM_HZ /
+                  static_cast<double>(hpcos_clock_target);
+
+              const u32 virtual_steps = static_cast<u32>(hpcos_virtual_retrace_fraction);
+              if (virtual_steps != 0)
+              {
+                hpcos_virtual_retrace += virtual_steps;
+                hpcos_virtual_retrace_fraction -= static_cast<double>(virtual_steps);
+                hpcos_virtual_retrace_advances += virtual_steps;
+              }
+            }
+
+            m_guest.gpr[3] = hpcos_virtual_retrace;
+
+            if (hpcos_fps_trace && (hpcos_real_retrace_callbacks % 600u) == 0)
+            {
+              std::fprintf(stderr,
+                           "[HPCOS-FPS-TRACE] realVI=%llu virtualTicks=%llu "
+                           "updates=%llu skips=%llu target=%d\n",
+                           static_cast<unsigned long long>(hpcos_real_retrace_callbacks),
+                           static_cast<unsigned long long>(hpcos_virtual_retrace_advances),
+                           static_cast<unsigned long long>(hpcos_update_runs),
+                           static_cast<unsigned long long>(hpcos_update_skips),
+                           hpcos_clock_target);
+            }
+          }
+          else if (hpcos_module && linked_dispatch_address == HPCOS_VI_CALLBACK_PC)
+          {
+            // Native/original timing: expose the SDK count unchanged and make
+            // the next high-FPS activation reseed cleanly.
+            hpcos_virtual_retrace_ready = false;
+            hpcos_update_retrace_ready = false;
+          }
+
+          // The retail loop may attempt phase-1 more than once while catching
+          // up. At high render rates it may also enter the phase on an extra
+          // presentation frame whose virtual retrace has not advanced. Run the
+          // fixed-step phase exactly once per virtual retrace tick.
           bool hpcos_skip_sim_update = false;
           if (hpcos_module && linked_dispatch_address == HPCOS_SIM_UPDATE_PC &&
-              hpcos_sim_target > 60)
+              hpcos_clock_target > 60)
           {
-            u32 frame_id = 0;
-            const bool have_frame =
-                HpcosReadGuestU32BE(m_guest.ram, m_guest.ram_size,
-                                    HPCOS_MAIN_FRAME_COUNTER, &frame_id);
+            u32 game_retrace = hpcos_virtual_retrace;
+            (void)HpcosReadGuestU32BE(m_guest.ram, m_guest.ram_size,
+                                      HPCOS_GAME_RETRACE_ADDRESS, &game_retrace);
 
-            if (!have_frame || !hpcos_sim_have_frame || frame_id != hpcos_sim_last_frame)
+            if (!hpcos_update_retrace_ready || game_retrace != hpcos_last_update_retrace)
             {
-              hpcos_sim_have_frame = have_frame;
-              if (have_frame)
-                hpcos_sim_last_frame = frame_id;
-
-              hpcos_sim_accumulator +=
-                  HPCOS_NATIVE_SIM_HZ / static_cast<double>(hpcos_sim_target);
-              hpcos_sim_run_this_frame = hpcos_sim_accumulator >= 1.0;
-              if (hpcos_sim_run_this_frame)
-                hpcos_sim_accumulator -= 1.0;
+              hpcos_update_retrace_ready = true;
+              hpcos_last_update_retrace = game_retrace;
+              ++hpcos_update_runs;
             }
             else
             {
-              // The original loop has catch-up paths that can call the update
-              // phase more than once before one render. Never allow a second
-              // physics step inside the same high-rate presentation frame.
-              hpcos_sim_run_this_frame = false;
+              hpcos_skip_sim_update = true;
+              ++hpcos_update_skips;
             }
-
-            hpcos_skip_sim_update = !hpcos_sim_run_this_frame;
-            if (hpcos_skip_sim_update)
-              ++hpcos_sim_skips;
-            else
-              ++hpcos_sim_updates;
           }
 
           m_guest.pc = linked_dispatch_address;
@@ -566,10 +629,9 @@ void StaticRecompCore::Run()
 
           if (hpcos_skip_sim_update)
           {
-            // Retire the call without touching phase-1 gameplay state. LR was
-            // set by the original caller, so returning to it preserves the
-            // main loop and lets the render phase continue at the high VI rate.
-            m_guest.pc = m_guest.lr;
+            // Behave like an immediate leaf return from 0x80038DAC. The caller
+            // does not consume a return value; it only needs control back at LR.
+            m_guest.pc = m_guest.lr & ~3u;
             m_guest.downcount = -1;
             dispatched_blocks = 1;
           }
@@ -743,15 +805,6 @@ void StaticRecompCore::Run()
         }
       }
     } while (ppc.downcount > 0 && *state_ptr == CPU::State::Running);
-  }
-
-  if (hpcos_sim_updates != 0 || hpcos_sim_skips != 0)
-  {
-    std::fprintf(stderr,
-                 "[HPCOS-FPS] fixed-step summary: updates=%llu skipped-high-rate=%llu target=%d\n",
-                 static_cast<unsigned long long>(hpcos_sim_updates),
-                 static_cast<unsigned long long>(hpcos_sim_skips),
-                 hpcos_sim_target);
   }
 
   if (hpcos_idle_trace)
