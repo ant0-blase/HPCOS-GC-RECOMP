@@ -1,73 +1,72 @@
-# In-game PC settings overlay architecture
+# HPCOS in-game PC settings overlay
 
-Status: design audit, not yet implemented. This document records the smallest
-reusable integration path through the existing ModernGekko/Dolphin frontend.
-It deliberately contains no game addresses or title-specific behavior.
+Status: implemented for the HPCOS / GHSE69 runtime on Linux X11 and Wayland.
 
-## Ownership and rendering
+## Hotkey and rendering
 
-`moderngekko-run` should own a game-independent settings-overlay controller and
-the validated frontend configuration. Dolphin's `Presenter` already owns the
-only in-game ImGui context through `OnScreenUI`; the launcher SDL/ImGui backend
-cannot be reused because the emulation window is created by Dolphin's native
-platform layer.
+- **Ctrl+F10** toggles the HPCOS PC settings overlay.
+- Dolphin's normal **F10** pause hotkey is preserved.
+- The overlay is rendered directly inside Dolphin's existing `OnScreenUI` ImGui
+  frame, before `ImGui::Render()`.
+- Emulation keeps running while the overlay is visible so the menu remains
+  responsive.
+- `Host_UIBlocksControllerState()` gates normal guest controller input while the
+  menu is open.
 
-Add a draw event inside `OnScreenUI::Finalize()`, after built-in OSD drawing and
-before `ImGui::Render()`. Register the overlay with the existing RAII event-hook
-facility. This point renders once per presented frame under the ImGui lock;
-`before_present_event` is outside that lock and can run for skipped duplicate
-presents.
+## Live settings
 
-The video-thread draw callback must not perform filesystem I/O, controller
-reloads, or other blocking runtime changes. Widget edits enqueue a small host-
-side apply command. The host path validates and atomically saves the frontend
-configuration, then applies only settings whose Dolphin APIs are safe live.
+The current overlay exposes:
 
-## Input and visibility
+- internal EFB resolution scale (1x through 12x)
+- V-Sync
+- FPS OSD
+- original 4:3, automatic host aspect, 16:9, 16:10, 21:9 and 32:9 presets
+- live horizontal FOV override
+- optional host presentation FPS cap
+- runtime audio volume and mute
+- keyboard/mouse enable, sensitivity and Y inversion
+- direct keyboard/mouse rebinding
 
-- Default to a configurable F10 edge-triggered toggle; move the existing pause
-  binding to Shift+F10. F1 through F8 already select savestate slots.
-- Keep emulation running while the overlay is open. Pausing can freeze the
-  presentation path that draws the overlay.
-- Store visibility atomically. Make `Host_UIBlocksControllerState()` reflect
-  it and ensure the input gate remains effective even when background input is
-  enabled. Closing clears UI key/button state before guest input resumes.
-- Forward keyboard press/release, mouse movement and buttons from each native
-  platform to `Presenter` only while the overlay is visible. X11, Wayland,
-  Win32 and macOS currently have different incomplete event paths, so platform
-  parity is an explicit milestone.
-- Enable ImGui keyboard navigation first. Controller navigation should later
-  consume a separate raw UI stream, never the gated emulated GameCube pad.
+HPCOS-specific FOV and aspect values are no longer process-only environment
+constants. The renderer, guest FOV synchronization and presentation path read
+live atomic runtime values, while the old `HPCOS_FOV` and
+`HPCOS_DYNAMIC_ASPECT` environment variables remain valid startup defaults.
 
-## Initial application policy
+The host FPS setting is intentionally a presentation cap only. It does not
+alter emulation speed and is not presented as a game-side framerate unlock.
 
-Safe candidates for live application through existing Dolphin configuration
-and refresh paths are VSync, internal EFB scale, renderer aspect presentation,
-anisotropic/texture filtering, supported MSAA modes, shader compilation mode,
-volume/mute, high-resolution texture enablement, statistics, and texture dump.
+## Keyboard and mouse
 
-Graphics backend, audio backend, output window mode/resolution, controller
-topology/profile and texture-pack search path should initially be marked
-restart-required. Backend capabilities must constrain values such as MSAA.
-Netplay must lock settings that affect emulation or controller topology.
+Keyboard/mouse input is merged into GameCube controller Port 1, so a normal
+controller remains usable at the same time.
 
-FPS targets remain unsupported until game timing is proved and patched under
-the P6 work. Renderer aspect selection alone is not proper widescreen; Hor+
-camera/FOV, HUD and FMV behavior belong to the per-game patch layer.
+Default bindings:
 
-## Implementation stages
+| GameCube input | PC binding |
+| --- | --- |
+| Main stick | WASD |
+| C-stick / camera | Mouse movement |
+| A | Mouse 1 |
+| B | Mouse 2 |
+| X | E |
+| Y | Q |
+| Z | Mouse 3 |
+| L | Left Shift |
+| R | Left Ctrl |
+| Start | Enter |
+| D-pad | Arrow keys |
 
-1. Finish and test the versioned settings schema, atomic save and legacy
-   migration.
-2. Add the `OnScreenUI::Finalize()` draw hook and an initially read-only shell
-   with Display, Graphics, Performance, Controller, Audio, Texture Packs,
-   Advanced and About categories.
-3. Implement F10, keyboard/mouse forwarding, cursor restoration and
-   unconditional guest-input gating on X11 and Wayland.
-4. Add a host-side apply queue and unit-test exact frontend-to-Dolphin setting
-   mappings with a mock adapter.
-5. Add Win32/macOS parity, stable SDL device identities, safe controller
-   profile reload, then separate controller navigation for ImGui.
-6. Manually verify that guest input is neutral while open, recovers on close,
-   live changes take effect, restart labels are truthful, and saved settings
-   survive relaunch.
+Selecting a binding in the overlay starts capture; the next keyboard key or
+mouse button becomes the new binding. Bindings and menu settings are written to
+`HPCOS_PC.ini` in Dolphin/ModernGekko's runtime config directory.
+
+## Platform notes
+
+The source includes both X11 and native Wayland input paths. X11 can be built
+and syntax-checked with the dependencies in the normal ModernGekko toolchain.
+Native Wayland currently uses surface pointer motion because the runtime does
+not yet ship the relative-pointer / pointer-constraints protocol plumbing; a
+future pass can add true locked relative mouse input for unlimited camera
+rotation on Wayland.
+
+Win32 and macOS input parity are not part of this HPCOS implementation yet.

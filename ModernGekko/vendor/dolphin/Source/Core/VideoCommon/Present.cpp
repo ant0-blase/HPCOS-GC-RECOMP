@@ -1,12 +1,14 @@
 // Copyright 2023 Dolphin Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <thread>
 #include <cstdio>
 #include <cstdlib>
 #include "VideoCommon/Present.h"
 
 #include "Common/ChunkFile.h"
 #include "Core/Config/GraphicsSettings.h"
+#include "Core/HPCOSSettings.h"
 #include "Core/Config/MainSettings.h"
 #include "Core/CoreTiming.h"
 #include "Core/HW/VideoInterface.h"
@@ -321,6 +323,14 @@ void Presenter::ProcessFrameDumping(u64 ticks) const
     g_frame_dumper->DumpCurrentFrame(m_xfb_entry->texture.get(), m_xfb_rect, target_rect, ticks,
                                      m_frame_count);
   }
+}
+
+float Presenter::GetHpcosHostAspect() const
+{
+  const float override_aspect = HPCOS::AspectOverride();
+  if (override_aspect > 0.1f)
+    return override_aspect;
+  return m_hpcos_host_aspect.load(std::memory_order_relaxed);
 }
 
 void Presenter::SetBackbuffer(int backbuffer_width, int backbuffer_height)
@@ -963,8 +973,7 @@ void Presenter::Present(PresentInfo* present_info)
     // HPCOS: dynamic widescreen must consume the complete host
     // backbuffer. Do this AFTER AdjustRectanglesToFitBounds(), so
     // nothing can restore Dolphin's pillarbox/letterbox target.
-    if (const char* env = std::getenv("HPCOS_DYNAMIC_ASPECT");
-        env != nullptr && env[0] == '1')
+    if (HPCOS::DynamicAspectEnabled())
     {
       const auto original_target = render_target_rc;
 
@@ -1115,6 +1124,22 @@ void Presenter::Present(PresentInfo* present_info)
       present_info->present_time_accuracy = PresentInfo::PresentTimeAccuracy::PresentInProgress;
     }
 
+    // Optional HPCOS host presentation cap. This only limits host presentation;
+    // it intentionally does not speed up or slow down guest game logic.
+    if (const int fps_cap = HPCOS::FpsCap(); fps_cap > 0)
+    {
+      using namespace std::chrono;
+      static thread_local steady_clock::time_point last_present{};
+      const auto interval = duration_cast<steady_clock::duration>(duration<double>(1.0 / fps_cap));
+      const auto now = steady_clock::now();
+      if (last_present.time_since_epoch().count() != 0)
+      {
+        const auto target = last_present + interval;
+        if (target > now)
+          std::this_thread::sleep_until(target);
+      }
+      last_present = steady_clock::now();
+    }
     g_gfx->PresentBackbuffer();
   }
 

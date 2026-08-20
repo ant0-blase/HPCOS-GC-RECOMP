@@ -157,6 +157,10 @@ private:
   u8* m_l1_cache = nullptr;
   u32 m_l1_cache_size = 0;
 
+  // GHSE69-specific fast path for the two hottest Processor Interface polls.
+  // Cached once per Run() so the hook never touches SConfig.
+  bool m_hpcos_pi_poll_fastpath = false;
+
   // MMIO read sampler, armed by STATICRECOMP_MMIO_TRACE. Names the register a
   // stuck game is polling and the guest PC polling it.
   // last_value / distinct: a poll loop that never ends is usually reading the
@@ -172,6 +176,26 @@ private:
   // fast path above -- so the table only holds real register writes.
   MmioRead m_mmio_writes[64] = {};
   void RecordMmioWrite(u32 ea, u32 guest_pc);
+
+  // Residual external-memory profiler, armed by STATICRECOMP_EXTERNAL_TRACE=1.
+  // It only sees accesses which missed the dedicated gather-pipe and locked-L1
+  // fast paths, i.e. exactly the traffic which still falls through to Dolphin's
+  // MMU. Entries are keyed by 4 KiB page + guest PC so the next optimization can
+  // be based on the real address ranges instead of guesses.
+  struct ExternalAccess
+  {
+    u32 page = 0;
+    u32 guest_pc = 0;
+    u32 min_ea = 0;
+    u32 max_ea = 0;
+    u32 read_sizes = 0;
+    u32 write_sizes = 0;
+    u64 reads = 0;
+    u64 writes = 0;
+  };
+  bool m_external_trace = false;
+  ExternalAccess m_external_accesses[256] = {};
+  void RecordExternalAccess(u32 ea, u32 guest_pc, u8 size, bool write);
 
   // Which guest instructions still leave native code for the interpreter.
   // Plain arrays rather than a map because this is counted on a path taken

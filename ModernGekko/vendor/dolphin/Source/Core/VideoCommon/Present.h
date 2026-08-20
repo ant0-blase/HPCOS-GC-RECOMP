@@ -52,10 +52,7 @@ public:
   // Window resolution (display resolution if fullscreen)
   int GetBackbufferWidth() const { return m_backbuffer_width; }
   int GetBackbufferHeight() const { return m_backbuffer_height; }
-  float GetHpcosHostAspect() const
-  {
-    return m_hpcos_host_aspect.load(std::memory_order_relaxed);
-  }
+  float GetHpcosHostAspect() const;
   float GetBackbufferScale() const { return m_backbuffer_scale; }
   u32 AutoIntegralScale() const;
   AbstractTextureFormat GetBackbufferFormat() const { return m_backbuffer_format; }

@@ -10,6 +10,7 @@
 #include "Common/Timer.h"
 
 #include "Core/Achievements/AchievementManager.h"
+#include "Core/HPCOSSettings.h"
 #include "Core/Config/AchievementSettings.h"
 #include "Core/Config/GraphicsSettings.h"
 #include "Core/Config/MainSettings.h"
@@ -31,11 +32,295 @@
 #include "VideoCommon/VertexManagerBase.h"
 #include "VideoCommon/VideoConfig.h"
 
+#include <fstream>
+#include <sstream>
+
 #include <inttypes.h>
+#include <algorithm>
+#include <cstdlib>
 #include <mutex>
 
 #include <imgui.h>
 #include <implot.h>
+
+namespace
+{
+std::string HpcosPcSettingsPath()
+{
+  return File::GetUserPath(D_CONFIG_IDX) + "HPCOS_PC.ini";
+}
+
+void SaveHpcosPcSettings()
+{
+  std::ofstream out(HpcosPcSettingsPath(), std::ios::trunc);
+  if (!out)
+    return;
+
+  out << "# HPCOS PC Edition runtime settings - edited with Ctrl+F10\n";
+  out << "dynamic_aspect=" << (HPCOS::DynamicAspectEnabled() ? 1 : 0) << '\n';
+  out << "aspect_override=" << HPCOS::AspectOverride() << '\n';
+  out << "fov=" << HPCOS::Fov() << '\n';
+  out << "fps_cap=" << HPCOS::FpsCap() << '\n';
+  out << "pc_input=" << (HPCOS::PcInputEnabled() ? 1 : 0) << '\n';
+  out << "mouse_sensitivity=" << HPCOS::MouseSensitivity() << '\n';
+  out << "mouse_invert_y=" << (HPCOS::MouseInvertY() ? 1 : 0) << '\n';
+  out << "internal_resolution=" << Config::Get(Config::GFX_EFB_SCALE) << '\n';
+  out << "vsync=" << (Config::Get(Config::GFX_VSYNC) ? 1 : 0) << '\n';
+  out << "show_fps=" << (Config::Get(Config::GFX_SHOW_FPS) ? 1 : 0) << '\n';
+  out << "audio_volume=" << Config::Get(Config::MAIN_AUDIO_VOLUME) << '\n';
+  out << "audio_muted=" << (Config::Get(Config::MAIN_AUDIO_MUTED) ? 1 : 0) << '\n';
+  for (int i = 0; i < static_cast<int>(HPCOS::Action::Count); ++i)
+    out << "bind." << i << '=' << HPCOS::Binding(static_cast<HPCOS::Action>(i)) << '\n';
+}
+
+void LoadHpcosPcSettingsOnce()
+{
+  static bool loaded = false;
+  if (loaded)
+    return;
+  loaded = true;
+
+  std::ifstream in(HpcosPcSettingsPath());
+  if (!in)
+    return;
+
+  std::string line;
+  while (std::getline(in, line))
+  {
+    if (line.empty() || line[0] == '#')
+      continue;
+    const size_t eq = line.find('=');
+    if (eq == std::string::npos)
+      continue;
+    const std::string key = line.substr(0, eq);
+    const std::string value = line.substr(eq + 1);
+    if (key == "dynamic_aspect")
+      HPCOS::SetDynamicAspectEnabled(std::atoi(value.c_str()) != 0);
+    else if (key == "aspect_override")
+      HPCOS::SetAspectOverride(std::strtof(value.c_str(), nullptr));
+    else if (key == "fov")
+      HPCOS::SetFov(std::strtof(value.c_str(), nullptr));
+    else if (key == "fps_cap")
+      HPCOS::SetFpsCap(std::atoi(value.c_str()));
+    else if (key == "pc_input")
+      HPCOS::SetPcInputEnabled(std::atoi(value.c_str()) != 0);
+    else if (key == "mouse_sensitivity")
+      HPCOS::SetMouseSensitivity(std::strtof(value.c_str(), nullptr));
+    else if (key == "mouse_invert_y")
+      HPCOS::SetMouseInvertY(std::atoi(value.c_str()) != 0);
+    else if (key == "internal_resolution")
+      Config::SetCurrent(Config::GFX_EFB_SCALE, std::clamp(std::atoi(value.c_str()), 1, 12));
+    else if (key == "vsync")
+      Config::SetCurrent(Config::GFX_VSYNC, std::atoi(value.c_str()) != 0);
+    else if (key == "show_fps")
+      Config::SetCurrent(Config::GFX_SHOW_FPS, std::atoi(value.c_str()) != 0);
+    else if (key == "audio_volume")
+      Config::SetCurrent(Config::MAIN_AUDIO_VOLUME, std::clamp(std::atoi(value.c_str()), 0, 100));
+    else if (key == "audio_muted")
+      Config::SetCurrent(Config::MAIN_AUDIO_MUTED, std::atoi(value.c_str()) != 0);
+    else if (key.rfind("bind.", 0) == 0)
+    {
+      const int index = std::atoi(key.c_str() + 5);
+      if (index >= 0 && index < static_cast<int>(HPCOS::Action::Count))
+        HPCOS::SetBinding(static_cast<HPCOS::Action>(index), value);
+    }
+  }
+}
+
+void DrawHpcosPcSettings()
+{
+  LoadHpcosPcSettingsOnce();
+  if (!HPCOS::OverlayVisible())
+    return;
+
+  ImGuiIO& io = ImGui::GetIO();
+  ImGui::SetNextWindowSize(ImVec2(std::min(760.0f, io.DisplaySize.x * 0.86f),
+                                 std::min(620.0f, io.DisplaySize.y * 0.88f)),
+                           ImGuiCond_FirstUseEver);
+  ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f),
+                          ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+
+  if (!ImGui::Begin("HPCOS PC Settings  |  Ctrl+F10", nullptr,
+                    ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings))
+  {
+    ImGui::End();
+    return;
+  }
+
+  ImGui::TextUnformatted("Harry Potter and the Chamber of Secrets - PC runtime controls");
+  ImGui::Separator();
+
+  bool changed = false;
+  if (ImGui::BeginTabBar("##hpcos-tabs"))
+  {
+    if (ImGui::BeginTabItem("Graphics"))
+    {
+      int scale = Config::Get(Config::GFX_EFB_SCALE);
+      const char* resolutions[] = {"1x Native (640x528)", "2x (~720p)", "3x (~1080p)",
+                                   "4x (~1440p)", "5x", "6x (~4K)", "7x", "8x (~5K)",
+                                   "9x", "10x", "11x", "12x (~8K)"};
+      int index = std::clamp(scale, 1, 12) - 1;
+      if (ImGui::Combo("Internal resolution", &index, resolutions, 12))
+      {
+        Config::SetCurrent(Config::GFX_EFB_SCALE, index + 1);
+        changed = true;
+      }
+
+      bool vsync = Config::Get(Config::GFX_VSYNC);
+      if (ImGui::Checkbox("V-Sync", &vsync))
+      {
+        Config::SetCurrent(Config::GFX_VSYNC, vsync);
+        changed = true;
+      }
+      bool show_fps = Config::Get(Config::GFX_SHOW_FPS);
+      if (ImGui::Checkbox("Show FPS overlay", &show_fps))
+      {
+        Config::SetCurrent(Config::GFX_SHOW_FPS, show_fps);
+        changed = true;
+      }
+
+      int aspect_index = 0;
+      const float override_aspect = HPCOS::AspectOverride();
+      if (HPCOS::DynamicAspectEnabled())
+      {
+        if (std::fabs(override_aspect - 16.0f / 9.0f) < 0.01f) aspect_index = 2;
+        else if (std::fabs(override_aspect - 16.0f / 10.0f) < 0.01f) aspect_index = 3;
+        else if (std::fabs(override_aspect - 21.0f / 9.0f) < 0.02f) aspect_index = 4;
+        else if (std::fabs(override_aspect - 32.0f / 9.0f) < 0.02f) aspect_index = 5;
+        else aspect_index = 1;
+      }
+      const char* aspects[] = {"Original 4:3", "Auto / window", "16:9", "16:10", "21:9", "32:9"};
+      if (ImGui::Combo("Aspect ratio", &aspect_index, aspects, 6))
+      {
+        if (aspect_index == 0)
+        {
+          HPCOS::SetDynamicAspectEnabled(false);
+          HPCOS::SetAspectOverride(0.0f);
+          Config::SetCurrent(Config::GFX_ASPECT_RATIO, AspectMode::ForceStandard);
+        }
+        else
+        {
+          HPCOS::SetDynamicAspectEnabled(true);
+          const float values[] = {0.0f, 0.0f, 16.0f / 9.0f, 16.0f / 10.0f, 21.0f / 9.0f, 32.0f / 9.0f};
+          HPCOS::SetAspectOverride(values[aspect_index]);
+          Config::SetCurrent(Config::GFX_ASPECT_RATIO, AspectMode::Stretch);
+        }
+        changed = true;
+      }
+
+      bool fov_override = HPCOS::Fov() > 0.0f;
+      if (ImGui::Checkbox("Custom FOV", &fov_override))
+      {
+        HPCOS::SetFov(fov_override ? 90.0f : 0.0f);
+        changed = true;
+      }
+      if (fov_override)
+      {
+        float fov = HPCOS::Fov();
+        if (ImGui::SliderFloat("Horizontal FOV", &fov, 50.0f, 130.0f, "%.0f deg"))
+        {
+          HPCOS::SetFov(fov);
+          changed = true;
+        }
+      }
+
+      int fps = HPCOS::FpsCap();
+      const int fps_values[] = {0, 30, 60, 90, 120, 144, 165, 240};
+      const char* fps_labels[] = {"Original / uncapped host", "30", "60", "90", "120", "144", "165", "240"};
+      int fps_index = 0;
+      for (int i = 0; i < 8; ++i)
+        if (fps == fps_values[i]) fps_index = i;
+      if (ImGui::Combo("Host FPS cap", &fps_index, fps_labels, 8))
+      {
+        HPCOS::SetFpsCap(fps_values[fps_index]);
+        changed = true;
+      }
+      ImGui::TextDisabled("The host cap can limit presentation; it does not fake a guest FPS unlock.");
+      ImGui::EndTabItem();
+    }
+
+    if (ImGui::BeginTabItem("Keyboard + Mouse"))
+    {
+      bool enabled = HPCOS::PcInputEnabled();
+      if (ImGui::Checkbox("Enable keyboard + mouse (Port 1, merged with gamepad)", &enabled))
+      {
+        HPCOS::SetPcInputEnabled(enabled);
+        changed = true;
+      }
+      float sensitivity = HPCOS::MouseSensitivity();
+      if (ImGui::SliderFloat("Mouse sensitivity", &sensitivity, 0.10f, 5.0f, "%.2fx"))
+      {
+        HPCOS::SetMouseSensitivity(sensitivity);
+        changed = true;
+      }
+      bool invert_y = HPCOS::MouseInvertY();
+      if (ImGui::Checkbox("Invert mouse Y", &invert_y))
+      {
+        HPCOS::SetMouseInvertY(invert_y);
+        changed = true;
+      }
+      ImGui::SeparatorText("Bindings");
+      ImGui::TextDisabled("Click a binding, then press a keyboard key or mouse button.");
+      for (int i = 0; i < static_cast<int>(HPCOS::Action::Count); ++i)
+      {
+        const auto action = static_cast<HPCOS::Action>(i);
+        ImGui::PushID(i);
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(HPCOS::ActionName(action));
+        ImGui::SameLine(260.0f);
+        std::string label = HPCOS::CapturingAction() == i ? "Press a key..." : HPCOS::Binding(action);
+        if (ImGui::Button(label.c_str(), ImVec2(180.0f, 0.0f)))
+          HPCOS::BeginBindingCapture(action);
+        ImGui::PopID();
+      }
+      if (ImGui::Button("Reset default bindings"))
+      {
+        HPCOS::ResetBindings();
+        changed = true;
+      }
+      ImGui::SameLine();
+      if (HPCOS::CapturingAction() >= 0 && ImGui::Button("Cancel rebind"))
+        HPCOS::CancelBindingCapture();
+      ImGui::EndTabItem();
+    }
+
+    if (ImGui::BeginTabItem("Audio / QoL"))
+    {
+      int volume = Config::Get(Config::MAIN_AUDIO_VOLUME);
+      if (ImGui::SliderInt("Volume", &volume, 0, 100, "%d%%"))
+      {
+        Config::SetCurrent(Config::MAIN_AUDIO_VOLUME, volume);
+        changed = true;
+      }
+      bool muted = Config::Get(Config::MAIN_AUDIO_MUTED);
+      if (ImGui::Checkbox("Mute", &muted))
+      {
+        Config::SetCurrent(Config::MAIN_AUDIO_MUTED, muted);
+        changed = true;
+      }
+      ImGui::Spacing();
+      ImGui::TextWrapped("Ctrl+F10 opens/closes this menu. F10 keeps Dolphin's normal pause hotkey. "
+                         "Gamepad input stays available alongside keyboard and mouse.");
+      ImGui::EndTabItem();
+    }
+    ImGui::EndTabBar();
+  }
+
+  static unsigned last_generation = HPCOS::BindingGeneration();
+  const unsigned generation = HPCOS::BindingGeneration();
+  if (generation != last_generation)
+  {
+    last_generation = generation;
+    changed = true;
+  }
+  if (changed)
+    SaveHpcosPcSettings();
+
+  ImGui::Separator();
+  ImGui::TextDisabled("Press Ctrl+F10 to close this menu.");
+  ImGui::End();
+}
+}  // namespace
 
 namespace VideoCommon
 {
@@ -422,6 +707,7 @@ void OnScreenUI::Finalize()
   DrawDebugText();
   OSD::DrawMessages();
   DrawChallengesAndLeaderboards();
+  DrawHpcosPcSettings();
   ImGui::Render();
 
   // Check for font changes
