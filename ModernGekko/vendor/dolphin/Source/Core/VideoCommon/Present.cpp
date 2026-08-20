@@ -360,7 +360,7 @@ void Presenter::SetBackbuffer(SurfaceInfo info)
   }
   m_backbuffer_scale = info.scale;
   m_backbuffer_format = info.format;
-  if (m_onscreen_ui)
+  if (m_onscreen_ui && m_onscreen_ui->IsReady())
     m_onscreen_ui->SetScale(info.scale);
 
   OnBackbufferSet(size_changed, is_first);
@@ -968,6 +968,18 @@ void Presenter::Present(PresentInfo* present_info)
     {
       const auto original_target = render_target_rc;
 
+      // The overscan crop below is measured from GHSE69's XFB and is only
+      // correct for that game: another title has a different border, so
+      // applying it crops the wrong number of pixels and shifts the image --
+      // the same mistake the guest FOV patch made before it was gated.
+      // Widescreen itself is generic (it derives from the host drawable) and
+      // stays on for everyone; only the measured border is game-specific, so
+      // it takes its own opt-in that only that game's run.sh sets.
+      static const bool hpcos_overscan_measured = [] {
+        const char* value = std::getenv("HPCOS_XFB_OVERSCAN");
+        return value != nullptr && value[0] == '1';
+      }();
+
 
       // HPCOS-XFB-OVERSCAN
       //
@@ -997,10 +1009,13 @@ void Presenter::Present(PresentInfo* present_info)
       const int hpcos_crop_bottom =
           (hpcos_xfb_height * 8 + 224) / 448;
 
-      render_source_rc.left += hpcos_crop_left;
-      render_source_rc.right -= hpcos_crop_right;
-      render_source_rc.top += hpcos_crop_top;
-      render_source_rc.bottom -= hpcos_crop_bottom;
+      if (hpcos_overscan_measured)
+      {
+        render_source_rc.left += hpcos_crop_left;
+        render_source_rc.right -= hpcos_crop_right;
+        render_source_rc.top += hpcos_crop_top;
+        render_source_rc.bottom -= hpcos_crop_bottom;
+      }
 
       static bool hpcos_crop_logged = false;
 

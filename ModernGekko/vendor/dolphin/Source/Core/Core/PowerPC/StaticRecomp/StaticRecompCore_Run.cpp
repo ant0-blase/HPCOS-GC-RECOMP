@@ -4,6 +4,7 @@
 #include <cmath>
 #include "VideoCommon/Present.h"
 #include "Core/PowerPC/StaticRecomp/StaticRecompCore.h"
+#include "Core/PowerPC/StaticRecomp/StaticRecompFastmem.h"
 #include "Core/System.h"
 #include "Core/PowerPC/PowerPC.h"
 #include "Core/PowerPC/Interpreter/Interpreter.h"
@@ -18,6 +19,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string_view>
 
 namespace
 {
@@ -60,6 +62,25 @@ static bool HpcosReadGuestFloatBE(const u8* ram, std::size_t ram_size,
   return true;
 }
 
+static bool HpcosReadGuestU32BE(const u8* ram, std::size_t ram_size,
+                                u32 address, u32* out)
+{
+  constexpr u32 MEM1_BASE = 0x80000000u;
+
+  if (!ram || !out || address < MEM1_BASE)
+    return false;
+
+  const std::size_t off = static_cast<std::size_t>(address - MEM1_BASE);
+  if (off + sizeof(u32) > ram_size)
+    return false;
+
+  *out = (static_cast<u32>(ram[off + 0]) << 24) |
+         (static_cast<u32>(ram[off + 1]) << 16) |
+         (static_cast<u32>(ram[off + 2]) << 8) |
+         static_cast<u32>(ram[off + 3]);
+  return true;
+}
+
 static bool HpcosWriteGuestFovFloatBE(u8* ram, std::size_t ram_size,
                                       u32 address, float value)
 {
@@ -93,6 +114,24 @@ void StaticRecompCore::Run()
   auto& interpreter = m_system.GetInterpreter();
   auto& memory = m_system.GetMemory();
   const CPU::State* state_ptr = m_system.GetCPU().GetStatePtr();
+  const bool hpcos_idle_trace = [] {
+    const char* value = std::getenv("HPCOS_IDLE_TRACE");
+    return value != nullptr && value[0] == '1' && value[1] == '\0';
+  }();
+  struct
+  {
+    u64 candidates = 0;
+    u64 frontend_game = 0;
+    u64 module_game = 0;
+    u64 interrupts_enabled = 0;
+    u64 no_exceptions = 0;
+    u64 readable_poll = 0;
+    u64 zero_poll = 0;
+    u64 skipped = 0;
+    u64 post_candidates = 0;
+    u64 post_zero = 0;
+    u64 post_nonzero = 0;
+  } idle_trace;
 
   m_guest.ram = memory.GetRAM();
   m_guest.ram_size = memory.GetRamSizeReal();
@@ -112,6 +151,7 @@ void StaticRecompCore::Run()
   // its first guest access, so say so rather than fault.
   m_guest.fastmem_physical = memory.GetPhysicalBase();
   m_guest.fastmem_logical = memory.GetLogicalBase();
+  StaticRecompFastmem::SetArenaBases(m_guest.fastmem_physical, m_guest.fastmem_logical);
   m_fastmem_available = m_guest.fastmem_physical != nullptr &&
                         m_guest.fastmem_logical != nullptr;
   if (!m_fastmem_available)
@@ -191,7 +231,14 @@ void StaticRecompCore::Run()
       return value;
     }();
 
-    if (hpcos_requested_hfov > 0.0f)
+    // These two addresses are GHSE69's own camera globals, found by reverse
+    // engineering that title. Writing them while another game is running would
+    // corrupt whatever happens to live there, so the game id gates the patch:
+    // the runtime source tree is shared between per-game projects, and only
+    // this one has had its globals identified.
+    const bool guest_fov_supported = SConfig::GetInstance().GetGameID() == "GHSE69";
+
+    if (hpcos_requested_hfov > 0.0f && guest_fov_supported)
     {
       constexpr u32 FOV_ADDRESS = 0x8049EC88u;
       constexpr u32 ASPECT_ADDRESS = 0x8049EC8Cu;
@@ -271,6 +318,54 @@ void StaticRecompCore::Run()
           !(m_guest.host_call && IsHostCallAddress(ppc.pc)))
       {
         SyncIn();
+
+        // GHSE69's configured idle PC polls OS scheduler RunQueueBits until an
+        // interrupt makes work runnable. CoreTiming::Advance has already run
+        // due events and delivered any enabled external exception before this
+        // point. When the poll is still zero, charge the remainder of the
+        // slice as idle instead of spending host cycles executing the same
+        // lwz/cmplwi/bc loop. A non-zero or unreadable poll always executes the
+        // guest chunk so the scheduler's exit path remains observable.
+        constexpr u32 HPCOS_IDLE_PC = 0x801789ACu;
+        constexpr s32 HPCOS_RUN_QUEUE_BITS_R13_OFFSET = -26752;
+        constexpr u32 MSR_EE = 0x00008000u;
+        u32 run_queue_bits = 0;
+        const u32 run_queue_address =
+            m_guest.gpr[13] + static_cast<u32>(HPCOS_RUN_QUEUE_BITS_R13_OFFSET);
+        const bool idle_candidate =
+            m_idle_pc == HPCOS_IDLE_PC && m_guest.pc == HPCOS_IDLE_PC;
+        const bool hpcos_module =
+            m_module_active && m_module != nullptr &&
+            std::string_view(m_module->game_id) == "GHSE69";
+        const bool interrupts_enabled = (m_guest.msr & MSR_EE) != 0;
+        const bool no_exceptions = ppc.Exceptions == 0;
+        const bool readable_poll =
+            idle_candidate &&
+            HpcosReadGuestU32BE(m_guest.ram, m_guest.ram_size,
+                                run_queue_address, &run_queue_bits);
+        const bool zero_poll = readable_poll && run_queue_bits == 0;
+
+        if (hpcos_idle_trace && idle_candidate)
+        {
+          ++idle_trace.candidates;
+          idle_trace.frontend_game += current_game_id == "GHSE69";
+          idle_trace.module_game += hpcos_module;
+          idle_trace.interrupts_enabled += interrupts_enabled;
+          idle_trace.no_exceptions += no_exceptions;
+          idle_trace.readable_poll += readable_poll;
+          idle_trace.zero_poll += zero_poll;
+        }
+
+        if (hpcos_module && idle_candidate && interrupts_enabled &&
+            no_exceptions && zero_poll)
+        {
+          if (hpcos_idle_trace)
+            ++idle_trace.skipped;
+          core_timing.Idle();
+          SyncOut();
+          continue;
+        }
+
         ++m_bursts;
         do
         {
@@ -312,7 +407,7 @@ void StaticRecompCore::Run()
            * For the normal DOL gameplay path, execute multiple verified chunks
            * inside the native module before returning to the C++ chassis.
            */
-          if (false && !do_ls &&
+          if (!do_ls &&
               m_module->dispatch_burst &&
               m_active_rel_sections.empty() &&
               !m_native_chain_state.empty())
@@ -373,7 +468,27 @@ void StaticRecompCore::Run()
           // Idle loop skipping for configured target loops (e.g. Wii Menu OSIdleThread)
           if (m_guest.pc == m_idle_pc && m_idle_pc != 0)
           {
-            m_system.GetCoreTiming().Idle();
+            bool should_idle = true;
+            if (hpcos_module && m_guest.pc == HPCOS_IDLE_PC)
+            {
+              u32 post_run_queue_bits = 0;
+              const u32 post_run_queue_address =
+                  m_guest.gpr[13] + static_cast<u32>(HPCOS_RUN_QUEUE_BITS_R13_OFFSET);
+              should_idle =
+                  HpcosReadGuestU32BE(m_guest.ram, m_guest.ram_size,
+                                      post_run_queue_address, &post_run_queue_bits) &&
+                  post_run_queue_bits == 0;
+              if (hpcos_idle_trace)
+              {
+                ++idle_trace.post_candidates;
+                if (should_idle)
+                  ++idle_trace.post_zero;
+                else
+                  ++idle_trace.post_nonzero;
+              }
+            }
+            if (should_idle)
+              m_system.GetCoreTiming().Idle();
           }
 
           // ctx->timebase is refreshed at burst start (SyncIn), and here we
@@ -454,6 +569,26 @@ void StaticRecompCore::Run()
         }
       }
     } while (ppc.downcount > 0 && *state_ptr == CPU::State::Running);
+  }
+
+  if (hpcos_idle_trace)
+  {
+    std::fprintf(stderr,
+                 "[HPCOS-IDLE] candidates=%llu frontend_game=%llu "
+                 "module_game=%llu ee=%llu no_exceptions=%llu readable=%llu "
+                 "zero=%llu skipped=%llu post_candidates=%llu post_zero=%llu "
+                 "post_nonzero=%llu\n",
+                 static_cast<unsigned long long>(idle_trace.candidates),
+                 static_cast<unsigned long long>(idle_trace.frontend_game),
+                 static_cast<unsigned long long>(idle_trace.module_game),
+                 static_cast<unsigned long long>(idle_trace.interrupts_enabled),
+                 static_cast<unsigned long long>(idle_trace.no_exceptions),
+                 static_cast<unsigned long long>(idle_trace.readable_poll),
+                 static_cast<unsigned long long>(idle_trace.zero_poll),
+                 static_cast<unsigned long long>(idle_trace.skipped),
+                 static_cast<unsigned long long>(idle_trace.post_candidates),
+                 static_cast<unsigned long long>(idle_trace.post_zero),
+                 static_cast<unsigned long long>(idle_trace.post_nonzero));
   }
 }
 

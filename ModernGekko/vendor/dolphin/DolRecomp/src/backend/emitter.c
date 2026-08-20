@@ -1553,9 +1553,21 @@ static void emit_instruction_with_range(FILE* out, const PPCInst* inst,
     case PPC_OP_DCBF:
     case PPC_OP_DCBI:
     case PPC_OP_ICBI:
-        fprintf(out, "    ppc_fallback_instruction(ctx, 0x%08Xu, 0x%08Xu);\n",
-                inst->raw, inst->address);
-        fprintf(out, "    return;\n");
+        {
+            const char* op =
+                inst->op == PPC_OP_DCBST ? "PPC_CACHE_DCBST" :
+                inst->op == PPC_OP_DCBF  ? "PPC_CACHE_DCBF"  :
+                inst->op == PPC_OP_DCBI  ? "PPC_CACHE_DCBI"  : "PPC_CACHE_ICBI";
+            fprintf(out, "    {\n");
+            fprintf(out, "        u32 ea = ");
+            if (inst->rA)
+                fprintf(out, "ctx->gpr[%u] + ", inst->rA);
+            fprintf(out, "ctx->gpr[%u];\n", inst->rB);
+            fprintf(out, "        ppc_cache_control(ctx, %s, ea, 0x%08Xu);\n",
+                    op, inst->address);
+            fprintf(out, "        if (ctx->exception) return;\n");
+            fprintf(out, "    }\n");
+        }
         break;
 
     case PPC_OP_DCBTST:
@@ -1746,9 +1758,11 @@ static void emit_instruction_with_range(FILE* out, const PPCInst* inst,
         case 282: fprintf(out, "    ctx->gpr[%u] = ctx->ear;\n", inst->rD); break;
         case 920: fprintf(out, "    ctx->gpr[%u] = ctx->hid2;\n", inst->rD); break;
         default:
-            fprintf(out, "    ppc_fallback_instruction(ctx, 0x%08Xu, 0x%08Xu);\n",
-                    inst->raw, inst->address);
-            fprintf(out, "    return;\n");
+            /* ppc_mfspr routes to the chassis SPR hook and raises the illegal
+             * exception itself, so this never needs the interpreter. */
+            fprintf(out, "    ctx->gpr[%u] = ppc_mfspr(ctx, %uu, 0x%08Xu);\n",
+                    inst->rD, inst->spr, inst->address);
+            fprintf(out, "    if (ctx->exception) return;\n");
             break;
         }
         break;
@@ -1771,9 +1785,12 @@ static void emit_instruction_with_range(FILE* out, const PPCInst* inst,
         case 919: fprintf(out, "    ctx->gqr[7] = ctx->gpr[%u];\n", inst->rS); break;
         case 920: fprintf(out, "    ctx->hid2 = ctx->gpr[%u];\n", inst->rS); break;
         default:
-            fprintf(out, "    ppc_fallback_instruction(ctx, 0x%08Xu, 0x%08Xu);\n",
-                    inst->raw, inst->address);
-            fprintf(out, "    return;\n");
+            /* ppc_mtspr applies the SPR side effects through the chassis hook
+             * (BAT updates, decrementer, DMA, ...) and raises the privilege
+             * exception itself. */
+            fprintf(out, "    ppc_mtspr(ctx, %uu, ctx->gpr[%u], 0x%08Xu);\n",
+                    inst->spr, inst->rS, inst->address);
+            fprintf(out, "    if (ctx->exception) return;\n");
             break;
         }
         break;

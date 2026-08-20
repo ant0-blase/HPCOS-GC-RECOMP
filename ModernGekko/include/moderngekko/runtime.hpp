@@ -55,6 +55,10 @@ struct RuntimeConfig
 {
   std::filesystem::path game_root;
   std::filesystem::path user_directory;
+  // Frontends that already inspected game_root can pass the result through
+  // to avoid hashing the same files again during Runtime::Create. The
+  // runtime verifies that its canonical root still matches before reuse.
+  std::optional<GameMetadata> inspected_game;
   ModuleSource module;
   std::vector<std::filesystem::path> mod_directories;
   GraphicsSettings graphics;

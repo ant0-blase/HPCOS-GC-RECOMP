@@ -297,7 +297,7 @@ static void sigsegv_handler(int sig, siginfo_t* info, void* raw_context)
   // no range check, so its guest accesses to unbacked pages land here. Checked
   // before the JIT: the two use disjoint code ranges, and this lookup only
   // matches PCs the module registered.
-  if (StaticRecompFastmem::HandleFault(ctx))
+  if (StaticRecompFastmem::HandleFault(bad_address, ctx))
     return;
 
   if (Core::System::GetInstance().GetJitInterface().HandleFault(bad_address, ctx))

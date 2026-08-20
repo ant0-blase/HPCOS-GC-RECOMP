@@ -1,3 +1,5 @@
+#include <stdint.h>
+#include <stdio.h>
 // DolRecomp output
 #include "../generated.h"
 
@@ -11920,6 +11922,17 @@ label_800040CC:
     }
 
 label_800040D0:
+    {
+        static unsigned hpcos_40d0_count = 0;
+        if (hpcos_40d0_count++ < 8) {
+            fprintf(stderr,
+                "[HPCOS-40D0] #%u r0=%08X r9=%08X "
+                "r25=%08X r30=%08X r31=%08X\n",
+                hpcos_40d0_count,
+                ctx->gpr[0], ctx->gpr[9],
+                ctx->gpr[25], ctx->gpr[30], ctx->gpr[31]);
+        }
+    }
     // 800040D0: cmplw   r0, r9
     {
         u32 val_a = (u32)(ctx->gpr[0]);
@@ -11943,6 +11956,16 @@ label_800040D4:
     }
 
 label_800040D8:
+    {
+        static unsigned hpcos_40d8_count = 0;
+        if (hpcos_40d8_count++ < 8) {
+            fprintf(stderr,
+                "[HPCOS-40D8-SETUP-PATH] #%u "
+                "r0=%08X r9=%08X r30=%08X\n",
+                hpcos_40d8_count,
+                ctx->gpr[0], ctx->gpr[9], ctx->gpr[30]);
+        }
+    }
     ctx->downcount -= 5;
     // 800040D8: or   r5, r29, r29
     {
@@ -12383,6 +12406,16 @@ label_800041C4:
     }
 
 label_800041C8:
+    {
+        static unsigned hpcos_41c8_count = 0;
+        if (hpcos_41c8_count++ < 8) {
+            fprintf(stderr,
+                "[HPCOS-41C8-EXIT] #%u "
+                "r0=%08X r9=%08X r22=%08X\n",
+                hpcos_41c8_count,
+                ctx->gpr[0], ctx->gpr[9], ctx->gpr[22]);
+        }
+    }
     ctx->pc = 0x800041C8u;
     ctx->downcount -= 16;
     // 800041C8: lwz     r0, 116(r1)
@@ -23142,6 +23175,19 @@ label_800056D4:
     }
 
 label_800056D8:
+    {
+        static unsigned hpcos_56d8_probe_count = 0;
+        if (hpcos_56d8_probe_count++ < 8) {
+            fprintf(stderr,
+                "[HPCOS-56D8-ENTRY] #%u lr=%08X pc=%08X "
+                "r3=%08X r4=%08X r5=%08X r6=%08X sp=%08X\n",
+                hpcos_56d8_probe_count,
+                ctx->lr, ctx->pc,
+                ctx->gpr[3], ctx->gpr[4],
+                ctx->gpr[5], ctx->gpr[6],
+                ctx->gpr[1]);
+        }
+    }
     ctx->pc = 0x800056D8u;
     ctx->downcount -= 7;
     // 800056D8: stwu     r1, -8(r1)
@@ -30226,6 +30272,26 @@ label_80006454:
     }
 
 label_80006458:
+    {
+        static unsigned hpcos_6458_count = 0;
+
+        if (hpcos_6458_count < 16) {
+            fprintf(stderr,
+                    "[HPCOS-6458-ENTRY] n=%u lr=%08X sp=%08X "
+                    "r3=%08X r4=%08X r5=%08X r6=%08X\n",
+                    hpcos_6458_count,
+                    ctx->lr,
+                    ctx->gpr[1],
+                    ctx->gpr[3],
+                    ctx->gpr[4],
+                    ctx->gpr[5],
+                    ctx->gpr[6]);
+            fflush(stderr);
+        }
+
+        ++hpcos_6458_count;
+    }
+
     ctx->pc = 0x80006458u;
     ctx->downcount -= 30;
     // 80006458: stwu     r1, -184(r1)
@@ -32744,6 +32810,24 @@ label_80006918:
     }
 
 label_8000691C:
+    {
+        static unsigned hpcos_691c_count = 0;
+        if (hpcos_691c_count < 32) {
+            fprintf(stderr,
+                    "[HPCOS-691C-ENTRY] n=%u lr=%08X sp=%08X "
+                    "r3=%08X r4=%08X r5=%08X r6=%08X\n",
+                    hpcos_691c_count,
+                    ctx->lr,
+                    ctx->gpr[1],
+                    ctx->gpr[3],
+                    ctx->gpr[4],
+                    ctx->gpr[5],
+                    ctx->gpr[6]);
+            fflush(stderr);
+        }
+        ++hpcos_691c_count;
+    }
+
     ctx->pc = 0x8000691Cu;
     ctx->downcount -= 8;
     // 8000691C: stwu     r1, -8(r1)
@@ -35092,6 +35176,10 @@ label_80006D8C:
     }
 
 label_80006D90:
+    fprintf(stderr,
+            "[HPCOS-D90-NATIVE] lr=%08X pc=%08X r3=%08X r4=%08X\n",
+            ctx->lr, ctx->pc, ctx->gpr[3], ctx->gpr[4]);
+    fflush(stderr);
     // 80006D90: bl      0x80199D18
     {
             ctx->lr = 0x80006D94u;
@@ -36051,6 +36139,31 @@ label_80006F54:
     }
 
 label_80006F58:
+    {
+        static unsigned long long dbg_f42c_pre1 = 0;
+        ++dbg_f42c_pre1;
+
+        fprintf(stderr,
+            "[HPCOS-F42C-PRE1] "
+            "#%llu "
+            "r3=%08X "
+            "r21=%08X r25=%08X r26=%08X "
+            "r27=%08X r28=%08X "
+            "r29=%08X r30=%08X r31=%08X "
+            "sp=%08X\n",
+            dbg_f42c_pre1,
+            ctx->gpr[3],
+            ctx->gpr[21],
+            ctx->gpr[25],
+            ctx->gpr[26],
+            ctx->gpr[27],
+            ctx->gpr[28],
+            ctx->gpr[29],
+            ctx->gpr[30],
+            ctx->gpr[31],
+            ctx->gpr[1]);
+    }
+
     // 80006F58: bl      0x8019F42C
     {
             ctx->lr = 0x80006F5Cu;
@@ -36059,6 +36172,20 @@ label_80006F58:
     }
 
 label_80006F5C:
+    fprintf(stderr,
+        "[HPCOS-F42C-POST1] "
+        "ret=%08X (%d) "
+        "r27=%08X "
+        "r28=%08X "
+        "r26=%08X "
+        "r25=%08X\n",
+        ctx->gpr[3],
+        (int32_t)ctx->gpr[3],
+        ctx->gpr[27],
+        ctx->gpr[28],
+        ctx->gpr[26],
+        ctx->gpr[25]);
+
     ctx->downcount -= 2;
     // 80006F5C: or.   r31, r3, r3
     {
@@ -36183,6 +36310,22 @@ label_80006F98:
     }
 
 label_80006F9C:
+    fprintf(stderr,
+        "[HPCOS-F42C-PRE2] "
+        "r3=%08X "
+        "r21=%08X r25=%08X r26=%08X "
+        "r27=%08X r28=%08X "
+        "r29=%08X r30=%08X r31=%08X\n",
+        ctx->gpr[3],
+        ctx->gpr[21],
+        ctx->gpr[25],
+        ctx->gpr[26],
+        ctx->gpr[27],
+        ctx->gpr[28],
+        ctx->gpr[29],
+        ctx->gpr[30],
+        ctx->gpr[31]);
+
     ctx->downcount -= 1;
     // 80006F9C: bl      0x8019F42C
     {
@@ -36192,6 +36335,18 @@ label_80006F9C:
     }
 
 label_80006FA0:
+    fprintf(stderr,
+        "[HPCOS-F42C-POST2] "
+        "ret=%08X (%d) "
+        "saved_r31=%08X (%d) "
+        "r27=%08X r28=%08X\n",
+        ctx->gpr[3],
+        (int32_t)ctx->gpr[3],
+        ctx->gpr[31],
+        (int32_t)ctx->gpr[31],
+        ctx->gpr[27],
+        ctx->gpr[28]);
+
     ctx->downcount -= 2;
     // 80006FA0: cmpw    r3, r31
     {

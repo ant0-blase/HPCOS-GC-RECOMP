@@ -209,8 +209,13 @@ static u32 chassis_dispatch_burst(
 
 /* The linker defines these for any section whose name is a C identifier. */
 #if defined(GXRUNTIME_FASTMEM)
-extern const char __start___fastmem_ex[];
-extern const char __stop___fastmem_ex[];
+/* Weak: only the C backend's generated code emits __fastmem_ex accesses, and
+ * the linker defines these bounds only when that section exists. The LLVM
+ * backend uses the bounds-checked helpers instead, so its module has no such
+ * section and both symbols resolve to NULL -- an empty recovery table, which is
+ * exactly right because nothing in it can fault. */
+extern const char __start___fastmem_ex[] __attribute__((weak));
+extern const char __stop___fastmem_ex[] __attribute__((weak));
 #endif
 
 static const StaticRecompModuleDesc s_desc = {

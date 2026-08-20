@@ -29510,7 +29510,14 @@ label_80196060:
 
 label_80196064:
     // 80196064: li      r5, 0
-    ctx->gpr[5] = (u32)(s32)(0);
+    /*
+     * HPCOS bring-up:
+     * GX init normally seeds unused arrays with stride 0.
+     * gxcore rejects the first indexed draw before the game's
+     * real GXSetArray setup runs. Keep the dummy base but give
+     * it a minimal non-zero stride so the FIFO remains consumable.
+     */
+    ctx->gpr[5] = (u32)(s32)(1);
 
 label_80196068:
     // 80196068: bl      0x80198D98

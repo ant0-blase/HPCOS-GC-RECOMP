@@ -1,3 +1,4 @@
+#include <stdio.h>
 // DolRecomp output
 #include "../generated.h"
 
@@ -17720,6 +17721,42 @@ label_801747E0:
 
 label_801747E4:
     ctx->pc = 0x801747E4u;
+
+    {
+        const u32 dbg_r13 = ctx->gpr[13];
+        const u32 dbg_flag_addr =
+            dbg_r13 + (u32)(s32)-26088;
+        const u32 dbg_queue_addr =
+            dbg_r13 + (u32)(s32)-26084;
+        const u32 dbg_cb_addr =
+            dbg_r13 + (u32)(s32)-26092;
+
+        fprintf(stderr,
+            "[HPCOS-VIPATH:DISPATCH] "
+            "pc=%08X lr=%08X "
+            "r3=%08X r4=%08X r12=%08X "
+            "r13=%08X "
+            "flag@%08X=%02X "
+            "queue=%08X head=%08X tail=%08X "
+            "cb@%08X=%08X "
+            "PIcause=%08X PImask=%08X\n",
+            ctx->pc,
+            ctx->lr,
+            ctx->gpr[3],
+            ctx->gpr[4],
+            ctx->gpr[12],
+            dbg_r13,
+            dbg_flag_addr,
+            (unsigned)mem_read8(ctx, dbg_flag_addr),
+            dbg_queue_addr,
+            mem_read32(ctx, dbg_queue_addr + 0u),
+            mem_read32(ctx, dbg_queue_addr + 4u),
+            dbg_cb_addr,
+            mem_read32(ctx, dbg_cb_addr),
+            mem_read32(ctx, 0xCC003000u),
+            mem_read32(ctx, 0xCC003004u));
+    }
+
     ctx->downcount -= 29;
     // 801747E4: stw     r0, 0(r4)
     {

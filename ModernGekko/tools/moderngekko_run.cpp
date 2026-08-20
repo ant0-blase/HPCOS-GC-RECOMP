@@ -251,7 +251,12 @@ int RunMain(int argc, char **argv) {
   if (dol_changed)
     std::cout << "Applied native DOL patches\n";
 #endif
-  const auto inspected = moderngekko::InspectGame(config.game_root);
+  moderngekko::GameInspectOptions inspect_options;
+  inspect_options.hash_assets = netplay_role.has_value();
+#ifdef MODERNGEKKO_REQUIRED_ASSETS_SHA256
+  inspect_options.hash_assets = true;
+#endif
+  auto inspected = moderngekko::InspectGame(config.game_root, inspect_options);
   if (!inspected) {
     std::cerr << "invalid game: " << inspected.error << '\n';
     return 2;
@@ -304,6 +309,11 @@ int RunMain(int argc, char **argv) {
   if (!module_path.empty())
     config.module =
         moderngekko::ModuleSource::DynamicPath(std::move(module_path));
+
+  // Runtime::Create normally performs its own inspection for library users.
+  // This runner has already validated the pinned game requirements above, so
+  // pass that exact result through and avoid hashing the game twice.
+  config.inspected_game = std::move(inspected.metadata);
 
 #if defined(__linux__) || defined(_WIN32)
   if (!config.headless && config.graphics.backend.empty())

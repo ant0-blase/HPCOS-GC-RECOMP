@@ -100,48 +100,59 @@ std::optional<std::string> HashFileSha256(const std::filesystem::path& path)
 
 std::optional<std::string> HashDirectorySha256(const std::filesystem::path& root)
 {
+  struct DirectoryFile
+  {
+    std::filesystem::path path;
+    std::string relative;
+  };
+
   std::error_code ec;
   if (!std::filesystem::is_directory(root, ec) || ec)
     return std::nullopt;
-  std::vector<std::filesystem::path> files;
+  std::vector<DirectoryFile> files;
   std::filesystem::recursive_directory_iterator iterator(
       root, std::filesystem::directory_options::skip_permission_denied, ec);
   const std::filesystem::recursive_directory_iterator end;
   while (!ec && iterator != end)
   {
     if (iterator->is_regular_file(ec) && !ec)
-      files.push_back(iterator->path());
+    {
+      const auto path = iterator->path();
+      const std::string relative =
+          std::filesystem::relative(path, root, ec).generic_string();
+      if (ec)
+        return std::nullopt;
+      files.push_back({path, relative});
+    }
     iterator.increment(ec);
   }
   if (ec)
     return std::nullopt;
-  std::ranges::sort(files, [&](const auto& left, const auto& right) {
-    return std::filesystem::relative(left, root).generic_string() <
-           std::filesystem::relative(right, root).generic_string();
-  });
+  std::ranges::sort(
+      files, [](const DirectoryFile& left, const DirectoryFile& right) {
+        return left.relative < right.relative;
+      });
   std::vector<std::uint8_t> manifest;
-  for (const auto& path : files)
+  for (const auto& file : files)
   {
-    const std::string relative = std::filesystem::relative(path, root, ec).generic_string();
-    if (ec)
-      return std::nullopt;
-    const auto size = std::filesystem::file_size(path, ec);
-    const auto hash = HashFileSha256(path);
+    const auto size = std::filesystem::file_size(file.path, ec);
+    const auto hash = HashFileSha256(file.path);
     if (ec || !hash)
       return std::nullopt;
     const auto append_u64 = [&](std::uint64_t value) {
       for (int shift = 56; shift >= 0; shift -= 8)
         manifest.push_back(static_cast<std::uint8_t>(value >> shift));
     };
-    append_u64(relative.size());
-    manifest.insert(manifest.end(), relative.begin(), relative.end());
+    append_u64(file.relative.size());
+    manifest.insert(manifest.end(), file.relative.begin(), file.relative.end());
     append_u64(size);
     manifest.insert(manifest.end(), hash->begin(), hash->end());
   }
   return Sha256(std::move(manifest));
 }
 
-GameInspectResult InspectGame(const std::filesystem::path& input_root)
+GameInspectResult InspectGame(const std::filesystem::path& input_root,
+                              GameInspectOptions options)
 {
   std::error_code ec;
   const auto root = std::filesystem::weakly_canonical(input_root, ec);
@@ -215,10 +226,13 @@ GameInspectResult InspectGame(const std::filesystem::path& input_root)
       return {{}, "can't hash files/_Main.rel"};
     metadata.rel_sha256 = *rel_hash;
   }
-  const auto assets_hash = HashDirectorySha256(root / "files");
-  if (!assets_hash)
-    return {{}, "can't hash the files directory"};
-  metadata.assets_sha256 = *assets_hash;
+  if (options.hash_assets)
+  {
+    const auto assets_hash = HashDirectorySha256(root / "files");
+    if (!assets_hash)
+      return {{}, "can't hash the files directory"};
+    metadata.assets_sha256 = *assets_hash;
+  }
   return {std::move(metadata), {}};
 }
 }  // namespace moderngekko

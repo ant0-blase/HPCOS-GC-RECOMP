@@ -109,10 +109,11 @@ void SystemTimersManager::GPUSleepCallback(Core::System& system, u64 userdata, s
   auto& core_timing = system.GetCoreTiming();
   system.GetFifo().GpuMaySleep();
 
-  // We want to call GpuMaySleep at about 1000hz so
-  // that the thread can sleep while not doing anything.
+  // Call GpuMaySleep often enough that the GPU thread can promptly sleep when idle.
   auto& system_timers = system.GetSystemTimers();
-  core_timing.ScheduleEvent(system_timers.GetTicksPerSecond() / 1000 - cycles_late,
+  core_timing.ScheduleEvent(system_timers.GetTicksPerSecond() /
+                                system_timers.m_gpu_sleeper_frequency_hz -
+                                cycles_late,
                             system_timers.m_event_type_gpu_sleeper);
 }
 
@@ -236,6 +237,9 @@ void SystemTimersManager::ChangePPCClock(Mode mode)
 
 void SystemTimersManager::Init()
 {
+  m_gpu_sleeper_frequency_hz =
+      Config::Get(Config::MAIN_CPU_CORE) == PowerPC::CPUCore::StaticRecomp ? 4000 : 1000;
+
   if (m_system.IsWii())
   {
     // AyuanX: TO BE TWEAKED

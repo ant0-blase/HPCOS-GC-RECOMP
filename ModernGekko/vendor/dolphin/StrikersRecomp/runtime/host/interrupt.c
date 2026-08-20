@@ -6,6 +6,15 @@
 #include "gxruntime/si.h"
 #include "gxruntime/vi_clock.h"
 
+#ifndef HPCOS_OS_CONTEXT_POINTER
+#define HPCOS_OS_CONTEXT_POINTER STRIKERS_OS_CONTEXT_POINTER
+#endif
+
+#ifndef HPCOS_DISPATCH_INTERRUPT_ADDR
+#define HPCOS_DISPATCH_INTERRUPT_ADDR STRIKERS_DISPATCH_INTERRUPT_ADDR
+#endif
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -194,9 +203,18 @@ void interrupt_set_di_pending(bool pending) {
 // the VI DI register and wakes the retrace waiter), reschedules, and ends in
 // OSLoadContext -> rfi, transferring control to the resumed thread.
 static void deliver_external(CPUState* cpu) {
-    u32 ctx = mem_read32(cpu, STRIKERS_OS_CONTEXT_POINTER);
+    u32 ctx = mem_read32(cpu, HPCOS_OS_CONTEXT_POINTER);
     if (ctx < GC_RAM_BASE || ctx >= GC_RAM_BASE + cpu->ram_size)
         return;  // no current context established yet
+
+#ifdef HPCOS_VI_ONLY
+    fprintf(stderr,
+            "[HPCOS-VI] deliver external ctx=%08X "
+            "from=%08X -> %08X\n",
+            ctx,
+            cpu->pc,
+            (u32)HPCOS_DISPATCH_INTERRUPT_ADDR);
+#endif
 
     capture_fpu_context(cpu, ctx);
     for (int i = 0; i < 32; i++)
@@ -222,7 +240,146 @@ static void deliver_external(CPUState* cpu) {
     cpu->srr0 = cpu->pc;
     cpu->srr1 = cpu->msr;
     cpu->msr &= ~MSR_EE;  // run the handler with external interrupts masked
-    cpu->pc = STRIKERS_DISPATCH_INTERRUPT_ADDR;
+    cpu->pc = HPCOS_DISPATCH_INTERRUPT_ADDR;
+}
+
+
+/*
+ * HPCOS Decrementer exception delivery.
+ *
+ * The original SDK installs a low-memory exception-vector stub which
+ * saves the interrupted context and eventually dispatches exception 8.
+ * Static recompilation cannot execute that relocated stub directly, so
+ * reproduce the same bridge used by external-interrupt delivery and
+ * enter GHSE69's registered Decrementer handler.
+ */
+bool interrupt_deliver_decrementer(CPUState* cpu) {
+    if (cpu == NULL)
+        return false;
+
+    const u32 ctx =
+        mem_read32(cpu, HPCOS_OS_CONTEXT_POINTER);
+
+    if (ctx < GC_RAM_BASE ||
+        ctx >= GC_RAM_BASE + cpu->ram_size) {
+
+        fprintf(stderr,
+                "[HPCOS-DEC] cannot deliver: "
+                "invalid current ctx=%08X\n",
+                ctx);
+
+        return false;
+    }
+
+    const u32 interrupted_pc =
+        cpu->pc;
+
+    const u32 interrupted_msr =
+        cpu->msr;
+
+    fprintf(stderr,
+            "[HPCOS-DEC] DELIVER "
+            "ctx=%08X pc=%08X lr=%08X "
+            "msr=%08X -> 801705E8\n",
+            ctx,
+            interrupted_pc,
+            cpu->lr,
+            interrupted_msr);
+
+    /*
+     * Mirror deliver_external(): save a complete OSContext.
+     *
+     * 801705E8 itself saves r0/r1/r2/r6..r31 and the GQRs again,
+     * while the exception-vector stub normally supplies r3/r4/r5,
+     * CR/LR/CTR/XER and SRR0/SRR1.
+     *
+     * Saving the complete context here gives the handler exactly the
+     * interrupted state regardless of which subset it overwrites.
+     */
+    capture_fpu_context(cpu, ctx);
+
+    for (int i = 0; i < 32; ++i) {
+        mem_write32(
+            cpu,
+            ctx + (u32)i * 4u,
+            cpu->gpr[i]);
+    }
+
+    mem_write32(cpu, ctx + CTX_CR,  cpu->cr);
+    mem_write32(cpu, ctx + CTX_LR,  cpu->lr);
+    mem_write32(cpu, ctx + CTX_CTR, cpu->ctr);
+    mem_write32(cpu, ctx + CTX_XER, cpu->xer);
+
+    for (int i = 0; i < 32; ++i) {
+        u64 bits;
+
+        memcpy(
+            &bits,
+            &cpu->fpr[i],
+            sizeof bits);
+
+        mem_write64(
+            cpu,
+            ctx + CTX_FPR + (u32)i * 8u,
+            bits);
+    }
+
+    mem_write32(
+        cpu,
+        ctx + CTX_FPSCR,
+        cpu->fpscr);
+
+    mem_write32(
+        cpu,
+        ctx + CTX_SRR0,
+        interrupted_pc);
+
+    mem_write32(
+        cpu,
+        ctx + CTX_SRR1,
+        interrupted_msr);
+
+    mem_write16(
+        cpu,
+        ctx + CTX_STATE,
+        OS_CONTEXT_STATE_FPSAVED);
+
+    for (int i = 0; i < 8; ++i) {
+        mem_write32(
+            cpu,
+            ctx + CTX_GQR + (u32)i * 4u,
+            cpu->gqr[i]);
+    }
+
+    /*
+     * Hardware exception state.
+     *
+     * The original vector enters its registered handler with:
+     *   r3 = exception number
+     *   r4 = OSContext*
+     */
+    cpu->gpr[3] = 8u;
+    cpu->gpr[4] = ctx;
+
+    cpu->srr0 = interrupted_pc;
+    cpu->srr1 = interrupted_msr;
+
+    /*
+     * As with the existing external-interrupt bridge, run the
+     * exception handler with asynchronous interrupts masked.
+     */
+    cpu->msr =
+        interrupted_msr & ~MSR_EE;
+
+    /*
+     * GHSE69's registered exception-8 handler.
+     *
+     * It performs the remaining context save and branches into the
+     * OSAlarm Decrementer handler at 801703B8.
+     */
+    cpu->pc = 0x801705E8u;
+
+    return true;
 }
 
 // A VI retrace is one work unit in ~350,000, and external-interrupt delivery is
@@ -237,6 +394,61 @@ static void deliver_external(CPUState* cpu) {
 #define INTERRUPT_POLL_INTERVAL 128u
 
 static u32 interrupt_poll_accum;
+
+
+#ifdef HPCOS_VI_ONLY
+void interrupt_poll_vi_only(CPUState* cpu) {
+    if (++interrupt_poll_accum < INTERRUPT_POLL_INTERVAL)
+        return;
+
+    const u64 units = interrupt_poll_accum;
+    interrupt_poll_accum = 0;
+
+    dol_vi_clock_advance(&vi_clock, units);
+
+    u64 ticks = 0;
+    bool retrace = false;
+
+    while (dol_vi_clock_pop_retrace(&vi_clock, &ticks)) {
+        /*
+         * Timebase is intentionally NOT advanced here.
+         * main.c already advances it from guest cycles.
+         */
+        (void)ticks;
+
+        dol_interrupts_assert_vi_retrace(&interrupts);
+        retrace = true;
+    }
+
+    if (retrace) {
+        const bool ee =
+            (cpu->msr & MSR_EE) != 0;
+
+        const bool pending =
+            dol_interrupts_external_pending(&interrupts);
+
+        const u32 ctx =
+            mem_read32(cpu, HPCOS_OS_CONTEXT_POINTER);
+
+        fprintf(stderr,
+                "[HPCOS-VI] retrace pc=%08X msr=%08X "
+                "EE=%u pending=%u ctx=%08X\n",
+                cpu->pc,
+                cpu->msr,
+                ee ? 1u : 0u,
+                pending ? 1u : 0u,
+                ctx);
+    }
+
+    if (!(cpu->msr & MSR_EE))
+        return;
+
+    if (!dol_interrupts_external_pending(&interrupts))
+        return;
+
+    deliver_external(cpu);
+}
+#endif
 
 void interrupt_poll(CPUState* cpu) {
     audio_poll(cpu);
