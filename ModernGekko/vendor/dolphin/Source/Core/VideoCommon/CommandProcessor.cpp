@@ -360,23 +360,23 @@ void CommandProcessorManager::GatherPipeBursted()
     return;
   }
 
-  // update the fifo pointer
-  if (m_fifo.CPWritePointer.load(std::memory_order_relaxed) ==
-      m_fifo.CPEnd.load(std::memory_order_relaxed))
-  {
-    m_fifo.CPWritePointer.store(m_fifo.CPBase, std::memory_order_relaxed);
-  }
-  else
-  {
-    m_fifo.CPWritePointer.fetch_add(GPFifo::GATHER_PIPE_SIZE, std::memory_order_relaxed);
-  }
+  // Update the FIFO pointer from one local snapshot. CPWritePointer has a single
+  // CPU-side writer, so an atomic store preserves the visibility guarantees while
+  // avoiding a redundant fetch_add/load sequence on every 32-byte burst.
+  const u32 fifo_end = m_fifo.CPEnd.load(std::memory_order_relaxed);
+  const u32 fifo_base = m_fifo.CPBase.load(std::memory_order_relaxed);
+  u32 fifo_write_pointer = m_fifo.CPWritePointer.load(std::memory_order_relaxed);
+  fifo_write_pointer = fifo_write_pointer == fifo_end ? fifo_base :
+                                                        fifo_write_pointer + GPFifo::GATHER_PIPE_SIZE;
+  m_fifo.CPWritePointer.store(fifo_write_pointer, std::memory_order_relaxed);
 
-  if (m_cp_ctrl_reg.GPReadEnable && m_cp_ctrl_reg.GPLinkEnable)
+  // GPLinkEnable is known true in this branch. Reuse the snapshots above rather
+  // than reloading three atomics immediately after updating them.
+  if (m_cp_ctrl_reg.GPReadEnable)
   {
-    processor_interface.m_fifo_cpu_write_pointer =
-        m_fifo.CPWritePointer.load(std::memory_order_relaxed);
-    processor_interface.m_fifo_cpu_base = m_fifo.CPBase.load(std::memory_order_relaxed);
-    processor_interface.m_fifo_cpu_end = m_fifo.CPEnd.load(std::memory_order_relaxed);
+    processor_interface.m_fifo_cpu_write_pointer = fifo_write_pointer;
+    processor_interface.m_fifo_cpu_base = fifo_base;
+    processor_interface.m_fifo_cpu_end = fifo_end;
   }
 
   // If the game is running close to overflowing, make the exception checking more frequent.
@@ -513,22 +513,20 @@ void CommandProcessorManager::SetCPStatusFromGPU()
 
 void CommandProcessorManager::SetCPStatusFromCPU()
 {
-  // overflow & underflow check
-  m_fifo.bFF_HiWatermark.store(
-      (m_fifo.CPReadWriteDistance.load(std::memory_order_relaxed) > m_fifo.CPHiWatermark),
-      std::memory_order_relaxed);
-  m_fifo.bFF_LoWatermark.store(
-      (m_fifo.CPReadWriteDistance.load(std::memory_order_relaxed) < m_fifo.CPLoWatermark),
-      std::memory_order_relaxed);
+  // Snapshot the distance once so the high/low watermark tests use one coherent
+  // value and avoid reloading the same atomic twice.
+  const u32 read_write_distance = m_fifo.CPReadWriteDistance.load(std::memory_order_relaxed);
+  const bool hi_watermark = read_write_distance > m_fifo.CPHiWatermark;
+  const bool lo_watermark = read_write_distance < m_fifo.CPLoWatermark;
+  m_fifo.bFF_HiWatermark.store(hi_watermark, std::memory_order_relaxed);
+  m_fifo.bFF_LoWatermark.store(lo_watermark, std::memory_order_relaxed);
 
-  bool bpInt = m_fifo.bFF_Breakpoint.load(std::memory_order_relaxed) &&
-               m_fifo.bFF_BPInt.load(std::memory_order_relaxed);
-  bool ovfInt = m_fifo.bFF_HiWatermark.load(std::memory_order_relaxed) &&
-                m_fifo.bFF_HiWatermarkInt.load(std::memory_order_relaxed);
-  bool undfInt = m_fifo.bFF_LoWatermark.load(std::memory_order_relaxed) &&
-                 m_fifo.bFF_LoWatermarkInt.load(std::memory_order_relaxed);
+  const bool bpInt = m_fifo.bFF_Breakpoint.load(std::memory_order_relaxed) &&
+                     m_fifo.bFF_BPInt.load(std::memory_order_relaxed);
+  const bool ovfInt = hi_watermark && m_fifo.bFF_HiWatermarkInt.load(std::memory_order_relaxed);
+  const bool undfInt = lo_watermark && m_fifo.bFF_LoWatermarkInt.load(std::memory_order_relaxed);
 
-  bool interrupt = (bpInt || ovfInt || undfInt) && m_cp_ctrl_reg.GPReadEnable;
+  const bool interrupt = (bpInt || ovfInt || undfInt) && m_cp_ctrl_reg.GPReadEnable;
 
   if (interrupt != m_interrupt_set.IsSet() && !m_interrupt_waiting.IsSet())
   {

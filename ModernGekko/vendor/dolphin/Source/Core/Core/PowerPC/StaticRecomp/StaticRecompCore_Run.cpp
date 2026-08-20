@@ -137,6 +137,8 @@ void StaticRecompCore::Run()
   m_guest.ram_size = memory.GetRamSizeReal();
   m_guest.exram = memory.GetEXRAM();
   m_guest.exram_size = memory.GetExRamSizeReal();
+  m_l1_cache = memory.GetL1Cache();
+  m_l1_cache_size = memory.GetL1CacheSize();
   InitLookupTable(m_guest.ram_size, m_guest.exram_size);
 
   // Fastmem views. Both stay NULL when the arena failed to reserve, which a
@@ -194,14 +196,32 @@ void StaticRecompCore::Run()
     return;
   }
 
+  // Run() owns one emulation session. SConfig::GetGameID() takes the config
+  // mutex and used to be called once (and, for HPCOS FOV, twice) per outer
+  // StaticRecomp loop iteration. The active title cannot change underneath
+  // this Run(), so cache all game-id decisions once here.
+  const bool guest_fov_supported = initial_game_id == "GHSE69";
+
+  // HPCOS_FOV is process configuration too, so parse it once instead of
+  // revisiting the static-local guard in the hot outer loop.
+  static const float hpcos_requested_hfov = [] {
+    const char* env = std::getenv("HPCOS_FOV");
+
+    if (!env || !*env)
+      return 0.0f;
+
+    char* end = nullptr;
+    const float value = std::strtof(env, &end);
+
+    if (end == env || *end != '\0' || value < 30.0f || value > 150.0f)
+      return 0.0f;
+
+    return value;
+  }();
+
   while (*state_ptr == CPU::State::Running)
   {
     core_timing.Advance();
-    const std::string current_game_id = SConfig::GetInstance().GetGameID();
-    m_module_active = m_module && (current_game_id.empty() || current_game_id == m_module->game_id);
-
-
-
 
     // HPCOS guest-side FOV/frustum synchronization.
     //
@@ -212,31 +232,9 @@ void StaticRecompCore::Run()
     // Convert requested hFOV -> the vertical FOV appropriate for
     // whatever aspect the guest is currently using. This widens the
     // actual game visibility frustum without changing the public
-    // meaning of --fov.
-    static const float hpcos_requested_hfov = [] {
-      const char* env = std::getenv("HPCOS_FOV");
-
-      if (!env || !*env)
-        return 0.0f;
-
-      char* end = nullptr;
-      const float value = std::strtof(env, &end);
-
-      if (end == env || *end != '\0' ||
-          value < 30.0f || value > 150.0f)
-      {
-        return 0.0f;
-      }
-
-      return value;
-    }();
-
-    // These two addresses are GHSE69's own camera globals, found by reverse
-    // engineering that title. Writing them while another game is running would
-    // corrupt whatever happens to live there, so the game id gates the patch:
-    // the runtime source tree is shared between per-game projects, and only
-    // this one has had its globals identified.
-    const bool guest_fov_supported = SConfig::GetInstance().GetGameID() == "GHSE69";
+    // meaning of --fov. These two addresses are GHSE69's own camera
+    // globals, so guest_fov_supported gates the patch using the cached
+    // title id above.
 
     if (hpcos_requested_hfov > 0.0f && guest_fov_supported)
     {
@@ -348,7 +346,7 @@ void StaticRecompCore::Run()
         if (hpcos_idle_trace && idle_candidate)
         {
           ++idle_trace.candidates;
-          idle_trace.frontend_game += current_game_id == "GHSE69";
+          idle_trace.frontend_game += initial_game_id == "GHSE69";
           idle_trace.module_game += hpcos_module;
           idle_trace.interrupts_enabled += interrupts_enabled;
           idle_trace.no_exceptions += no_exceptions;

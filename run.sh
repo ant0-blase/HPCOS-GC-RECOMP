@@ -79,6 +79,9 @@ done
 
 mkdir -p "$USERDIR/Config"
 
+# HPCOS loads large .geo/.sdt assets through DirectoryBlob in many small DVD
+# fragments. Reuse backing file handles and preserve Linux readahead state.
+export MODERNGEKKO_FAST_DIRECTORY_IO="${MODERNGEKKO_FAST_DIRECTORY_IO:-1}"
 
 python3 - \
   "$USERDIR/Config/GFX.ini" \

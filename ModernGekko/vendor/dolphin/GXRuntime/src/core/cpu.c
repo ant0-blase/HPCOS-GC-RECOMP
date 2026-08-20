@@ -195,10 +195,20 @@ static GXRUNTIME_ALWAYS_INLINE u32 psq_type_size(u8 type) {
  *  - Quantization: round the lane to f32 first, multiply by the f32
  *    power-of-two scale, clamp in f32, truncate. NaN quantizes to 0
  *    (matching SType(NaN-after-clamp) in release Dolphin on arm64). */
+/* GQR scales are signed 6-bit values (-32..31).  2^scale is therefore
+ * always a normal IEEE-754 binary32 value, so constructing the exponent bits
+ * is exact and avoids a libm ldexp/ldexpf call in the PSQ hot path. */
+static GXRUNTIME_ALWAYS_INLINE f32 psq_pow2(s32 scale) {
+    const u32 bits = (u32)(scale + 127) << 23;
+    f32 value;
+    memcpy(&value, &bits, sizeof(value));
+    return value;
+}
+
 static GXRUNTIME_ALWAYS_INLINE f64 psq_dequant(f64 value, s32 scale) {
     if (scale == 0)
         return (f64)(f32)value;
-    return (f64)(f32)ldexp(value, -scale);
+    return (f64)((f32)value * psq_pow2(-scale));
 }
 
 static GXRUNTIME_ALWAYS_INLINE f64 psq_load_value(CPUState* cpu, u32 ea, u8 type, s32 scale) {
@@ -219,7 +229,7 @@ static GXRUNTIME_ALWAYS_INLINE f64 psq_load_value(CPUState* cpu, u32 ea, u8 type
 }
 
 static GXRUNTIME_ALWAYS_INLINE s64 psq_quantize_int(f64 value, s64 min_value, s64 max_value, s32 scale) {
-    f32 conv = (f32)value * ldexpf(1.0f, scale);
+    f32 conv = (f32)value * psq_pow2(scale);
     if (isnan(conv))
         return 0;
     if (conv <= (f32)min_value)

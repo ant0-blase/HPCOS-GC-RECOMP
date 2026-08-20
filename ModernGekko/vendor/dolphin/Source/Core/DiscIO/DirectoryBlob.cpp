@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <cstdlib>
 #include <map>
 #include <memory>
 #include <set>
@@ -12,6 +13,7 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <unordered_map>
 
 #include "Common/Align.h"
 #include "Common/Assert.h"
@@ -28,6 +30,10 @@
 #include "DiscIO/VolumeWii.h"
 #include "DiscIO/WiiEncryptionCache.h"
 
+#if defined(__linux__)
+#include <fcntl.h>
+#endif
+
 namespace DiscIO
 {
 // Reads as many bytes as the vector fits (or less, if the file is smaller).
@@ -36,6 +42,57 @@ static size_t ReadFileToVector(const std::string& path, std::vector<u8>* vector)
 
 static void PadToAddress(u64 start_address, u64* address, u64* length, u8** buffer);
 static void Write32(u32 data, u32 offset, std::vector<u8>* buffer);
+
+// ModernGekko/HPCOS fast-directory path. DirectoryBlob normally opens and
+// closes the backing host file for every small DVD fragment. That is harmless
+// with a hot page cache but defeats per-file kernel readahead on a cold load.
+// Keep a small per-DVD-thread cache when explicitly enabled by the launcher.
+static File::DirectIOFile* GetCachedDirectoryFile(const std::string& filename)
+{
+  static const bool enabled = [] {
+    const char* value = std::getenv("MODERNGEKKO_FAST_DIRECTORY_IO");
+    return value && value[0] == '1' && value[1] == '\0';
+  }();
+
+  if (!enabled)
+    return nullptr;
+
+  constexpr std::size_t MAX_OPEN_FILES = 128;
+  thread_local std::unordered_map<std::string, File::DirectIOFile> files;
+
+  auto it = files.find(filename);
+  if (it != files.end())
+    return &it->second;
+
+  if (files.size() >= MAX_OPEN_FILES)
+    files.clear();
+
+  auto [inserted_it, inserted] = files.try_emplace(filename);
+  (void)inserted;
+  File::DirectIOFile& file = inserted_it->second;
+  if (!file.Open(filename, File::AccessMode::Read))
+  {
+    files.erase(inserted_it);
+    return nullptr;
+  }
+
+#if defined(__linux__)
+  // Preserve sequential-read state across the hundreds of pread fragments and
+  // ask the kernel to start filling the page cache early. Cap WILLNEED so a
+  // pathological huge asset cannot create a large one-shot I/O burst.
+  const int fd = file.GetHandle();
+  if (fd >= 0)
+  {
+    (void)posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
+    constexpr u64 PREFETCH_BYTES = 16ull * 1024ull * 1024ull;
+    const u64 file_size = file.GetSize();
+    (void)posix_fadvise(fd, 0, static_cast<off_t>(std::min(file_size, PREFETCH_BYTES)),
+                        POSIX_FADV_WILLNEED);
+  }
+#endif
+
+  return &file;
+}
 
 enum class PartitionType : u32
 {
@@ -93,10 +150,16 @@ bool DiscContent::Read(u64* offset, u64* length, u8** buffer, DirectoryBlobReade
     if (std::holds_alternative<ContentFile>(m_content_source))
     {
       const auto& content = std::get<ContentFile>(m_content_source);
-      File::DirectIOFile file(content.m_filename, File::AccessMode::Read);
-      if (!file.OffsetRead(content.m_offset + offset_in_content, *buffer, bytes_to_read))
+      if (File::DirectIOFile* cached = GetCachedDirectoryFile(content.m_filename))
       {
-        return false;
+        if (!cached->OffsetRead(content.m_offset + offset_in_content, *buffer, bytes_to_read))
+          return false;
+      }
+      else
+      {
+        File::DirectIOFile file(content.m_filename, File::AccessMode::Read);
+        if (!file.OffsetRead(content.m_offset + offset_in_content, *buffer, bytes_to_read))
+          return false;
       }
     }
     else if (std::holds_alternative<ContentMemory>(m_content_source))
