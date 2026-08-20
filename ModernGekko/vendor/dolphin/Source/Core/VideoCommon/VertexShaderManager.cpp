@@ -50,84 +50,32 @@ Common::Matrix44 VertexShaderManager::LoadProjectionMatrix()
   case ProjectionType::Perspective:
   {
 
-    // HPCOS v4 dynamic perspective aspect.
+    // HPCOS perspective policy:
     //
-    // Original rendering space is 4:3. The final XFB is stretched
-    // to the host drawable, therefore compensate the 3D projection
-    // so geometry keeps its correct physical proportions while gaining
-    // horizontal field of view.
+    // Do NOT modify generic Dolphin perspective matrices here.  GHSE69 uses
+    // perspective passes for the world camera *and* shadow/light cameras.
+    // Applying the PC FOV/aspect correction at this layer widened the shadow
+    // projection as well, which made the game's shadows disappear.
     //
-    // Examples:
-    //   16:10 -> X * 0.833333
-    //   16:9  -> X * 0.750000
-    //   21:9  -> X * 0.571429
-    float hpcos_3d_scale_x = 1.0f;
-    float hpcos_3d_scale_y = 1.0f;
-
-    if (HPCOS::DynamicAspectEnabled() && g_presenter)
-    {
-      constexpr float original_aspect = 4.0f / 3.0f;
-      const float host_aspect = g_presenter->GetHpcosHostAspect();
-
-      if (host_aspect > original_aspect + 0.0001f)
-      {
-        hpcos_3d_scale_x = original_aspect / host_aspect;
-      }
-      else if (host_aspect < original_aspect - 0.0001f)
-      {
-        hpcos_3d_scale_y = host_aspect / original_aspect;
-      }
-    }
-
-
+    // The PC runtime now patches GHSE69's own camera/aspect globals instead.
+    // That keeps camera frustum/culling in sync while leaving auxiliary
+    // perspective passes (shadows, reflections, etc.) untouched.
     const Common::Vec2 fov_multiplier = g_freelook_camera.IsActive() ?
                                             g_freelook_camera.GetFieldOfViewMultiplier() :
                                             Common::Vec2{1, 1};
 
-    /*
-     * HPCOS runtime FOV override.
-     *
-     * HPCOS_FOV is interpreted as target horizontal FOV in degrees.
-     * The same correction factor is applied to X and Y so the projection
-     * keeps its aspect ratio instead of stretching the image.
-     *
-     * Orthographic projections are untouched, so normal 2D/HUD rendering
-     * remains on the original path.
-     */
-    const float hpcos_target_hfov = HPCOS::Fov();
-
-    float hpcos_fov_projection_scale = 1.0f;
-
-    if (hpcos_target_hfov > 0.0f)
-    {
-      const float current_x_scale =
-          std::fabs(rawProjection[0] *
-                    g_ActiveConfig.fAspectRatioHackW *
-                    fov_multiplier.x);
-
-      if (current_x_scale > 1.0e-6f)
-      {
-        constexpr float pi = 3.14159265358979323846f;
-
-        const float half_angle =
-            0.5f * hpcos_target_hfov * pi / 180.0f;
-
-        const float target_x_scale =
-            1.0f / std::tan(half_angle);
-
-        hpcos_fov_projection_scale =
-            target_x_scale / current_x_scale;
-      }
-    }
-
-    m_projection_matrix[0] = (rawProjection[0] * g_ActiveConfig.fAspectRatioHackW * fov_multiplier.x * hpcos_fov_projection_scale) * hpcos_3d_scale_x;
+    m_projection_matrix[0] =
+        rawProjection[0] * g_ActiveConfig.fAspectRatioHackW * fov_multiplier.x;
     m_projection_matrix[1] = 0.0f;
-    m_projection_matrix[2] = (rawProjection[1] * g_ActiveConfig.fAspectRatioHackW * fov_multiplier.x * hpcos_fov_projection_scale) * hpcos_3d_scale_x;
+    m_projection_matrix[2] =
+        rawProjection[1] * g_ActiveConfig.fAspectRatioHackW * fov_multiplier.x;
     m_projection_matrix[3] = 0.0f;
 
     m_projection_matrix[4] = 0.0f;
-    m_projection_matrix[5] = (rawProjection[2] * g_ActiveConfig.fAspectRatioHackH * fov_multiplier.y * hpcos_fov_projection_scale) * hpcos_3d_scale_y;
-    m_projection_matrix[6] = (rawProjection[3] * g_ActiveConfig.fAspectRatioHackH * fov_multiplier.y * hpcos_fov_projection_scale) * hpcos_3d_scale_y;
+    m_projection_matrix[5] =
+        rawProjection[2] * g_ActiveConfig.fAspectRatioHackH * fov_multiplier.y;
+    m_projection_matrix[6] =
+        rawProjection[3] * g_ActiveConfig.fAspectRatioHackH * fov_multiplier.y;
     m_projection_matrix[7] = 0.0f;
 
     m_projection_matrix[8] = 0.0f;
@@ -137,7 +85,6 @@ Common::Matrix44 VertexShaderManager::LoadProjectionMatrix()
 
     m_projection_matrix[12] = 0.0f;
     m_projection_matrix[13] = 0.0f;
-
     m_projection_matrix[14] = -1.0f;
     m_projection_matrix[15] = 0.0f;
 

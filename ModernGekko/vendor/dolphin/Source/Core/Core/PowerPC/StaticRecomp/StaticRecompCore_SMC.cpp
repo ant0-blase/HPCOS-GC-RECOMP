@@ -539,13 +539,16 @@ void StaticRecompCore::VerifyChunk(u32 index)
       }
     }
 
-    // GHSE69 enters its scheduler idle poll at 0x801789AC. Do not let a
-    // cross-chunk burst enter that chunk: returning to the chassis makes the
-    // RunQueueBits-aware idle fast path observable at the exact poll PC. The
-    // chunk remains natively dispatchable; only cross-chunk chaining stops.
+    // GHSE69 has two exact PCs that the C++ chassis must observe:
+    // - scheduler idle poll, for RunQueueBits-aware idling
+    // - phase-1 gameplay update, for high-FPS fixed-step simulation gating
+    // Keep those chunks natively dispatchable, but do not let a cross-chunk
+    // burst enter them invisibly.
     constexpr u32 HPCOS_IDLE_PC = 0x801789ACu;
+    constexpr u32 HPCOS_SIM_UPDATE_PC = 0x80038DACu;
     if (chainable && std::string_view(m_module->game_id) == "GHSE69" &&
-        chunk.start <= HPCOS_IDLE_PC && HPCOS_IDLE_PC < chunk.end)
+        ((chunk.start <= HPCOS_IDLE_PC && HPCOS_IDLE_PC < chunk.end) ||
+         (chunk.start <= HPCOS_SIM_UPDATE_PC && HPCOS_SIM_UPDATE_PC < chunk.end)))
     {
       chainable = false;
     }

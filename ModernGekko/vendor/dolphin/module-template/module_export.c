@@ -114,7 +114,7 @@ static u32 chassis_dispatch_burst(
      * Hard cap prevents pathological zero-cost control-flow from staying in
      * the module forever. Normal exit is the guest cycle budget.
      */
-    while (blocks < 64u && total_cycles < cycle_budget)
+    while (blocks < 256u && total_cycles < cycle_budget)
     {
 #if defined(DOLRECOMP_HAS_INDEXED_LOOKUP)
 
@@ -190,7 +190,18 @@ static u32 chassis_dispatch_burst(
          * Generated guest code may read the emulated timebase. Keep it moving
          * between chained chunks exactly like the previous C++ dispatch loop.
          */
-        if (timebase_ratio != 0u)
+        if (timebase_ratio == 12u)
+        {
+            /*
+             * GameCube/Wii use SystemTimers::TIMER_RATIO == 12. Keeping the
+             * common divisor constant lets the host compiler replace the
+             * per-block integer divide with reciprocal multiply/shift.
+             */
+            ctx->timebase =
+                timebase_origin +
+                (timebase_cycles_before + total_cycles) / 12u;
+        }
+        else if (timebase_ratio != 0u)
         {
             ctx->timebase =
                 timebase_origin +

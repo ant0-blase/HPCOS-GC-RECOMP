@@ -54,7 +54,8 @@ The overlay currently exposes live controls for:
 - V-Sync and the FPS performance overlay
 - original 4:3, automatic host aspect, 16:9, 16:10, 21:9 and 32:9 modes
 - horizontal FOV override, synchronized with the GHSE69 guest camera/frustum
-- optional host presentation FPS cap without changing guest game speed
+- high-rate game VI/render target (60/90/120/144/165/240) with gameplay/physics held at native ~59.94 Hz
+- optional host presentation FPS cap
 - keyboard + mouse input merged with the normal GameCube controller on Port 1
 - mouse sensitivity and Y-axis inversion
 - direct in-menu keyboard/mouse rebinding
@@ -69,9 +70,13 @@ C-stick/camera, left/right/middle mouse for A/B/Z, **E/Q** for X/Y,
 D-pad. Gamepad input remains enabled at the same time.
 
 > [!NOTE]
-> The FPS option is a host presentation cap, not a fake timing multiplier. A true
-> guest framerate unlock still requires game-specific timing work so animations,
-> audio and gameplay are not sped up.
+> The menu has two separate FPS controls. **Game FPS** raises the guest VI/render
+> cadence without changing Dolphin's global emulation speed. GHSE69's phase-1
+> gameplay/physics update (`0x80038DAC`) is separately scheduled at the native
+> ~59.94 Hz, while DSP/audio and CoreTiming remain on their normal clock.
+> **Presentation FPS cap** only limits host presentation. Above 60 FPS the renderer
+> currently presents the latest fixed simulation state between updates; true motion
+> interpolation is a separate refinement.
 
 ### Dynamic widescreen
 
@@ -105,14 +110,15 @@ A horizontal FOV can be selected at launch:
 
 `--fov` represents the requested **horizontal** field of view.
 
-The renderer adjusts the host-side projection while the runtime also synchronizes
-the corresponding game-side camera/frustum FOV used by `GHSE69`.
+The runtime synchronizes the corresponding game-side camera/frustum FOV used by
+`GHSE69`. The previous generic host perspective-FOV override has been removed:
+that layer also affects auxiliary perspective passes such as shadow cameras and
+could make shadows disappear when a custom FOV was active.
 
-This is important because changing only the projection matrix causes objects near the
-expanded edges of the screen to be incorrectly culled by the original game.
-
-The game-side FOV synchronization greatly reduces this widescreen/FOV pop-in while
-leaving the original game logic intact.
+Dynamic widescreen also synchronizes all three GHSE69 aspect globals used by the
+original game's 16:9 patch. This makes the guest frustum/culling use the expanded
+aspect instead of keeping a hidden 4:3 visibility window, reducing objects popping
+out near the left and right edges.
 
 ### XFB / presentation correction
 
@@ -240,6 +246,12 @@ Dynamic widescreen with a custom horizontal FOV:
 
 ```bash
 ./run.sh --widescreen --fov 110
+```
+
+Experimental 120 FPS VBI target:
+
+```bash
+./run.sh --widescreen --fov 110 --fps 120
 ```
 
 The current launcher uses Vulkan and Wayland.
