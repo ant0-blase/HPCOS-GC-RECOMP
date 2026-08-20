@@ -7711,6 +7711,19 @@ label_8000F874:
     }
 
 label_8000F878:
+    {
+        static unsigned n = 0;
+        if (n++ < 16) {
+            fprintf(stderr,
+                "[HPCOS-F878-CULL] #%u r31=%08X "
+                "f13=%g f9=%g cr=%08X\n",
+                n,
+                ctx->gpr[31],
+                (double)ctx->fpr[13],
+                (double)ctx->fpr[9],
+                ctx->cr);
+        }
+    }
     ctx->pc = 0x8000F878u;
     // 8000F878: bc    4, 0, 0x8000F8B4
     {
@@ -7745,6 +7758,18 @@ label_8000F880:
     }
 
 label_8000F884:
+    {
+        static unsigned n = 0;
+        if (n++ < 16) {
+            fprintf(stderr,
+                "[HPCOS-F884-TYPE] #%u r31=%08X "
+                "type300=%08X cr=%08X\n",
+                n,
+                ctx->gpr[31],
+                ctx->gpr[0],
+                ctx->cr);
+        }
+    }
     ctx->pc = 0x8000F884u;
     // 8000F884: bc    4, 2, 0x8000F898
     {
@@ -7774,6 +7799,17 @@ label_8000F890:
     ctx->gpr[5] = (u32)(s32)(0);
 
 label_8000F894:
+    {
+        static unsigned n = 0;
+        if (n++ < 16) {
+            fprintf(stderr,
+                "[HPCOS-F894-SETUP] #%u r31=%08X "
+                "type300=%08X\n",
+                n,
+                ctx->gpr[31],
+                ctx->gpr[0]);
+        }
+    }
     ctx->pc = 0x8000F894u;
     // 8000F894: bl      0x8001A7CC
     {

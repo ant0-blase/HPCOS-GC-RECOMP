@@ -1045,7 +1045,8 @@ void DVDInterface::ScheduleReads(u64 offset, u32 length, const DiscIO::Partition
   const u64 current_time = core_timing.GetTicks();
   const u32 ticks_per_second = m_system.GetSystemTimers().GetTicksPerSecond();
   auto& dvd_thread = m_system.GetDVDThread();
-  const bool wii_disc = dvd_thread.GetDiscType() == DiscIO::Platform::WiiDisc;
+  const DiscIO::Platform disc_type = dvd_thread.GetDiscType();
+  const bool wii_disc = disc_type == DiscIO::Platform::WiiDisc;
 
   // Whether we have performed a seek.
   bool seek = false;
@@ -1068,6 +1069,10 @@ void DVDInterface::ScheduleReads(u64 offset, u32 length, const DiscIO::Partition
 
   const bool fast_disc_speed =
       Config::Get(Config::MAIN_FAST_DISC_SPEED);
+  const bool coalesce_fast_gamecube_read =
+      fast_disc_speed && disc_type == DiscIO::Platform::GameCubeDisc &&
+      partition == DiscIO::PARTITION_NONE && length != 0 &&
+      static_cast<u64>(output_address) + length <= m_system.GetMemory().GetRamSizeReal();
 
   if (fast_disc_speed)
   {
@@ -1137,6 +1142,15 @@ void DVDInterface::ScheduleReads(u64 offset, u32 length, const DiscIO::Partition
                                   DiscIO::VolumeWii::BLOCK_DATA_SIZE :
                                   DVD_ECC_BLOCK_SIZE;
 
+  // Fast disc speed makes every chunk complete at the same emulated time. For plain GameCube
+  // reads into contiguous RAM, submit one host read while retaining the loop below for drive
+  // buffer bookkeeping. Other disc/partition/address cases keep the original request granularity.
+  if (coalesce_fast_gamecube_read)
+  {
+    dvd_thread.StartReadToEmulatedRAM(output_address, offset, length, partition, reply_type,
+                                      ticks_until_completion);
+  }
+
   do
   {
     // The length of this read - "+1" so that if this read is already
@@ -1196,10 +1210,13 @@ void DVDInterface::ScheduleReads(u64 offset, u32 length, const DiscIO::Partition
       head_position = dvd_offset + DVD_ECC_BLOCK_SIZE;
     }
 
-    // Schedule this read to complete at the appropriate time
-    const ReplyType chunk_reply_type = chunk_length == length ? reply_type : ReplyType::NoReply;
-    dvd_thread.StartReadToEmulatedRAM(output_address, offset, chunk_length, partition,
-                                      chunk_reply_type, ticks_until_completion);
+    if (!coalesce_fast_gamecube_read)
+    {
+      // Schedule this read to complete at the appropriate time
+      const ReplyType chunk_reply_type = chunk_length == length ? reply_type : ReplyType::NoReply;
+      dvd_thread.StartReadToEmulatedRAM(output_address, offset, chunk_length, partition,
+                                        chunk_reply_type, ticks_until_completion);
+    }
 
     // Advance the read window
     output_address += chunk_length;

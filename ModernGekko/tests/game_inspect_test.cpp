@@ -32,14 +32,25 @@ int main()
   std::ofstream(root / "sys" / "main.dol", std::ios::binary)
       .write(reinterpret_cast<const char*>(dol.data()), dol.size());
 
+  const std::array<unsigned char, 4> asset = {0xde, 0xad, 0xbe, 0xef};
+  std::ofstream(root / "files" / "asset.bin", std::ios::binary)
+      .write(reinterpret_cast<const char*>(asset.data()), asset.size());
+
   const auto result = moderngekko::InspectGame(root);
+  const auto without_assets = moderngekko::InspectGame(
+      root, moderngekko::GameInspectOptions{.hash_assets = false});
   fs::remove_all(root);
   if (!result || result.metadata->disc_id != "TEST01" ||
       result.metadata->game_name != "Synthetic Test Game" ||
       result.metadata->platform != moderngekko::GamePlatform::Wii ||
       result.metadata->entry_point != 0x80003100u ||
       result.metadata->dol_sha256 !=
-          "ee292f5fc3d0e5cfa32d951bd682a3cd2806c102e4a0a50300a2c480e21bcef6")
+          "ee292f5fc3d0e5cfa32d951bd682a3cd2806c102e4a0a50300a2c480e21bcef6" ||
+      result.metadata->assets_sha256 !=
+          "5b3ade52402cb46148fad4f6dd3d56f42343a785aa4b4e9b62202bed0f3c4e64" ||
+      !without_assets ||
+      !without_assets.metadata->assets_sha256.empty() ||
+      without_assets.metadata->dol_sha256 != result.metadata->dol_sha256)
     return 1;
   return 0;
 }

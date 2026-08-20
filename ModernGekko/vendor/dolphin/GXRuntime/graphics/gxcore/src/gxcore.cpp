@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include <cstdio>
 #include "gxruntime/gxcore/gxcore.hpp"
 #include "gxruntime/gxcore/shader.hpp"
 
@@ -478,6 +479,23 @@ DrawPlan GxCoreState::build_draw_plan(const ar::ConsumedDraw& draw,
     plan.ok = false;
     plan.skip_reason = reason;
     ++counters.draws_skipped;
+
+    // HPCOS CORE SKIP DIAG
+    static unsigned hpcosCoreSkipCount = 0;
+    ++hpcosCoreSkipCount;
+
+    if (hpcosCoreSkipCount <= 40u) {
+      std::fprintf(
+          stderr,
+          "[HPCOS-CORE-SKIP] n=%u reason=%s "
+          "fmt=%u flags=0x%08X payload=%zu\n",
+          hpcosCoreSkipCount,
+          reason != nullptr ? reason : "null",
+          static_cast<unsigned>(draw.vtx_fmt),
+          static_cast<unsigned>(draw.transform_flags),
+          draw.vertex_payload.size());
+    }
+
     return plan;
   };
 

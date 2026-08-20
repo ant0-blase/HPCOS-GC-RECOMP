@@ -1,4 +1,5 @@
 // DolRecomp output
+#include <stdio.h>
 #include "../generated.h"
 
 static void loop_80177330(CPUState* ctx) {
@@ -22821,6 +22822,26 @@ label_80179474:
 
 label_80179478:
     ctx->pc = 0x80179478u;
+
+    /* TEMP DEBUG: identify who sleeps on the problematic queue */
+    if (ctx->gpr[3] != 0u) {
+        u32 dbg_current = mem_read32(ctx, 0x800000E4u);
+
+        fprintf(stderr,
+            "[HPCOS-WAITQ-SLEEP] "
+            "queue=%08X current=%08X "
+            "lr=%08X caller=%08X "
+            "r3=%08X r4=%08X r5=%08X\n",
+            ctx->gpr[3],
+            dbg_current,
+            ctx->lr,
+            ctx->lr - 4u,
+            ctx->gpr[3],
+            ctx->gpr[4],
+            ctx->gpr[5]);
+
+        fflush(stderr);
+    }
     ctx->downcount -= 7;
     // 80179478: mflr    r0
     ctx->gpr[0] = ctx->lr;
@@ -23345,6 +23366,26 @@ label_80179560:
 
 label_80179564:
     ctx->pc = 0x80179564u;
+
+    /* TEMP DEBUG: identify who wakes the problematic queue */
+    if (ctx->gpr[3] != 0u) {
+        u32 dbg_current = mem_read32(ctx, 0x800000E4u);
+
+        fprintf(stderr,
+            "[HPCOS-WAITQ-WAKE] "
+            "queue=%08X current=%08X "
+            "lr=%08X caller=%08X "
+            "r3=%08X r4=%08X r5=%08X\n",
+            ctx->gpr[3],
+            dbg_current,
+            ctx->lr,
+            ctx->lr - 4u,
+            ctx->gpr[3],
+            ctx->gpr[4],
+            ctx->gpr[5]);
+
+        fflush(stderr);
+    }
     ctx->downcount -= 7;
     // 80179564: mflr    r0
     ctx->gpr[0] = ctx->lr;

@@ -368,7 +368,9 @@ void shadow_frontend_write(u64 value, u8 size) {
             g_shadow_frontend_failed = true;
             std::fprintf(stderr,
                          "[gx-core] frontend rejected FIFO after %llu byte(s): "
-                         "%s (opcode=0x%02X offset=%llu); consumer=%s\n",
+                         "%s (opcode=0x%02X offset=%llu "
+                         "detail=(%u,%u,%u,%u) pending=%llu); "
+                         "consumer=%s\n",
                          g_fifo_bytes,
                          g_shadow_frontend.last_error() != nullptr
                              ? g_shadow_frontend.last_error()
@@ -377,6 +379,12 @@ void shadow_frontend_write(u64 value, u8 size) {
                              g_shadow_frontend.last_error_opcode()),
                          static_cast<unsigned long long>(
                              g_shadow_frontend.last_error_offset()),
+                         g_shadow_frontend.last_error_a(),
+                         g_shadow_frontend.last_error_b(),
+                         g_shadow_frontend.last_error_c(),
+                         g_shadow_frontend.last_error_d(),
+                         static_cast<unsigned long long>(
+                             g_shadow_frontend.pending_fifo_size()),
                          g_core_sink.failure_reason() != nullptr
                              ? g_core_sink.failure_reason()
                              : "none");
@@ -626,13 +634,17 @@ void aurora_backend_present(void) {
                      gx_aurora::g_present_count, aurora_get_fps(), stats->drawCallCount,
                      stats->lastTextureUploadSize, gx_aurora::g_fifo_bytes);
     }
-    if (gx_aurora::g_graphics_log) {
+    if (gx_aurora::g_present_count <= 12u) {
         const AuroraStats* s = aurora_get_stats();
         std::fprintf(stderr,
-                     "[gfxN] present=%llu draws=%u merged=%u verts=%u indices=%u "
-                     "fifo=%llu\n",
-                     gx_aurora::g_present_count, s->drawCallCount, s->mergedDrawCallCount,
-                     s->lastVertSize, s->lastIndexSize, gx_aurora::g_fifo_bytes);
+                     "[HPCOS-GFXN] present=%llu draws=%u merged=%u "
+                     "verts=%u indices=%u fifo=%llu\n",
+                     gx_aurora::g_present_count,
+                     s->drawCallCount,
+                     s->mergedDrawCallCount,
+                     s->lastVertSize,
+                     s->lastIndexSize,
+                     gx_aurora::g_fifo_bytes);
     }
 #if GXRUNTIME_HAS_AURORA_RECOMP
     gx_aurora::g_trace_present_scope_frame = gx_aurora::g_present_count;
@@ -685,8 +697,9 @@ void aurora_backend_present(void) {
                  vert_align_slack);
         if (!vert_extent_match)
             ++gx_aurora::g_shadow_vert_extent_mismatch_frames;
-        if (gx_aurora::g_graphics_log && have_prev &&
-            (gx_aurora::g_present_count <= 10 || gx_aurora::g_present_count % 60 == 0 ||
+        // HPCOS SHADOW DIAG
+        if (have_prev &&
+            (gx_aurora::g_present_count <= 10 ||
              !draw_match || !vert_extent_match)) {
             std::fprintf(stderr,
                          "[gfx] shadow-consume failed=%d packets=%llu "
@@ -855,13 +868,66 @@ void aurora_backend_call_display_list(const void* data, u32 size) {
 void aurora_backend_gx_write(u64 value, u8 size) {
     if (!gx_aurora::g_initialized)
         return;
+
     gx_aurora::g_fifo_bytes += size;
+
+    /*
+     * HPCOS CORE GXCopyDisp
+     *
+     * DOL_GX_CORE=1 returns before the live Aurora WGPIPE parser,
+     * therefore the existing BP 0x52 present bridge is never reached.
+     *
+     * Observe the raw guest WGPIPE transaction here as well:
+     *
+     *   0x61          LOAD_BP_REG
+     *   0x52xxxxxx    BP copy execute
+     *
+     * bit14 == display copy.
+     */
+    static u8 hpcosCoreLastOpcode = 0;
+    bool hpcosCoreDisplayCopy = false;
+
+    if (size == 1u) {
+        hpcosCoreLastOpcode = static_cast<u8>(value);
+    } else if (size == 4u && hpcosCoreLastOpcode == 0x61u) {
+        const u32 hpcosBp = static_cast<u32>(value);
+        const u8 hpcosReg = static_cast<u8>(hpcosBp >> 24u);
+
+        if (hpcosReg == 0x52u &&
+            (hpcosBp & (1u << 14u)) != 0u) {
+            hpcosCoreDisplayCopy = true;
+        }
+    }
+
 #if GXRUNTIME_HAS_AURORA_RECOMP
+    /*
+     * Important:
+     * feed the BP 0x52 to RetailGxFrontend/CoreSink FIRST.
+     * Only then close/present the host frame.
+     */
     gx_aurora::shadow_frontend_write(value, size);
+
     if (gx_aurora::trace_should_record())
         gx_aurora::g_trace_writer.gx_write(size, value);
-    if (gx_aurora::g_gx_core_enabled)
+
+    if (gx_aurora::g_gx_core_enabled) {
+        if (hpcosCoreDisplayCopy) {
+            static unsigned hpcosCorePresentCount = 0;
+            ++hpcosCorePresentCount;
+
+            if (hpcosCorePresentCount <= 16u) {
+                std::fprintf(
+                    stderr,
+                    "[HPCOS-CORE-DISPLAY] "
+                    "GXCopyDisp #%u -> CoreSink present\n",
+                    hpcosCorePresentCount);
+            }
+
+            aurora_backend_present();
+        }
+
         return;
+    }
 #endif
 
     static u32 s_last_zmode = 0x40000017;
@@ -876,7 +942,7 @@ void aurora_backend_gx_write(u64 value, u8 size) {
         if (gx_aurora::g_draw_opcode_pending && command >= 0x80u) {
             gx_aurora::g_draw_opcode_pending = false;
             gx_aurora::flush_pending_resource_metadata();
-            if (gx_aurora::g_force_untextured) {
+            if (true) { /* HPCOS FORCE UNTEXTURED DIAG */
                 GXSetCullMode(GX_CULL_NONE);
                 GXSetZMode(GX_FALSE, GX_ALWAYS, GX_FALSE);
                 GXSetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR);
@@ -912,6 +978,34 @@ void aurora_backend_gx_write(u64 value, u8 size) {
                     val32 &= ~0x18;
                 }
                 GXParam1u32(val32);
+            } else if (regId == 0x52) {
+                /*
+                 * HPCOS native GXCopyDisp frame boundary.
+                 *
+                 * Queue the BP payload first. aurora_backend_present()
+                 * then closes the current frame, which consumes the FIFO
+                 * including this 0x52, and opens the next frame.
+                 */
+                GXParam1u32(val32);
+
+                const bool hpcosDisplayCopy =
+                    (val32 & (1u << 14)) != 0u;
+
+                if (hpcosDisplayCopy) {
+                    static unsigned hpcosDisplayWriteCount = 0;
+                    ++hpcosDisplayWriteCount;
+
+                    if (hpcosDisplayWriteCount <= 16u) {
+                        std::fprintf(
+                            stderr,
+                            "[HPCOS-DISPLAY-WRITE] "
+                            "GXCopyDisp #%u BP=0x%08X -> present\n",
+                            hpcosDisplayWriteCount,
+                            val32);
+                    }
+
+                    aurora_backend_present();
+                }
             } else if (regId == 0x00) {
                 u32 hwCull = (val32 >> 14) & 3;
                 if (hwCull == 3) {
@@ -1031,6 +1125,19 @@ void aurora_backend_set_guest_address_resolver(
     gx_aurora::g_guest_address_resolver = resolve;
     gx_aurora::g_guest_address_resolver_user = user;
 #if GXRUNTIME_HAS_AURORA_RECOMP
+    /*
+     * HPCOS ENABLE SHADOW FRONTEND
+     *
+     * Diagnostic only: mirror the real guest GX stream through the
+     * RetailGxFrontend/packet sink while the live Aurora parser remains
+     * the rendering path (DOL_GX_CORE=0).
+     *
+     * The normal resolver setup below already resets the frontend,
+     * enables packet draining and installs the guest resolver.
+     */
+    gx_aurora::g_shadow_frontend_enabled = true;
+    gx_aurora::g_shadow_frontend_failed = false;
+
     if (resolve != nullptr) {
         DolGuestAddressResolver frontend_resolver;
         dol_guest_address_resolver_init_callback(
