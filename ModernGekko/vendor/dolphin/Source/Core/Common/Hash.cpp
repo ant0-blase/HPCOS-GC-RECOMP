@@ -322,29 +322,74 @@ FUNCTION_TARGET_SSE42
 static u64 GetHash64_SSE42_CRC32(const u8* src, u32 len, u32 samples)
 {
   u64 h[4] = {len, 0, 0, 0};
-  u32 Step = (len / 8);
-  const u64* data = (const u64*)src;
-  const u64* end = data + Step;
-  if (samples == 0)
-    samples = std::max(Step, 1u);
-  Step = Step / samples;
-  if (Step < 1)
-    Step = 1;
+  const u32 words = len / 8;
+  const u64* const begin = reinterpret_cast<const u64*>(src);
+  const u64* const end = begin + words;
+  u32 step;
 
-  while (data < end - Step * 3)
+  // samples == 0 is Dolphin's normal full-hash mode. The generic formula
+  // turns that into words / words, which leaves an expensive integer divide
+  // in this hot function. samples >= words also clamps to a stride of one, so
+  // both cases can skip the division with exactly the same result.
+  if (samples == 0 || samples >= words) [[likely]]
+    step = 1;
+  else
+    step = words / samples;
+
+  // Most texture hashes are dense (step == 1). Keep four independent CRC
+  // dependency chains, but unroll two groups at a time so the hot path avoids
+  // repeated scaled-index arithmetic and halves loop-control overhead. This
+  // produces exactly the same hash as the generic sampled path.
+  if (step == 1)
   {
-    h[0] = _mm_crc32_u64(h[0], data[Step * 0]);
-    h[1] = _mm_crc32_u64(h[1], data[Step * 1]);
-    h[2] = _mm_crc32_u64(h[2], data[Step * 2]);
-    h[3] = _mm_crc32_u64(h[3], data[Step * 3]);
-    data += Step * 4;
+    const u64* data = begin;
+    while (static_cast<size_t>(end - data) >= 8)
+    {
+      h[0] = _mm_crc32_u64(h[0], data[0]);
+      h[1] = _mm_crc32_u64(h[1], data[1]);
+      h[2] = _mm_crc32_u64(h[2], data[2]);
+      h[3] = _mm_crc32_u64(h[3], data[3]);
+      h[0] = _mm_crc32_u64(h[0], data[4]);
+      h[1] = _mm_crc32_u64(h[1], data[5]);
+      h[2] = _mm_crc32_u64(h[2], data[6]);
+      h[3] = _mm_crc32_u64(h[3], data[7]);
+      data += 8;
+    }
+    if (static_cast<size_t>(end - data) >= 4)
+    {
+      h[0] = _mm_crc32_u64(h[0], data[0]);
+      h[1] = _mm_crc32_u64(h[1], data[1]);
+      h[2] = _mm_crc32_u64(h[2], data[2]);
+      h[3] = _mm_crc32_u64(h[3], data[3]);
+      data += 4;
+    }
+    if (data < end)
+      h[0] = _mm_crc32_u64(h[0], data[0]);
+    if (static_cast<size_t>(end - data) >= 2)
+      h[1] = _mm_crc32_u64(h[1], data[1]);
+    if (static_cast<size_t>(end - data) >= 3)
+      h[2] = _mm_crc32_u64(h[2], data[2]);
   }
-  if (data < end - Step * 0)
-    h[0] = _mm_crc32_u64(h[0], data[Step * 0]);
-  if (data < end - Step * 1)
-    h[1] = _mm_crc32_u64(h[1], data[Step * 1]);
-  if (data < end - Step * 2)
-    h[2] = _mm_crc32_u64(h[2], data[Step * 2]);
+  else
+  {
+    size_t index = 0;
+    const size_t stride = step;
+    const size_t word_count = words;
+    while (index + stride * 3 < word_count)
+    {
+      h[0] = _mm_crc32_u64(h[0], begin[index + stride * 0]);
+      h[1] = _mm_crc32_u64(h[1], begin[index + stride * 1]);
+      h[2] = _mm_crc32_u64(h[2], begin[index + stride * 2]);
+      h[3] = _mm_crc32_u64(h[3], begin[index + stride * 3]);
+      index += stride * 4;
+    }
+    if (index < word_count)
+      h[0] = _mm_crc32_u64(h[0], begin[index]);
+    if (index + stride < word_count)
+      h[1] = _mm_crc32_u64(h[1], begin[index + stride]);
+    if (index + step * 2 < words)
+      h[2] = _mm_crc32_u64(h[2], begin[index + stride * 2]);
+  }
 
   if (len & 7)
   {
@@ -422,7 +467,15 @@ static u64 SetHash64Function(const u8* src, u32 len, u32 samples)
 
 u64 GetHash64(const u8* src, u32 len, u32 samples)
 {
+#if defined(_M_X86_64) && defined(__SSE4_2__)
+  // native/x86-64-v2/v3 builds already guarantee SSE4.2. Avoid the indirect
+  // function-pointer dispatch on every texture hash and, with runtime LTO,
+  // give the optimizer a direct edge into the CRC32 implementation. Baseline
+  // x86-64 builds keep the runtime CPU-selection path below.
+  return GetHash64_SSE42_CRC32(src, len, samples);
+#else
   return s_texture_hash_func(src, len, samples);
+#endif
 }
 
 u32 StartCRC32()
