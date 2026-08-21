@@ -13,7 +13,7 @@
 /.publish.*/
 .build.lock
 /module/
-
+.deps/
 # Local runtime/user state
 /user/
 

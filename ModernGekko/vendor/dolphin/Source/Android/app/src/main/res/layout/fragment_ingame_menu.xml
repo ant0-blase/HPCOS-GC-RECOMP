@@ -87,6 +87,11 @@
                 android:text="@string/grid_menu_settings" />
 
             <Button
+                android:id="@+id/menu_hpcos_settings"
+                style="@style/InGameMenuOption"
+                android:text="HPCOS Settings" />
+
+            <Button
                 android:id="@+id/menu_overlay_controls"
                 style="@style/InGameMenuOption"
                 android:text="@string/emulation_overlay_controls" />

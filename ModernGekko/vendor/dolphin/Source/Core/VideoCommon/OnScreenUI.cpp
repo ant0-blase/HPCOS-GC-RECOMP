@@ -713,7 +713,10 @@ void DrawHpcosPcSettings()
     SaveHpcosPcSettings();
 
   ImGui::Separator();
-  ImGui::TextDisabled("Press Ctrl+F10 to close this menu.");
+  if (ImGui::Button("Close menu", ImVec2(150.0f, 0.0f)))
+    HPCOS::SetOverlayVisible(false);
+  ImGui::SameLine();
+  ImGui::TextDisabled("Ctrl+F10 on desktop / HPCOS Settings on Android.");
   ImGui::End();
 }
 }  // namespace

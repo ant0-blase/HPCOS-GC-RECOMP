@@ -494,6 +494,7 @@ class EmulationActivity : AppCompatActivity(), ThemeProvider {
             }
 
             MENU_ACTION_TAKE_SCREENSHOT -> NativeLibrary.SaveScreenShot()
+            MENU_ACTION_HPCOS_SETTINGS -> { closeMenu(); NativeLibrary.ToggleHpcosOverlay() }
             MENU_ACTION_QUICK_SAVE -> NativeLibrary.SaveState(9)
             MENU_ACTION_QUICK_LOAD -> NativeLibrary.LoadState(9)
             MENU_ACTION_SAVE_ROOT -> showSubMenu(SaveOrLoad.SAVE)
@@ -542,6 +543,11 @@ class EmulationActivity : AppCompatActivity(), ThemeProvider {
 
     // Gets button presses
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN && event.keyCode == KeyEvent.KEYCODE_F10 &&
+            event.isCtrlPressed) {
+            NativeLibrary.ToggleHpcosOverlay()
+            return true
+        }
         if (!menuVisible) {
             if (ControllerInterface.dispatchKeyEvent(event)) {
                 return true
@@ -954,6 +960,12 @@ class EmulationActivity : AppCompatActivity(), ThemeProvider {
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        // When the native HPCOS ImGui overlay is open, make it a real touch UI
+        // instead of letting the normal Android controller/menu consume taps.
+        if (NativeLibrary.IsHpcosOverlayVisible()) {
+            NativeLibrary.HpcosOverlayPointer(event.x, event.y, event.actionMasked)
+            return true
+        }
         if (event.actionMasked == MotionEvent.ACTION_DOWN) {
             var anyMenuClosed = false
 
@@ -1074,6 +1086,7 @@ class EmulationActivity : AppCompatActivity(), ThemeProvider {
         const val MENU_ACTION_UNPAUSE_EMULATION = 33
         const val MENU_ACTION_OVERLAY_CONTROLS = 34
         const val MENU_ACTION_SETTINGS = 35
+        const val MENU_ACTION_HPCOS_SETTINGS = 90
         const val MENU_ACTION_SKYLANDERS = 36
         const val MENU_ACTION_INFINITY_BASE = 37
         const val MENU_ACTION_LATCHING_CONTROLS = 38

@@ -6,12 +6,16 @@
 #include "Core/Config/MainSettings.h"
 #include "Core/Config/ConfigManager.h"
 #include "Core/Core.h"
+#include "Core/HPCOSSettings.h"
 #include "Core/System.h"
 
 #include <chrono>
 #include <windows.h>
 #include <climits>
 #include <dwmapi.h>
+#include <string>
+#include <vector>
+#include <windowsx.h>
 #include <thread>
 
 #include "VideoCommon/Present.h"
@@ -19,6 +23,32 @@
 
 namespace
 {
+std::string HpcosWin32KeyToken(WPARAM key)
+{
+  if (key >= 'A' && key <= 'Z')
+    return std::string(1, static_cast<char>(key));
+  if (key >= '0' && key <= '9')
+    return std::string(1, static_cast<char>(key));
+  if (key >= VK_F1 && key <= VK_F24)
+    return "F" + std::to_string(key - VK_F1 + 1);
+  switch (key)
+  {
+  case VK_SHIFT: return "Shift_L";
+  case VK_CONTROL: return "Control_L";
+  case VK_MENU: return "Alt_L";
+  case VK_RETURN: return "Return";
+  case VK_UP: return "Up";
+  case VK_DOWN: return "Down";
+  case VK_LEFT: return "Left";
+  case VK_RIGHT: return "Right";
+  case VK_SPACE: return "Space";
+  case VK_TAB: return "Tab";
+  case VK_BACK: return "BackSpace";
+  case VK_ESCAPE: return "Escape";
+  default: return {};
+  }
+}
+
 class PlatformWin32 final : public Platform
 {
 public:
@@ -46,6 +76,7 @@ private:
   int m_window_y = Config::Get(Config::MAIN_RENDER_WINDOW_YPOS);
   int m_window_width = Config::Get(Config::MAIN_RENDER_WINDOW_WIDTH);
   int m_window_height = Config::Get(Config::MAIN_RENDER_WINDOW_HEIGHT);
+  u32 m_mouse_button_mask = 0;
 };
 
 PlatformWin32::~PlatformWin32()
@@ -100,6 +131,14 @@ bool PlatformWin32::Init()
 {
   if (!RegisterRenderWindowClass() || !CreateRenderWindow())
     return false;
+
+  // Relative raw mouse motion avoids edge clipping and desktop acceleration.
+  RAWINPUTDEVICE raw_mouse{};
+  raw_mouse.usUsagePage = 0x01;
+  raw_mouse.usUsage = 0x02;
+  raw_mouse.dwFlags = 0;
+  raw_mouse.hwndTarget = m_hwnd;
+  RegisterRawInputDevices(&raw_mouse, 1, sizeof(raw_mouse));
 
   // TODO: Enter fullscreen if enabled.
   if (Config::Get(Config::MAIN_FULLSCREEN))
@@ -200,8 +239,79 @@ LRESULT PlatformWin32::WndProc(const HWND hwnd, const UINT msg, const WPARAM wPa
   break;
 
   case WM_KEYDOWN:
+  case WM_SYSKEYDOWN:
+  {
+    const bool first_press = (lParam & (1LL << 30)) == 0;
+    if (wParam == VK_F10 && (GetKeyState(VK_CONTROL) & 0x8000) != 0 && first_press)
+    {
+      HPCOS::ToggleOverlay();
+      return 0;
+    }
+    const std::string token = HpcosWin32KeyToken(wParam);
+    if (!token.empty()) HPCOS::OnHostToken(token, true);
     if (wParam == VK_ESCAPE)
       platform->RequestShutdown();
+    break;
+  }
+
+  case WM_KEYUP:
+  case WM_SYSKEYUP:
+  {
+    const std::string token = HpcosWin32KeyToken(wParam);
+    if (!token.empty()) HPCOS::OnHostToken(token, false);
+    break;
+  }
+
+  case WM_MOUSEMOVE:
+    if (g_presenter && HPCOS::OverlayVisible())
+      g_presenter->SetMousePos(static_cast<float>(GET_X_LPARAM(lParam)),
+                               static_cast<float>(GET_Y_LPARAM(lParam)));
+    break;
+
+  case WM_LBUTTONDOWN: case WM_LBUTTONUP:
+  case WM_RBUTTONDOWN: case WM_RBUTTONUP:
+  case WM_MBUTTONDOWN: case WM_MBUTTONUP:
+  case WM_XBUTTONDOWN: case WM_XBUTTONUP:
+  {
+    const bool down = msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN ||
+                      msg == WM_XBUTTONDOWN;
+    int imgui_button = -1;
+    const char* token = nullptr;
+    if (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONUP) { imgui_button = 0; token = "Mouse1"; }
+    else if (msg == WM_RBUTTONDOWN || msg == WM_RBUTTONUP) { imgui_button = 1; token = "Mouse2"; }
+    else if (msg == WM_MBUTTONDOWN || msg == WM_MBUTTONUP) { imgui_button = 2; token = "Mouse3"; }
+    else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) { imgui_button = 3; token = "Mouse4"; }
+    else { imgui_button = 4; token = "Mouse5"; }
+    HPCOS::OnHostToken(token, down);
+    if (down) platform->m_mouse_button_mask |= (1u << imgui_button);
+    else platform->m_mouse_button_mask &= ~(1u << imgui_button);
+    if (g_presenter && HPCOS::OverlayVisible())
+      g_presenter->SetMousePress(platform->m_mouse_button_mask);
+    return 0;
+  }
+
+  case WM_INPUT:
+  {
+    UINT size = 0;
+    GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, nullptr, &size,
+                    sizeof(RAWINPUTHEADER));
+    if (size != 0)
+    {
+      std::vector<u8> bytes(size);
+      if (GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, bytes.data(), &size,
+                          sizeof(RAWINPUTHEADER)) == size)
+      {
+        const RAWINPUT* raw = reinterpret_cast<const RAWINPUT*>(bytes.data());
+        if (raw->header.dwType == RIM_TYPEMOUSE)
+          HPCOS::OnMouseMotion(static_cast<float>(raw->data.mouse.lLastX),
+                               static_cast<float>(raw->data.mouse.lLastY));
+      }
+    }
+    break;
+  }
+
+  case WM_KILLFOCUS:
+    HPCOS::ResetInput();
     break;
 
   case WM_CLOSE:

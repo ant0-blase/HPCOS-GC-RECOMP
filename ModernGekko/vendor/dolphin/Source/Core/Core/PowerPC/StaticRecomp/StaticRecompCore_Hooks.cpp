@@ -19,6 +19,34 @@
 namespace
 {
 constexpr u32 LOCKED_CACHE_BASE = 0xE0000000u;
+
+
+// Host-side copy of GXRuntime's program-exception transition.
+//
+// StaticRecompCore_Hooks.cpp is linked into Dolphin's libcore/libmain, while
+// ppc_program_exception() itself lives inside the per-game recomp module.
+// Android links libmain.so with --no-undefined, so keep this transition local
+// to the chassis instead of depending on a symbol from a module dlopen()'d
+// later.
+static inline void StaticRecompProgramException(CPUState* cpu, u32 cause, u32 cia)
+{
+  const u32 old_msr = cpu->msr;
+  constexpr u32 clear =
+      PPC_MSR_POW | PPC_MSR_EE | PPC_MSR_PR | PPC_MSR_FP |
+      PPC_MSR_FE0 | PPC_MSR_SE | PPC_MSR_BE | PPC_MSR_FE1 |
+      PPC_MSR_IR | PPC_MSR_DR | PPC_MSR_PM | PPC_MSR_RI | PPC_MSR_LE;
+
+  u32 next_msr = old_msr & ~clear;
+  if (old_msr & PPC_MSR_ILE)
+    next_msr |= PPC_MSR_LE;
+
+  cpu->program_exception |= cause;
+  cpu->srr0 = cia;
+  cpu->srr1 = (old_msr & PPC_MSR_RFI_MASK) | cause;
+  cpu->exception |= PPC_EXC_PROGRAM;
+  cpu->msr = next_msr;
+  cpu->pc = ((next_msr & PPC_MSR_IP) ? 0xFFF00000u : 0u) + PPC_VECTOR_PROGRAM;
+}
 }
 
 bool StaticRecompCore::HookHostCall(CPUState* cpu, u32 address)
@@ -405,7 +433,7 @@ u32 StaticRecompCore::HookSPRRead(CPUState* cpu, u16 spr, u32 cia)
   auto& ppc = core->m_system.GetPPCState();
   if (spr >= 1024)
   {
-    ppc_program_exception(cpu, PPC_PROGRAM_ILLEGAL, cia);
+    StaticRecompProgramException(cpu, PPC_PROGRAM_ILLEGAL, cia);
     return 0;
   }
 
@@ -455,7 +483,7 @@ void StaticRecompCore::HookSPRWrite(CPUState* cpu, u16 spr, u32 value, u32 cia)
   auto& ppc = system.GetPPCState();
   if (spr >= 1024)
   {
-    ppc_program_exception(cpu, PPC_PROGRAM_ILLEGAL, cia);
+    StaticRecompProgramException(cpu, PPC_PROGRAM_ILLEGAL, cia);
     return;
   }
 
@@ -609,7 +637,7 @@ void StaticRecompCore::HookCacheControl(CPUState* cpu, u8 operation, u32 ea, u32
     mmu.InvalidateDCacheLine(ea);
     break;
   default:
-    ppc_program_exception(cpu, PPC_PROGRAM_ILLEGAL, cia);
+    StaticRecompProgramException(cpu, PPC_PROGRAM_ILLEGAL, cia);
     break;
   }
 }
