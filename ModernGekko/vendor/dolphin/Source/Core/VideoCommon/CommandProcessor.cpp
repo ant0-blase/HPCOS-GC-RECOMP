@@ -338,7 +338,24 @@ void CommandProcessorManager::RegisterMMIO(MMIO::Mapping* mmio, u32 base)
 
 void CommandProcessorManager::GatherPipeBursted()
 {
-  SetCPStatusFromCPU();
+  // The common retail-game path has no CP interrupt source armed. In that
+  // state SetCPStatusFromCPU() only computes/publishes flags that nobody can
+  // consume before the next synchronized STATUS read. Keep only the high
+  // watermark comparison needed locally for exception-check pacing.
+  const bool cp_interrupt_logic_active =
+      m_cp_ctrl_reg.BPInt || m_cp_ctrl_reg.FifoOverflowIntEnable ||
+      m_cp_ctrl_reg.FifoUnderflowIntEnable || m_interrupt_set.IsSet() ||
+      m_interrupt_waiting.IsSet();
+  bool hi_watermark;
+  if (cp_interrupt_logic_active) [[unlikely]]
+  {
+    SetCPStatusFromCPU();
+    hi_watermark = m_fifo.bFF_HiWatermark.load(std::memory_order_relaxed) != 0;
+  }
+  else
+  {
+    hi_watermark = m_fifo.CPReadWriteDistance.load(std::memory_order_relaxed) > m_fifo.CPHiWatermark;
+  }
 
   auto& processor_interface = m_system.GetProcessorInterface();
 
@@ -381,7 +398,7 @@ void CommandProcessorManager::GatherPipeBursted()
   }
 
   // If the game is running close to overflowing, make the exception checking more frequent.
-  if (m_fifo.bFF_HiWatermark.load(std::memory_order_relaxed) != 0)
+  if (hi_watermark) [[unlikely]]
     m_system.GetCoreTiming().ForceExceptionCheck(0);
 
   m_fifo.CPReadWriteDistance.fetch_add(GPFifo::GATHER_PIPE_SIZE, std::memory_order_seq_cst);
@@ -442,10 +459,27 @@ bool CommandProcessorManager::IsInterruptWaiting() const
 
 void CommandProcessorManager::SetCPStatusFromGPU()
 {
+  const bool breakpoint_enabled = m_fifo.bFF_BPEnable.load(std::memory_order_relaxed) != 0;
+  const bool breakpoint_irq_enabled =
+      breakpoint_enabled && m_fifo.bFF_BPInt.load(std::memory_order_relaxed) != 0;
+  const bool hi_irq_enabled =
+      m_fifo.bFF_HiWatermarkInt.load(std::memory_order_relaxed) != 0;
+  const bool lo_irq_enabled =
+      m_fifo.bFF_LoWatermarkInt.load(std::memory_order_relaxed) != 0;
+
+  // No enabled source can change the interrupt line. STATUS_REGISTER reads
+  // synchronize the GPU and SetCpStatusRegister() refreshes the observable
+  // breakpoint/watermark bits on demand, so continuously publishing them here
+  // is redundant in the overwhelmingly common no-IRQ path.
+  if (!breakpoint_irq_enabled && !hi_irq_enabled && !lo_irq_enabled &&
+      !m_interrupt_set.IsSet() && !m_interrupt_waiting.IsSet()) [[likely]]
+  {
+    return;
+  }
+
   // Keep hot status values in locals. The old path stored them to atomics and
   // immediately loaded them back to compute the interrupt state.
   bool breakpoint = m_fifo.bFF_Breakpoint.load(std::memory_order_relaxed);
-  const bool breakpoint_enabled = m_fifo.bFF_BPEnable.load(std::memory_order_relaxed) != 0;
   if (breakpoint_enabled)
   {
     const u32 read_pointer = m_fifo.CPReadPointer.load(std::memory_order_relaxed);
@@ -476,10 +510,9 @@ void CommandProcessorManager::SetCPStatusFromGPU()
   m_fifo.bFF_HiWatermark.store(hi_watermark, std::memory_order_relaxed);
   m_fifo.bFF_LoWatermark.store(lo_watermark, std::memory_order_relaxed);
 
-  const bool bpInt = breakpoint && m_fifo.bFF_BPInt.load(std::memory_order_relaxed);
-  const bool ovfInt = hi_watermark && m_fifo.bFF_HiWatermarkInt.load(std::memory_order_relaxed);
-  const bool undfInt =
-      lo_watermark && m_fifo.bFF_LoWatermarkInt.load(std::memory_order_relaxed);
+  const bool bpInt = breakpoint && breakpoint_irq_enabled;
+  const bool ovfInt = hi_watermark && hi_irq_enabled;
+  const bool undfInt = lo_watermark && lo_irq_enabled;
 
   const bool interrupt = (bpInt || ovfInt || undfInt) && m_cp_ctrl_reg.GPReadEnable;
 
@@ -541,16 +574,28 @@ void CommandProcessorManager::SetCPStatusFromCPU()
 
 void CommandProcessorManager::SetCpStatusRegister()
 {
-  // Here always there is one fifo attached to the GPU
-  m_cp_status_reg.Breakpoint = m_fifo.bFF_Breakpoint.load(std::memory_order_relaxed);
-  m_cp_status_reg.ReadIdle = !m_fifo.CPReadWriteDistance.load(std::memory_order_relaxed) ||
-                             (m_fifo.CPReadPointer.load(std::memory_order_relaxed) ==
-                              m_fifo.CPWritePointer.load(std::memory_order_relaxed));
-  m_cp_status_reg.CommandIdle = !m_fifo.CPReadWriteDistance.load(std::memory_order_relaxed) ||
-                                Fifo::AtBreakpoint(m_system) ||
+  // STATUS reads are synchronized with the GPU by RegisterMMIO(). Recompute
+  // the flags from the live FIFO counters here, which lets the hot GPU loop
+  // defer these atomic stores entirely while no CP interrupt is armed.
+  const u32 distance = m_fifo.CPReadWriteDistance.load(std::memory_order_relaxed);
+  const u32 read_pointer = m_fifo.CPReadPointer.load(std::memory_order_relaxed);
+  const u32 write_pointer = m_fifo.CPWritePointer.load(std::memory_order_relaxed);
+  const bool breakpoint =
+      m_fifo.bFF_BPEnable.load(std::memory_order_relaxed) != 0 &&
+      m_fifo.CPBreakpoint.load(std::memory_order_relaxed) == read_pointer;
+  const bool hi_watermark = distance > m_fifo.CPHiWatermark;
+  const bool lo_watermark = distance < m_fifo.CPLoWatermark;
+
+  m_fifo.bFF_Breakpoint.store(breakpoint, std::memory_order_relaxed);
+  m_fifo.bFF_HiWatermark.store(hi_watermark, std::memory_order_relaxed);
+  m_fifo.bFF_LoWatermark.store(lo_watermark, std::memory_order_relaxed);
+
+  m_cp_status_reg.Breakpoint = breakpoint;
+  m_cp_status_reg.ReadIdle = distance == 0 || read_pointer == write_pointer;
+  m_cp_status_reg.CommandIdle = distance == 0 || breakpoint ||
                                 !m_fifo.bFF_GPReadEnable.load(std::memory_order_relaxed);
-  m_cp_status_reg.UnderflowLoWatermark = m_fifo.bFF_LoWatermark.load(std::memory_order_relaxed);
-  m_cp_status_reg.OverflowHiWatermark = m_fifo.bFF_HiWatermark.load(std::memory_order_relaxed);
+  m_cp_status_reg.UnderflowLoWatermark = lo_watermark;
+  m_cp_status_reg.OverflowHiWatermark = hi_watermark;
 
   DEBUG_LOG_FMT(COMMANDPROCESSOR, "\t Read from STATUS_REGISTER : {:04x}", m_cp_status_reg.Hex);
   DEBUG_LOG_FMT(COMMANDPROCESSOR,
