@@ -87,8 +87,27 @@ void GPFifoManager::UpdateGatherPipe()
   auto& system = m_system;
   auto& memory = system.GetMemory();
   auto& processor_interface = system.GetProcessorInterface();
+  auto& command_processor = system.GetCommandProcessor();
 
   size_t pipe_count = GetGatherPipeCount();
+
+  // Static recomp normally reaches this function at exactly one complete
+  // 32-byte gather block. Handle that overwhelmingly common case without the
+  // generic loop bookkeeping or zero-byte memmove. The observable ordering is
+  // identical to one iteration of the generic path below.
+  if (pipe_count == GATHER_PIPE_SIZE) [[likely]]
+  {
+    memory.CopyToEmu(processor_interface.m_fifo_cpu_write_pointer, m_gather_pipe,
+                     GATHER_PIPE_SIZE);
+    if (processor_interface.m_fifo_cpu_write_pointer == processor_interface.m_fifo_cpu_end)
+      processor_interface.m_fifo_cpu_write_pointer = processor_interface.m_fifo_cpu_base;
+    else
+      processor_interface.m_fifo_cpu_write_pointer += GATHER_PIPE_SIZE;
+    command_processor.GatherPipeBursted();
+    SetGatherPipeCount(0);
+    return;
+  }
+
   size_t processed;
   for (processed = 0; pipe_count >= GATHER_PIPE_SIZE; processed += GATHER_PIPE_SIZE)
   {
@@ -103,11 +122,12 @@ void GPFifoManager::UpdateGatherPipe()
     else
       processor_interface.m_fifo_cpu_write_pointer += GATHER_PIPE_SIZE;
 
-    system.GetCommandProcessor().GatherPipeBursted();
+    command_processor.GatherPipeBursted();
   }
 
-  // move back the spill bytes
-  memmove(m_gather_pipe, m_gather_pipe + processed, pipe_count);
+  // move back the spill bytes only when there is actually a spill.
+  if (pipe_count != 0)
+    memmove(m_gather_pipe, m_gather_pipe + processed, pipe_count);
   SetGatherPipeCount(pipe_count);
 }
 
