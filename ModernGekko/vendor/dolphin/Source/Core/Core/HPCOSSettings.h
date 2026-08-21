@@ -52,6 +52,17 @@ inline std::atomic<float> s_aspect_override{0.0f};
 inline std::atomic<float> s_fov{0.0f};
 inline std::atomic<int> s_fps_cap{0};
 inline std::atomic<int> s_game_fps_target{0};
+inline std::atomic<bool> s_enhanced_graphics_enabled{false};
+inline std::atomic<float> s_enhanced_saturation{1.08f};
+inline std::atomic<float> s_enhanced_vibrance{0.12f};
+inline std::atomic<float> s_enhanced_contrast{1.06f};
+inline std::atomic<float> s_enhanced_exposure{0.03f};
+inline std::atomic<float> s_enhanced_gamma{1.00f};
+inline std::atomic<float> s_enhanced_temperature{0.02f};
+inline std::atomic<float> s_enhanced_sharpen{0.28f};
+inline std::atomic<float> s_enhanced_bloom{0.10f};
+inline std::atomic<float> s_enhanced_vignette{0.06f};
+inline std::atomic<float> s_enhanced_grain{0.00f};
 inline std::atomic<bool> s_pc_input_enabled{true};
 inline std::atomic<float> s_mouse_sensitivity{1.0f};
 inline std::atomic<bool> s_mouse_invert_y{false};
@@ -155,6 +166,35 @@ inline void SetGameFpsTarget(int fps)
     fps = std::clamp(fps, 30, 1000);
   s_game_fps_target.store(fps, std::memory_order_relaxed);
 }
+inline bool EnhancedGraphicsEnabled()
+{
+  return s_enhanced_graphics_enabled.load(std::memory_order_relaxed);
+}
+inline void SetEnhancedGraphicsEnabled(bool enabled)
+{
+  s_enhanced_graphics_enabled.store(enabled, std::memory_order_relaxed);
+}
+inline float EnhancedSaturation() { return s_enhanced_saturation.load(std::memory_order_relaxed); }
+inline void SetEnhancedSaturation(float v) { s_enhanced_saturation.store(std::clamp(v, 0.0f, 2.0f), std::memory_order_relaxed); }
+inline float EnhancedVibrance() { return s_enhanced_vibrance.load(std::memory_order_relaxed); }
+inline void SetEnhancedVibrance(float v) { s_enhanced_vibrance.store(std::clamp(v, -1.0f, 1.0f), std::memory_order_relaxed); }
+inline float EnhancedContrast() { return s_enhanced_contrast.load(std::memory_order_relaxed); }
+inline void SetEnhancedContrast(float v) { s_enhanced_contrast.store(std::clamp(v, 0.5f, 1.8f), std::memory_order_relaxed); }
+inline float EnhancedExposure() { return s_enhanced_exposure.load(std::memory_order_relaxed); }
+inline void SetEnhancedExposure(float v) { s_enhanced_exposure.store(std::clamp(v, -1.0f, 1.0f), std::memory_order_relaxed); }
+inline float EnhancedGamma() { return s_enhanced_gamma.load(std::memory_order_relaxed); }
+inline void SetEnhancedGamma(float v) { s_enhanced_gamma.store(std::clamp(v, 0.5f, 2.0f), std::memory_order_relaxed); }
+inline float EnhancedTemperature() { return s_enhanced_temperature.load(std::memory_order_relaxed); }
+inline void SetEnhancedTemperature(float v) { s_enhanced_temperature.store(std::clamp(v, -1.0f, 1.0f), std::memory_order_relaxed); }
+inline float EnhancedSharpen() { return s_enhanced_sharpen.load(std::memory_order_relaxed); }
+inline void SetEnhancedSharpen(float v) { s_enhanced_sharpen.store(std::clamp(v, 0.0f, 1.5f), std::memory_order_relaxed); }
+inline float EnhancedBloom() { return s_enhanced_bloom.load(std::memory_order_relaxed); }
+inline void SetEnhancedBloom(float v) { s_enhanced_bloom.store(std::clamp(v, 0.0f, 1.0f), std::memory_order_relaxed); }
+inline float EnhancedVignette() { return s_enhanced_vignette.load(std::memory_order_relaxed); }
+inline void SetEnhancedVignette(float v) { s_enhanced_vignette.store(std::clamp(v, 0.0f, 1.0f), std::memory_order_relaxed); }
+inline float EnhancedGrain() { return s_enhanced_grain.load(std::memory_order_relaxed); }
+inline void SetEnhancedGrain(float v) { s_enhanced_grain.store(std::clamp(v, 0.0f, 0.25f), std::memory_order_relaxed); }
+
 inline bool PcInputEnabled() { return s_pc_input_enabled.load(std::memory_order_relaxed); }
 inline void SetPcInputEnabled(bool enabled)
 {
