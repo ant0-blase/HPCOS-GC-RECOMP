@@ -32,6 +32,9 @@
 
 #define DOLC_DEFAULT_CHUNK_INSTRUCTIONS 4096u
 #define DOLC_HOT_CHUNK_INSTRUCTIONS 2048u
+#define DOLC_ULTRA_CHUNK_INSTRUCTIONS 1024u
+#define DOLC_MEGA_CHUNK_INSTRUCTIONS 512u
+#define DOLC_MIN_PROFILE_CHUNK_INSTRUCTIONS DOLC_MEGA_CHUNK_INSTRUCTIONS
 
 static u32 c_chunk_instructions(void) {
     const char* configured = getenv("DOLRECOMP_C_CHUNK_INSTRUCTIONS");
@@ -52,11 +55,20 @@ static u32 c_chunk_instructions(void) {
 }
 
 /*
- * GHSE69 profile-guided hot chunk splitting.  Keep the proven 4K global
- * layout, but halve only the handful of chunks that dominate perf so LLVM
- * sees smaller CFGs and fewer live temporaries where the stack spills occur.
- * DOLRECOMP_C_HOT_SPLIT=0 disables this for A/B testing.  An explicit global
- * DOLRECOMP_C_CHUNK_INSTRUCTIONS value also disables this profile override.
+ * GHSE69 profile-guided C layout, v5.
+ *
+ * The v4 2K split removed enough register pressure to cut total cycles by
+ * roughly ten percent.  Perf now shows one dominant region plus two secondary
+ * regions, so make the split hierarchical instead of shrinking the whole DOL:
+ *
+ *   mega  (512 insns): 0x8000B2C0..0x800132C0, still the dominant ~5.6% area
+ *   ultra (1K insns):  the hot geometry/PS and 0x8016xxxx regions
+ *   hot   (2K insns):  secondary >1% regions and the proven v4 ranges
+ *   cold  (4K insns):  everything else
+ *
+ * Cross-chunk fall-through/tail chaining in emitter.c offsets the extra
+ * boundaries. DOLRECOMP_C_HOT_SPLIT=0 restores the global 4K layout for A/B.
+ * An explicit DOLRECOMP_C_CHUNK_INSTRUCTIONS value still wins over the profile.
  */
 typedef struct {
     u32 start;
@@ -72,12 +84,30 @@ static int c_hot_chunk_split_enabled(void) {
            strcmp(configured, "false") != 0;
 }
 
+static int c_address_in_ranges(u32 address, const CHotChunkRange* ranges, u32 count) {
+    for (u32 i = 0; i < count; ++i) {
+        if (address >= ranges[i].start && address < ranges[i].end)
+            return 1;
+    }
+    return 0;
+}
+
 static u32 c_chunk_instructions_at(u32 address, u32 configured_chunk) {
-    static const CHotChunkRange hot_ranges[] = {
-        {0x800032C0u, 0x800072C0u},
+    static const CHotChunkRange mega_ranges[] = {
+        /* func_8000B2C0 + the split children remain the dominant CPU region. */
         {0x8000B2C0u, 0x800132C0u},
+    };
+    static const CHotChunkRange ultra_ranges[] = {
+        /* v4 perf: func_800452C0/8003F2C0 and func_801692C0 dominate these. */
         {0x8003F2C0u, 0x800472C0u},
         {0x801632C0u, 0x8016B2C0u},
+    };
+    static const CHotChunkRange hot_ranges[] = {
+        {0x800032C0u, 0x800072C0u},
+        /* New v4 hotspots that were still 4K. */
+        {0x8002F2C0u, 0x800332C0u},
+        {0x801732C0u, 0x801772C0u},
+        /* Proven v4 profile ranges. */
         {0x801972C0u, 0x8019F2C0u},
         {0x801C72C0u, 0x801CB2C0u},
     };
@@ -86,10 +116,16 @@ static u32 c_chunk_instructions_at(u32 address, u32 configured_chunk) {
         configured_chunk != DOLC_DEFAULT_CHUNK_INSTRUCTIONS ||
         !c_hot_chunk_split_enabled())
         return configured_chunk;
-    for (u32 i = 0; i < (u32)(sizeof(hot_ranges) / sizeof(hot_ranges[0])); ++i) {
-        if (address >= hot_ranges[i].start && address < hot_ranges[i].end)
-            return DOLC_HOT_CHUNK_INSTRUCTIONS;
-    }
+
+    if (c_address_in_ranges(address, mega_ranges,
+                            (u32)(sizeof(mega_ranges) / sizeof(mega_ranges[0]))))
+        return DOLC_MEGA_CHUNK_INSTRUCTIONS;
+    if (c_address_in_ranges(address, ultra_ranges,
+                            (u32)(sizeof(ultra_ranges) / sizeof(ultra_ranges[0]))))
+        return DOLC_ULTRA_CHUNK_INSTRUCTIONS;
+    if (c_address_in_ranges(address, hot_ranges,
+                            (u32)(sizeof(hot_ranges) / sizeof(hot_ranges[0]))))
+        return DOLC_HOT_CHUNK_INSTRUCTIONS;
     return configured_chunk;
 }
 
@@ -1049,8 +1085,8 @@ int emit_code_sections_split(const LoadedCodeSection* sections,
         }
 
         const u32 minimum_chunk_instructions =
-            chunk_instructions < DOLC_HOT_CHUNK_INSTRUCTIONS ?
-                chunk_instructions : DOLC_HOT_CHUNK_INSTRUCTIONS;
+            chunk_instructions < DOLC_MIN_PROFILE_CHUNK_INSTRUCTIONS ?
+                chunk_instructions : DOLC_MIN_PROFILE_CHUNK_INSTRUCTIONS;
         const u32 section_job_capacity =
             (num_insts + minimum_chunk_instructions - 1u) / minimum_chunk_instructions;
         ChunkJob* chunk_jobs = (ChunkJob*)calloc(section_job_capacity, sizeof(ChunkJob));

@@ -229,6 +229,16 @@ object NativeLibrary {
     @JvmStatic
     external fun SaveScreenShot()
 
+    /** Opens/closes the in-game HPCOS settings overlay. */
+    @JvmStatic
+    external fun ToggleHpcosOverlay()
+
+    @JvmStatic
+    external fun IsHpcosOverlayVisible(): Boolean
+
+    @JvmStatic
+    external fun HpcosOverlayPointer(x: Float, y: Float, action: Int)
+
     /**
      * Saves a game state to the slot number.
      *

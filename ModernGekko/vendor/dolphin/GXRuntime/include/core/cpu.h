@@ -387,6 +387,8 @@ static GXRUNTIME_COLD u64 gxr_fastmem_slow_read(CPUState* cpu, u32 addr, u8 size
     return cpu->external_read ? cpu->external_read(cpu, addr, size) : 0u;
 }
 
+#if defined(__x86_64__) || defined(_M_X64)
+
 #define GXRUNTIME_FASTMEM_STORE(suffix, ctype, insn)                           \
     static GXRUNTIME_ALWAYS_INLINE void fastmem_write##suffix(                  \
         CPUState* cpu, u8* base, u32 addr, ctype value) {                       \
@@ -429,6 +431,103 @@ GXRUNTIME_FASTMEM_LOAD(64, u64, "movbe")
 GXRUNTIME_FASTMEM_LOAD(32, u32, "movbe")
 GXRUNTIME_FASTMEM_LOAD(16, u16, "movbe")
 GXRUNTIME_FASTMEM_LOAD(8, u8, "movb")
+
+#elif defined(__aarch64__) && (defined(__GNUC__) || defined(__clang__))
+
+/*
+ * AArch64 fastmem. PowerPC guest memory is big-endian while Android/AArch64
+ * is little-endian, so use ldr/str plus rev/rev16 in place of x86 movbe.
+ * The faulting memory instruction remains label 1, preserving __fastmem_ex
+ * recovery and the existing chassis slow-path redirection.
+ */
+#define GXRUNTIME_ARM64_FASTMEM_STORE64()                                      \
+    static GXRUNTIME_ALWAYS_INLINE void fastmem_write64(                       \
+        CPUState* cpu, u8* base, u32 addr, u64 value) {                        \
+        u64 swapped;                                                           \
+        if (addr >= GXRUNTIME_MMIO_FLOOR) goto slow;                           \
+        asm goto("rev %[s], %[v]\n"                                            \
+                 "1: str %[s], [%[b], %w[o], uxtw]\n"                          \
+                 GXRUNTIME_FASTMEM_EX("1b", "%l[slow]")                        \
+                 : [s] "=&r"(swapped)                                          \
+                 : [v] "r"(value), [b] "r"(base), [o] "r"(addr)                \
+                 : "memory" : slow);                                           \
+        return;                                                                \
+    slow: gxr_fastmem_slow_write(cpu, addr, value, 8u);                        \
+    }
+
+#define GXRUNTIME_ARM64_FASTMEM_STORE32()                                      \
+    static GXRUNTIME_ALWAYS_INLINE void fastmem_write32(                       \
+        CPUState* cpu, u8* base, u32 addr, u32 value) {                        \
+        u32 swapped;                                                           \
+        if (addr >= GXRUNTIME_MMIO_FLOOR) goto slow;                           \
+        asm goto("rev %w[s], %w[v]\n"                                          \
+                 "1: str %w[s], [%[b], %w[o], uxtw]\n"                         \
+                 GXRUNTIME_FASTMEM_EX("1b", "%l[slow]")                        \
+                 : [s] "=&r"(swapped)                                          \
+                 : [v] "r"(value), [b] "r"(base), [o] "r"(addr)                \
+                 : "memory" : slow);                                           \
+        return;                                                                \
+    slow: gxr_fastmem_slow_write(cpu, addr, (u64)value, 4u);                   \
+    }
+
+#define GXRUNTIME_ARM64_FASTMEM_STORE16()                                      \
+    static GXRUNTIME_ALWAYS_INLINE void fastmem_write16(                       \
+        CPUState* cpu, u8* base, u32 addr, u16 value) {                        \
+        u32 swapped; const u32 wide = (u32)value;                              \
+        if (addr >= GXRUNTIME_MMIO_FLOOR) goto slow;                           \
+        asm goto("rev16 %w[s], %w[v]\n"                                        \
+                 "1: strh %w[s], [%[b], %w[o], uxtw]\n"                        \
+                 GXRUNTIME_FASTMEM_EX("1b", "%l[slow]")                        \
+                 : [s] "=&r"(swapped)                                          \
+                 : [v] "r"(wide), [b] "r"(base), [o] "r"(addr)                 \
+                 : "memory" : slow);                                           \
+        return;                                                                \
+    slow: gxr_fastmem_slow_write(cpu, addr, (u64)value, 2u);                   \
+    }
+
+#define GXRUNTIME_ARM64_FASTMEM_STORE8()                                       \
+    static GXRUNTIME_ALWAYS_INLINE void fastmem_write8(                        \
+        CPUState* cpu, u8* base, u32 addr, u8 value) {                         \
+        const u32 wide = (u32)value;                                           \
+        if (addr >= GXRUNTIME_MMIO_FLOOR) goto slow;                           \
+        asm goto("1: strb %w[v], [%[b], %w[o], uxtw]\n"                        \
+                 GXRUNTIME_FASTMEM_EX("1b", "%l[slow]")                        \
+                 : : [v] "r"(wide), [b] "r"(base), [o] "r"(addr)               \
+                 : "memory" : slow);                                           \
+        return;                                                                \
+    slow: gxr_fastmem_slow_write(cpu, addr, (u64)value, 1u);                   \
+    }
+
+#define GXRUNTIME_ARM64_FASTMEM_LOAD(name, ctype, load_insn, swap_insn, size) \
+    static GXRUNTIME_ALWAYS_INLINE ctype fastmem_read##name(                   \
+        CPUState* cpu, u8* base, u32 addr) {                                   \
+        ctype value;                                                           \
+        if (addr >= GXRUNTIME_MMIO_FLOOR) goto slow;                           \
+        asm goto("1: " load_insn "\n" swap_insn "\n"                           \
+                 GXRUNTIME_FASTMEM_EX("1b", "%l[slow]")                        \
+                 : [v] "=r"(value)                                             \
+                 : [b] "r"(base), [o] "r"(addr)                                \
+                 : "memory" : slow);                                           \
+        return value;                                                          \
+    slow: return (ctype)gxr_fastmem_slow_read(cpu, addr, (u8)(size));          \
+    }
+
+GXRUNTIME_ARM64_FASTMEM_STORE64()
+GXRUNTIME_ARM64_FASTMEM_STORE32()
+GXRUNTIME_ARM64_FASTMEM_STORE16()
+GXRUNTIME_ARM64_FASTMEM_STORE8()
+GXRUNTIME_ARM64_FASTMEM_LOAD(64, u64,
+    "ldr %[v], [%[b], %w[o], uxtw]", "rev %[v], %[v]", 8)
+GXRUNTIME_ARM64_FASTMEM_LOAD(32, u32,
+    "ldr %w[v], [%[b], %w[o], uxtw]", "rev %w[v], %w[v]", 4)
+GXRUNTIME_ARM64_FASTMEM_LOAD(16, u16,
+    "ldrh %w[v], [%[b], %w[o], uxtw]", "rev16 %w[v], %w[v]", 2)
+GXRUNTIME_ARM64_FASTMEM_LOAD(8, u8,
+    "ldrb %w[v], [%[b], %w[o], uxtw]", "", 1)
+
+#else
+#error "GXRUNTIME_FASTMEM is enabled on an unsupported host architecture"
+#endif
 
 /* MSR[DR], PowerPC bit 27: address translation for data accesses. */
 #define GXRUNTIME_MSR_DR 0x10u

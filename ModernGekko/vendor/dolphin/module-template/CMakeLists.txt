@@ -161,13 +161,22 @@ if(NOT RECOMPCORE_MODULE_OPT_LEVEL MATCHES "^[0-3]$")
     "RECOMPCORE_MODULE_OPT_LEVEL must be one of 0, 1, 2, or 3")
 endif()
 if(RECOMPCORE_MODULE_ENABLE_IPO AND CMAKE_C_COMPILER_ID MATCHES "Clang")
-  include(CheckIPOSupported)
-  check_ipo_supported(RESULT RECOMPCORE_MODULE_IPO_SUPPORTED
-                      OUTPUT RECOMPCORE_MODULE_IPO_ERROR LANGUAGES C)
-  if(RECOMPCORE_MODULE_IPO_SUPPORTED)
-    set_property(TARGET ${MODULE_NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+  if(ANDROID)
+    # CheckIPOSupported in the SDK CMake 3.22 probe can lose ANDROID_ABI and
+    # select host ld.gold/armv7. The real NDK arm64 toolchain supports ThinLTO
+    # through lld, so enable it directly on the actual target.
+    target_compile_options(${MODULE_NAME} PRIVATE -flto=thin)
+    target_link_options(${MODULE_NAME} PRIVATE -flto=thin -fuse-ld=lld)
+    message(STATUS "Module ThinLTO enabled for Android NDK Clang/lld")
   else()
-    message(STATUS "Module IPO disabled: ${RECOMPCORE_MODULE_IPO_ERROR}")
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT RECOMPCORE_MODULE_IPO_SUPPORTED
+                        OUTPUT RECOMPCORE_MODULE_IPO_ERROR LANGUAGES C)
+    if(RECOMPCORE_MODULE_IPO_SUPPORTED)
+      set_property(TARGET ${MODULE_NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    else()
+      message(STATUS "Module IPO disabled: ${RECOMPCORE_MODULE_IPO_ERROR}")
+    endif()
   endif()
 endif()
 

@@ -3,6 +3,7 @@
 
 #include "Core/PowerPC/JitInterface.h"
 
+#include <cstdlib>
 #include <string>
 #include <unordered_set>
 
@@ -70,6 +71,13 @@ CPUCoreBase* JitInterface::InitJitCore(PowerPC::CPUCore core)
     break;
 
   case PowerPC::CPUCore::StaticRecomp:
+    // Native launchers (notably Android) can attach the packaged module without
+    // going through ModernGekko::Runtime. Desktop RuntimeConfig still wins.
+    if (m_static_recomp_module_source.kind == StaticRecompModuleSource::Kind::None)
+    {
+      if (const char* module = std::getenv("STATICRECOMP_MODULE"); module && module[0])
+        m_static_recomp_module_source = StaticRecompModuleSource::Dynamic(module);
+    }
     m_jit = std::make_unique<StaticRecompCore>(m_system, m_static_recomp_module_source);
     break;
 

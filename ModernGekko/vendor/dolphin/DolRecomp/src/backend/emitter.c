@@ -388,13 +388,26 @@ static void emit_direct_branch(FILE* out, const PPCInst* inst,
             fprintf(out, "            }\n");
             fprintf(out, "            goto label_%08X;\n", inst->branch_target);
         } else {
-            fprintf(out, "            ctx->pc = 0x%08Xu;\n", inst->branch_target);
+            /* Cross-chunk static tail: keep execution inside the generated
+             * module while the timing budget allows it. This is especially
+             * important once profile-guided chunks shrink below 2K. */
+            fprintf(out, "            if (DOLRECOMP_UNLIKELY(ctx->downcount <= -(s64)DOLRECOMP_C_LOOP_CYCLE_BUDGET)) {\n");
+            fprintf(out, "                ctx->pc = 0x%08Xu;\n", inst->branch_target);
+            fprintf(out, "                return;\n");
+            fprintf(out, "            }\n");
+            fprintf(out, "            if (DOLRECOMP_UNLIKELY(!dolrecomp_call(ctx, 0x%08Xu))) ctx->pc = 0x%08Xu;\n",
+                    inst->branch_target, inst->branch_target);
             fprintf(out, "            return;\n");
         }
     } else if (local_target) {
         fprintf(out, "            goto label_%08X;\n", inst->branch_target);
     } else {
-        fprintf(out, "            ctx->pc = 0x%08Xu;\n", inst->branch_target);
+        fprintf(out, "            if (DOLRECOMP_UNLIKELY(ctx->downcount <= -(s64)DOLRECOMP_C_LOOP_CYCLE_BUDGET)) {\n");
+        fprintf(out, "                ctx->pc = 0x%08Xu;\n", inst->branch_target);
+        fprintf(out, "                return;\n");
+        fprintf(out, "            }\n");
+        fprintf(out, "            if (DOLRECOMP_UNLIKELY(!dolrecomp_call(ctx, 0x%08Xu))) ctx->pc = 0x%08Xu;\n",
+                inst->branch_target, inst->branch_target);
         fprintf(out, "            return;\n");
     }
 }
@@ -474,6 +487,9 @@ void emit_header_for_cpu(FILE* out, DolRecompCPU cpu) {
         "#include <math.h>\n"
         "#if defined(__SSE2__) && (defined(__x86_64__) || defined(_M_X64))\n"
         "#include <immintrin.h>\n"
+        "#endif\n"
+        "#if defined(__aarch64__) || defined(_M_ARM64)\n"
+        "#include <arm_neon.h>\n"
         "#endif\n"
         "\n"
         "#ifndef DOLRECOMP_CPU_HEADER\n"
@@ -597,6 +613,44 @@ void emit_header_for_cpu(FILE* out, DolRecompCPU cpu) {
         "    }\n"
         "    if (negative) result = _mm_xor_ps(result, _mm_set1_ps(-0.0f));\n"
         "    dolrecomp_ps_simd_store(ctx, d, result);\n"
+        "}\n"
+        "#elif defined(__aarch64__) || defined(_M_ARM64)\n"
+        "#define DOLRECOMP_PS_SIMD 1\n"
+        "typedef float32x2_t dolrecomp_ps_vec;\n"
+        "static inline dolrecomp_ps_vec dolrecomp_ps_simd_load(const CPUState* ctx, u32 r) {\n"
+        "    const f32 lanes[2] = {(f32)ctx->fpr[r], (f32)ctx->ps1[r]};\n"
+        "    return vld1_f32(lanes);\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_store(CPUState* ctx, u32 r, dolrecomp_ps_vec value) {\n"
+        "    f32 lanes[2]; vst1_f32(lanes, value);\n"
+        "    ctx->fpr[r] = (f64)lanes[0]; ctx->ps1[r] = (f64)lanes[1];\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_add(CPUState* ctx, u32 d, u32 a, u32 b) {\n"
+        "    dolrecomp_ps_simd_store(ctx, d, vadd_f32(dolrecomp_ps_simd_load(ctx,a), dolrecomp_ps_simd_load(ctx,b)));\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_sub(CPUState* ctx, u32 d, u32 a, u32 b) {\n"
+        "    dolrecomp_ps_simd_store(ctx, d, vsub_f32(dolrecomp_ps_simd_load(ctx,a), dolrecomp_ps_simd_load(ctx,b)));\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_mul(CPUState* ctx, u32 d, u32 a, u32 c) {\n"
+        "    dolrecomp_ps_simd_store(ctx, d, vmul_f32(dolrecomp_ps_simd_load(ctx,a), dolrecomp_ps_simd_load(ctx,c)));\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_div(CPUState* ctx, u32 d, u32 a, u32 b) {\n"
+        "    dolrecomp_ps_simd_store(ctx, d, vdiv_f32(dolrecomp_ps_simd_load(ctx,a), dolrecomp_ps_simd_load(ctx,b)));\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_muls(CPUState* ctx, u32 d, u32 a, u32 c, bool lane1) {\n"
+        "    const f32 s=(f32)(lane1?ctx->ps1[c]:ctx->fpr[c]);\n"
+        "    dolrecomp_ps_simd_store(ctx,d,vmul_n_f32(dolrecomp_ps_simd_load(ctx,a),s));\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_madd(CPUState* ctx,u32 d,u32 a,u32 c,u32 b,bool sub,bool neg) {\n"
+        "    dolrecomp_ps_vec r=vmul_f32(dolrecomp_ps_simd_load(ctx,a),dolrecomp_ps_simd_load(ctx,c));\n"
+        "    r=sub?vsub_f32(r,dolrecomp_ps_simd_load(ctx,b)):vadd_f32(r,dolrecomp_ps_simd_load(ctx,b));\n"
+        "    f32 lanes[2]; vst1_f32(lanes,r);\n"
+        "    if (DOLRECOMP_UNLIKELY(isnan(lanes[0]) || isnan(lanes[1]))) {\n"
+        "        f32 p0=(f32)ctx->fpr[a]*(f32)ctx->fpr[c], p1=(f32)ctx->ps1[a]*(f32)ctx->ps1[c];\n"
+        "        if(sub){p0-=(f32)ctx->fpr[b];p1-=(f32)ctx->ps1[b];}else{p0+=(f32)ctx->fpr[b];p1+=(f32)ctx->ps1[b];}\n"
+        "        if(neg){p0=-p0;p1=-p1;} ctx->fpr[d]=dolrecomp_ps_round(p0);ctx->ps1[d]=dolrecomp_ps_round(p1);return;\n"
+        "    }\n"
+        "    if(neg) r=vneg_f32(r); dolrecomp_ps_simd_store(ctx,d,r);\n"
         "}\n"
         "#else\n"
         "#define DOLRECOMP_PS_SIMD 0\n"
@@ -2042,6 +2096,14 @@ bool emit_function(FILE* out, const PPCInst* insts, u32 count, u32 func_addr) {
     fprintf(out, "    register CPUState* dolrecomp_ctx_r15 __asm__(\"r15\") = ctx;\n");
     fprintf(out, "    __asm__ volatile(\"\" : \"+r\"(dolrecomp_ctx_r15));\n");
     fprintf(out, "#define ctx dolrecomp_ctx_r15\n");
+    fprintf(out, "#elif defined(__x86_64__) && defined(__clang__) && defined(_MSC_VER) && !defined(DOLRECOMP_DISABLE_PINNED_CTX)\n");
+    fprintf(out, "    register CPUState* dolrecomp_ctx_r15 __asm__(\"r15\") = ctx;\n");
+    fprintf(out, "    __asm__ volatile(\"\" : \"+r\"(dolrecomp_ctx_r15));\n");
+    fprintf(out, "#define ctx dolrecomp_ctx_r15\n");
+    fprintf(out, "#elif defined(__aarch64__) && (defined(__GNUC__) || defined(__clang__)) && !defined(DOLRECOMP_DISABLE_PINNED_CTX)\n");
+    fprintf(out, "    register CPUState* dolrecomp_ctx_x19 __asm__(\"x19\") = ctx;\n");
+    fprintf(out, "    __asm__ volatile(\"\" : \"+r\"(dolrecomp_ctx_x19));\n");
+    fprintf(out, "#define ctx dolrecomp_ctx_x19\n");
     fprintf(out, "#endif\n");
     fprintf(out, "    switch (ctx->pc) {\n");
     for (u32 i = 0; i < count; i++) {
@@ -2074,6 +2136,20 @@ bool emit_function(FILE* out, const PPCInst* insts, u32 count, u32 func_addr) {
     }
 
     fprintf(out, "    ctx->pc = 0x%08Xu;\n", func_end);
+    /*
+     * Natural sequential execution across a C chunk boundary used to return to
+     * the chassis even though the next guest PC is statically known.  With the
+     * v5 512/1K hot chunks that boundary would otherwise dominate the gain from
+     * reduced register pressure. Chain the fall-through through dolrecomp_call
+     * while the same timing budget used by static cross-chunk calls permits it.
+     * The generated dispatcher still handles replacements/host calls, and a
+     * failed lookup simply falls back to the ordinary chassis return below.
+     */
+    fprintf(out, "#if !defined(DOLRECOMP_DISABLE_CROSS_CHUNK_FALLTHROUGH)\n");
+    fprintf(out, "    if (DOLRECOMP_LIKELY(ctx->downcount > -(s64)DOLRECOMP_C_LOOP_CYCLE_BUDGET)) {\n");
+    fprintf(out, "        if (DOLRECOMP_LIKELY(dolrecomp_call(ctx, 0x%08Xu))) return;\n", func_end);
+    fprintf(out, "    }\n");
+    fprintf(out, "#endif\n");
     if (has_local_returns) {
         fprintf(out, "    return;\n");
         fprintf(out, "return_dispatch_%08X:\n", func_addr);
@@ -2089,6 +2165,9 @@ bool emit_function(FILE* out, const PPCInst* insts, u32 count, u32 func_addr) {
         fprintf(out, "    }\n");
     }
     fprintf(out, "#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__)) && !defined(_MSC_VER) && !defined(DOLRECOMP_DISABLE_PINNED_CTX)\n");
+    fprintf(out, "#undef ctx\n");
+    fprintf(out, "#endif\n");
+    fprintf(out, "#if (defined(__x86_64__) && defined(__clang__) && defined(_MSC_VER) && !defined(DOLRECOMP_DISABLE_PINNED_CTX)) || (defined(__aarch64__) && (defined(__GNUC__) || defined(__clang__)) && !defined(DOLRECOMP_DISABLE_PINNED_CTX))\n");
     fprintf(out, "#undef ctx\n");
     fprintf(out, "#endif\n");
     fprintf(out, "}\n\n");

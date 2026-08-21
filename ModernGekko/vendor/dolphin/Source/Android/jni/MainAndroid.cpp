@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include <dlfcn.h>
 #include <EGL/egl.h>
 #include <android/log.h>
 #include <android/native_window_jni.h>
@@ -41,6 +42,7 @@
 #include "Core/Config/ConfigManager.h"
 #include "Core/Core.h"
 #include "Core/DolphinAnalytics.h"
+#include "Core/HPCOSSettings.h"
 #include "Core/HW/DVD/DVDInterface.h"
 #include "Core/HW/Wiimote.h"
 #include "Core/HW/WiimoteReal/WiimoteReal.h"
@@ -236,6 +238,28 @@ static std::string GetAnalyticValue(const std::string& key)
 }
 
 extern "C" {
+
+JNIEXPORT void JNICALL Java_org_dolphinemu_dolphinemu_NativeLibrary_ToggleHpcosOverlay(JNIEnv*,
+                                                                                        jclass)
+{
+  HPCOS::ToggleOverlay();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_dolphinemu_dolphinemu_NativeLibrary_IsHpcosOverlayVisible(
+    JNIEnv*, jclass)
+{
+  return static_cast<jboolean>(HPCOS::OverlayVisible());
+}
+
+JNIEXPORT void JNICALL Java_org_dolphinemu_dolphinemu_NativeLibrary_HpcosOverlayPointer(
+    JNIEnv*, jclass, jfloat x, jfloat y, jint action)
+{
+  if (!g_presenter || !HPCOS::OverlayVisible())
+    return;
+  g_presenter->SetMousePos(x, y);
+  // Android MotionEvent: DOWN=0, UP=1, MOVE=2, CANCEL=3.
+  g_presenter->SetMousePress(action == 0 || action == 2 ? 1u : 0u);
+}
 
 JNIEXPORT void JNICALL Java_org_dolphinemu_dolphinemu_NativeLibrary_UnPauseEmulation(JNIEnv*,
                                                                                      jclass)
@@ -548,6 +572,30 @@ static float GetRenderSurfaceScale(JNIEnv* env)
 
 static void Run(JNIEnv* env, std::unique_ptr<BootParameters>&& boot, bool riivolution)
 {
+  // The recomp module is packaged beside libmain.so in the APK native library
+  // directory. Resolve that directory at runtime so Android package/version
+  // paths never need to be hard-coded.
+  if (!std::getenv("STATICRECOMP_MODULE"))
+  {
+    Dl_info info{};
+    if (dladdr(reinterpret_cast<const void*>(&s_surf), &info) != 0 && info.dli_fname)
+    {
+      std::string module_path = info.dli_fname;
+      const auto slash = module_path.find_last_of('/');
+      if (slash != std::string::npos)
+      {
+        module_path.resize(slash + 1);
+        module_path += "libgGHSE69_recomp.so";
+        if (File::Exists(module_path))
+        {
+          setenv("STATICRECOMP_MODULE", module_path.c_str(), 1);
+          __android_log_print(ANDROID_LOG_INFO, DOLPHIN_TAG,
+                              "HPCOS StaticRecomp module: %s", module_path.c_str());
+        }
+      }
+    }
+  }
+
   if (riivolution && std::holds_alternative<BootParameters::Disc>(boot->parameters))
   {
     const std::string& riivolution_dir = File::GetUserPath(D_RIIVOLUTION_IDX);
