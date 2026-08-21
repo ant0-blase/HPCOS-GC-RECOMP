@@ -23,12 +23,15 @@
 #include "VideoCommon/AbstractShader.h"
 #include "VideoCommon/AbstractStagingTexture.h"
 #include "VideoCommon/FramebufferShaderGen.h"
+#include "VideoCommon/HiresTextures.h"
 #include "VideoCommon/NetPlayChatUI.h"
 #include "VideoCommon/NetPlayGolfUI.h"
 #include "VideoCommon/OnScreenDisplay.h"
 #include "VideoCommon/PerformanceMetrics.h"
+#include "VideoCommon/PostProcessing.h"
 #include "VideoCommon/Present.h"
 #include "VideoCommon/Statistics.h"
+#include "VideoCommon/TextureCacheBase.h"
 #include "VideoCommon/VertexManagerBase.h"
 #include "VideoCommon/VideoConfig.h"
 
@@ -45,6 +48,150 @@
 
 namespace
 {
+
+constexpr const char* HPCOS_REMASTER_SHADER = "HPCOS_Remaster";
+
+std::string HpcosHdTexturePath()
+{
+  return File::GetUserPath(D_HIRESTEXTURES_IDX) + "GHSE69" + DIR_SEP;
+}
+
+bool HpcosNearlyEqual(float a, float b)
+{
+  return std::fabs(a - b) < 0.0005f;
+}
+
+void ApplyHpcosEnhancedPreset(int preset)
+{
+  switch (preset)
+  {
+  case 0:  // Original / neutral
+    HPCOS::SetEnhancedSaturation(1.00f);
+    HPCOS::SetEnhancedVibrance(0.00f);
+    HPCOS::SetEnhancedContrast(1.00f);
+    HPCOS::SetEnhancedExposure(0.00f);
+    HPCOS::SetEnhancedGamma(1.00f);
+    HPCOS::SetEnhancedTemperature(0.00f);
+    HPCOS::SetEnhancedSharpen(0.00f);
+    HPCOS::SetEnhancedBloom(0.00f);
+    HPCOS::SetEnhancedVignette(0.00f);
+    HPCOS::SetEnhancedGrain(0.00f);
+    break;
+  case 1:  // Remaster balanced
+    HPCOS::SetEnhancedSaturation(1.08f);
+    HPCOS::SetEnhancedVibrance(0.12f);
+    HPCOS::SetEnhancedContrast(1.06f);
+    HPCOS::SetEnhancedExposure(0.03f);
+    HPCOS::SetEnhancedGamma(1.00f);
+    HPCOS::SetEnhancedTemperature(0.02f);
+    HPCOS::SetEnhancedSharpen(0.28f);
+    HPCOS::SetEnhancedBloom(0.10f);
+    HPCOS::SetEnhancedVignette(0.06f);
+    HPCOS::SetEnhancedGrain(0.00f);
+    break;
+  case 2:  // Vibrant
+    HPCOS::SetEnhancedSaturation(1.18f);
+    HPCOS::SetEnhancedVibrance(0.25f);
+    HPCOS::SetEnhancedContrast(1.08f);
+    HPCOS::SetEnhancedExposure(0.04f);
+    HPCOS::SetEnhancedGamma(1.00f);
+    HPCOS::SetEnhancedTemperature(0.04f);
+    HPCOS::SetEnhancedSharpen(0.35f);
+    HPCOS::SetEnhancedBloom(0.14f);
+    HPCOS::SetEnhancedVignette(0.05f);
+    HPCOS::SetEnhancedGrain(0.00f);
+    break;
+  case 3:  // Cinematic
+    HPCOS::SetEnhancedSaturation(0.95f);
+    HPCOS::SetEnhancedVibrance(0.08f);
+    HPCOS::SetEnhancedContrast(1.12f);
+    HPCOS::SetEnhancedExposure(-0.02f);
+    HPCOS::SetEnhancedGamma(0.96f);
+    HPCOS::SetEnhancedTemperature(0.06f);
+    HPCOS::SetEnhancedSharpen(0.22f);
+    HPCOS::SetEnhancedBloom(0.18f);
+    HPCOS::SetEnhancedVignette(0.15f);
+    HPCOS::SetEnhancedGrain(0.015f);
+    break;
+  default:
+    break;
+  }
+}
+
+int DetectHpcosEnhancedPreset()
+{
+  struct Preset
+  {
+    float saturation, vibrance, contrast, exposure, gamma, temperature, sharpen, bloom, vignette,
+        grain;
+  };
+  constexpr Preset presets[] = {
+      {1.00f, 0.00f, 1.00f, 0.00f, 1.00f, 0.00f, 0.00f, 0.00f, 0.00f, 0.000f},
+      {1.08f, 0.12f, 1.06f, 0.03f, 1.00f, 0.02f, 0.28f, 0.10f, 0.06f, 0.000f},
+      {1.18f, 0.25f, 1.08f, 0.04f, 1.00f, 0.04f, 0.35f, 0.14f, 0.05f, 0.000f},
+      {0.95f, 0.08f, 1.12f, -0.02f, 0.96f, 0.06f, 0.22f, 0.18f, 0.15f, 0.015f},
+  };
+
+  const float current[] = {HPCOS::EnhancedSaturation(), HPCOS::EnhancedVibrance(),
+                           HPCOS::EnhancedContrast(), HPCOS::EnhancedExposure(),
+                           HPCOS::EnhancedGamma(), HPCOS::EnhancedTemperature(),
+                           HPCOS::EnhancedSharpen(), HPCOS::EnhancedBloom(),
+                           HPCOS::EnhancedVignette(), HPCOS::EnhancedGrain()};
+  for (int p = 0; p < 4; ++p)
+  {
+    const float values[] = {presets[p].saturation, presets[p].vibrance, presets[p].contrast,
+                            presets[p].exposure, presets[p].gamma, presets[p].temperature,
+                            presets[p].sharpen, presets[p].bloom, presets[p].vignette,
+                            presets[p].grain};
+    bool match = true;
+    for (size_t i = 0; i < std::size(current); ++i)
+      match &= HpcosNearlyEqual(current[i], values[i]);
+    if (match)
+      return p;
+  }
+  return 4;  // Custom
+}
+
+void SetHpcosPostFloat(VideoCommon::PostProcessingConfiguration* config, const char* option,
+                       float value)
+{
+  if (!config)
+    return;
+  const auto it = config->GetOptions().find(option);
+  if (it == config->GetOptions().end() || it->second.m_float_values.empty())
+    return;
+  if (!HpcosNearlyEqual(it->second.m_float_values[0], value))
+    config->SetOptionf(option, 0, value);
+}
+
+void ApplyHpcosEnhancedGraphics()
+{
+  const bool enabled = HPCOS::EnhancedGraphicsEnabled();
+  const std::string current_shader = Config::Get(Config::GFX_ENHANCE_POST_SHADER);
+  if (enabled && current_shader != HPCOS_REMASTER_SHADER)
+    Config::SetCurrent(Config::GFX_ENHANCE_POST_SHADER, std::string(HPCOS_REMASTER_SHADER));
+  else if (!enabled && current_shader == HPCOS_REMASTER_SHADER)
+    Config::SetCurrent(Config::GFX_ENHANCE_POST_SHADER, std::string{});
+
+  if (!enabled || !g_presenter || !g_presenter->GetPostProcessor())
+    return;
+
+  auto* config = g_presenter->GetPostProcessor()->GetConfig();
+  if (!config || config->GetShader() != HPCOS_REMASTER_SHADER)
+    return;  // The VideoConfig change will load it on the next frame.
+
+  SetHpcosPostFloat(config, "HPCOS_SATURATION", HPCOS::EnhancedSaturation());
+  SetHpcosPostFloat(config, "HPCOS_VIBRANCE", HPCOS::EnhancedVibrance());
+  SetHpcosPostFloat(config, "HPCOS_CONTRAST", HPCOS::EnhancedContrast());
+  SetHpcosPostFloat(config, "HPCOS_EXPOSURE", HPCOS::EnhancedExposure());
+  SetHpcosPostFloat(config, "HPCOS_GAMMA", HPCOS::EnhancedGamma());
+  SetHpcosPostFloat(config, "HPCOS_TEMPERATURE", HPCOS::EnhancedTemperature());
+  SetHpcosPostFloat(config, "HPCOS_SHARPEN", HPCOS::EnhancedSharpen());
+  SetHpcosPostFloat(config, "HPCOS_BLOOM", HPCOS::EnhancedBloom());
+  SetHpcosPostFloat(config, "HPCOS_VIGNETTE", HPCOS::EnhancedVignette());
+  SetHpcosPostFloat(config, "HPCOS_GRAIN", HPCOS::EnhancedGrain());
+}
+
 std::string HpcosPcSettingsPath()
 {
   return File::GetUserPath(D_CONFIG_IDX) + "HPCOS_PC.ini";
@@ -62,6 +209,23 @@ void SaveHpcosPcSettings()
   out << "fov=" << HPCOS::Fov() << '\n';
   out << "fps_cap=" << HPCOS::FpsCap() << '\n';
   out << "game_fps=" << HPCOS::GameFpsTarget() << '\n';
+  out << "enhanced_graphics=" << (HPCOS::EnhancedGraphicsEnabled() ? 1 : 0) << '\n';
+  out << "enhanced_saturation=" << HPCOS::EnhancedSaturation() << '\n';
+  out << "enhanced_vibrance=" << HPCOS::EnhancedVibrance() << '\n';
+  out << "enhanced_contrast=" << HPCOS::EnhancedContrast() << '\n';
+  out << "enhanced_exposure=" << HPCOS::EnhancedExposure() << '\n';
+  out << "enhanced_gamma=" << HPCOS::EnhancedGamma() << '\n';
+  out << "enhanced_temperature=" << HPCOS::EnhancedTemperature() << '\n';
+  out << "enhanced_sharpen=" << HPCOS::EnhancedSharpen() << '\n';
+  out << "enhanced_bloom=" << HPCOS::EnhancedBloom() << '\n';
+  out << "enhanced_vignette=" << HPCOS::EnhancedVignette() << '\n';
+  out << "enhanced_grain=" << HPCOS::EnhancedGrain() << '\n';
+  out << "hd_textures=" << (Config::Get(Config::GFX_HIRES_TEXTURES) ? 1 : 0) << '\n';
+  out << "cache_hd_textures=" << (Config::Get(Config::GFX_CACHE_HIRES_TEXTURES) ? 1 : 0) << '\n';
+  out << "enhanced_anisotropy=" << static_cast<int>(Config::Get(Config::GFX_ENHANCE_MAX_ANISOTROPY)) << '\n';
+  out << "enhanced_texture_filter=" << static_cast<int>(Config::Get(Config::GFX_ENHANCE_FORCE_TEXTURE_FILTERING)) << '\n';
+  out << "enhanced_true_color=" << (Config::Get(Config::GFX_ENHANCE_FORCE_TRUE_COLOR) ? 1 : 0) << '\n';
+  out << "enhanced_disable_copy_filter=" << (Config::Get(Config::GFX_ENHANCE_DISABLE_COPY_FILTER) ? 1 : 0) << '\n';
   out << "pc_input=" << (HPCOS::PcInputEnabled() ? 1 : 0) << '\n';
   out << "mouse_sensitivity=" << HPCOS::MouseSensitivity() << '\n';
   out << "mouse_invert_y=" << (HPCOS::MouseInvertY() ? 1 : 0) << '\n';
@@ -105,6 +269,42 @@ void LoadHpcosPcSettingsOnce()
       HPCOS::SetFpsCap(std::atoi(value.c_str()));
     else if (key == "game_fps")
       HPCOS::SetGameFpsTarget(std::atoi(value.c_str()));
+    else if (key == "enhanced_graphics")
+      HPCOS::SetEnhancedGraphicsEnabled(std::atoi(value.c_str()) != 0);
+    else if (key == "enhanced_saturation")
+      HPCOS::SetEnhancedSaturation(std::strtof(value.c_str(), nullptr));
+    else if (key == "enhanced_vibrance")
+      HPCOS::SetEnhancedVibrance(std::strtof(value.c_str(), nullptr));
+    else if (key == "enhanced_contrast")
+      HPCOS::SetEnhancedContrast(std::strtof(value.c_str(), nullptr));
+    else if (key == "enhanced_exposure")
+      HPCOS::SetEnhancedExposure(std::strtof(value.c_str(), nullptr));
+    else if (key == "enhanced_gamma")
+      HPCOS::SetEnhancedGamma(std::strtof(value.c_str(), nullptr));
+    else if (key == "enhanced_temperature")
+      HPCOS::SetEnhancedTemperature(std::strtof(value.c_str(), nullptr));
+    else if (key == "enhanced_sharpen")
+      HPCOS::SetEnhancedSharpen(std::strtof(value.c_str(), nullptr));
+    else if (key == "enhanced_bloom")
+      HPCOS::SetEnhancedBloom(std::strtof(value.c_str(), nullptr));
+    else if (key == "enhanced_vignette")
+      HPCOS::SetEnhancedVignette(std::strtof(value.c_str(), nullptr));
+    else if (key == "enhanced_grain")
+      HPCOS::SetEnhancedGrain(std::strtof(value.c_str(), nullptr));
+    else if (key == "hd_textures")
+      Config::SetCurrent(Config::GFX_HIRES_TEXTURES, std::atoi(value.c_str()) != 0);
+    else if (key == "cache_hd_textures")
+      Config::SetCurrent(Config::GFX_CACHE_HIRES_TEXTURES, std::atoi(value.c_str()) != 0);
+    else if (key == "enhanced_anisotropy")
+      Config::SetCurrent(Config::GFX_ENHANCE_MAX_ANISOTROPY,
+                         static_cast<AnisotropicFilteringMode>(std::clamp(std::atoi(value.c_str()), -1, 4)));
+    else if (key == "enhanced_texture_filter")
+      Config::SetCurrent(Config::GFX_ENHANCE_FORCE_TEXTURE_FILTERING,
+                         static_cast<TextureFilteringMode>(std::clamp(std::atoi(value.c_str()), 0, 2)));
+    else if (key == "enhanced_true_color")
+      Config::SetCurrent(Config::GFX_ENHANCE_FORCE_TRUE_COLOR, std::atoi(value.c_str()) != 0);
+    else if (key == "enhanced_disable_copy_filter")
+      Config::SetCurrent(Config::GFX_ENHANCE_DISABLE_COPY_FILTER, std::atoi(value.c_str()) != 0);
     else if (key == "pc_input")
       HPCOS::SetPcInputEnabled(std::atoi(value.c_str()) != 0);
     else if (key == "mouse_sensitivity")
@@ -133,6 +333,7 @@ void LoadHpcosPcSettingsOnce()
 void DrawHpcosPcSettings()
 {
   LoadHpcosPcSettingsOnce();
+  ApplyHpcosEnhancedGraphics();
   if (!HPCOS::OverlayVisible())
     return;
 
@@ -252,6 +453,185 @@ void DrawHpcosPcSettings()
         changed = true;
       }
       ImGui::TextDisabled("Presentation cap only; it does not alter the guest simulation clock.");
+      ImGui::EndTabItem();
+    }
+
+    if (ImGui::BeginTabItem("Enhanced Graphics"))
+    {
+      bool enhanced = HPCOS::EnhancedGraphicsEnabled();
+      if (ImGui::Checkbox("Enable HPCOS Remaster post-processing", &enhanced))
+      {
+        HPCOS::SetEnhancedGraphicsEnabled(enhanced);
+        changed = true;
+      }
+      ImGui::TextDisabled("Runs after the original GameCube image. Changes are live and do not alter game logic.");
+
+      ImGui::SeparatorText("Rendering quality");
+      int anisotropy_index = static_cast<int>(Config::Get(Config::GFX_ENHANCE_MAX_ANISOTROPY)) + 1;
+      const char* anisotropy_labels[] = {"Default / game", "1x", "2x", "4x", "8x", "16x"};
+      anisotropy_index = std::clamp(anisotropy_index, 0, 5);
+      if (ImGui::Combo("Anisotropic filtering", &anisotropy_index, anisotropy_labels, 6))
+      {
+        Config::SetCurrent(Config::GFX_ENHANCE_MAX_ANISOTROPY,
+                           static_cast<AnisotropicFilteringMode>(anisotropy_index - 1));
+        changed = true;
+      }
+
+      int filtering = static_cast<int>(Config::Get(Config::GFX_ENHANCE_FORCE_TEXTURE_FILTERING));
+      filtering = std::clamp(filtering, 0, 2);
+      const char* filtering_labels[] = {"Original texture filtering", "Force nearest", "Force linear"};
+      if (ImGui::Combo("Texture filtering", &filtering, filtering_labels, 3))
+      {
+        Config::SetCurrent(Config::GFX_ENHANCE_FORCE_TEXTURE_FILTERING,
+                           static_cast<TextureFilteringMode>(filtering));
+        changed = true;
+      }
+      bool true_color = Config::Get(Config::GFX_ENHANCE_FORCE_TRUE_COLOR);
+      if (ImGui::Checkbox("Force 24-bit color", &true_color))
+      {
+        Config::SetCurrent(Config::GFX_ENHANCE_FORCE_TRUE_COLOR, true_color);
+        changed = true;
+      }
+      bool disable_copy_filter = Config::Get(Config::GFX_ENHANCE_DISABLE_COPY_FILTER);
+      if (ImGui::Checkbox("Disable original copy filter (cleaner image)", &disable_copy_filter))
+      {
+        Config::SetCurrent(Config::GFX_ENHANCE_DISABLE_COPY_FILTER, disable_copy_filter);
+        changed = true;
+      }
+
+      ImGui::SeparatorText("Remaster look");
+      int preset = DetectHpcosEnhancedPreset();
+      const char* presets[] = {"Original / neutral", "Remaster balanced", "Vibrant",
+                               "Cinematic", "Custom"};
+      if (ImGui::Combo("Preset", &preset, presets, 5) && preset < 4)
+      {
+        ApplyHpcosEnhancedPreset(preset);
+        HPCOS::SetEnhancedGraphicsEnabled(true);
+        changed = true;
+      }
+
+      float saturation = HPCOS::EnhancedSaturation();
+      if (ImGui::SliderFloat("Saturation", &saturation, 0.0f, 2.0f, "%.2fx"))
+      {
+        HPCOS::SetEnhancedSaturation(saturation);
+        changed = true;
+      }
+      float vibrance = HPCOS::EnhancedVibrance();
+      if (ImGui::SliderFloat("Vibrance", &vibrance, -1.0f, 1.0f, "%+.2f"))
+      {
+        HPCOS::SetEnhancedVibrance(vibrance);
+        changed = true;
+      }
+      float contrast = HPCOS::EnhancedContrast();
+      if (ImGui::SliderFloat("Contrast", &contrast, 0.5f, 1.8f, "%.2fx"))
+      {
+        HPCOS::SetEnhancedContrast(contrast);
+        changed = true;
+      }
+      float exposure = HPCOS::EnhancedExposure();
+      if (ImGui::SliderFloat("Exposure / brightness", &exposure, -1.0f, 1.0f, "%+.2f EV"))
+      {
+        HPCOS::SetEnhancedExposure(exposure);
+        changed = true;
+      }
+      float gamma = HPCOS::EnhancedGamma();
+      if (ImGui::SliderFloat("Gamma", &gamma, 0.5f, 2.0f, "%.2f"))
+      {
+        HPCOS::SetEnhancedGamma(gamma);
+        changed = true;
+      }
+      float temperature = HPCOS::EnhancedTemperature();
+      if (ImGui::SliderFloat("Color temperature", &temperature, -1.0f, 1.0f, "%+.2f"))
+      {
+        HPCOS::SetEnhancedTemperature(temperature);
+        changed = true;
+      }
+
+      ImGui::SeparatorText("Detail / lens");
+      float sharpen = HPCOS::EnhancedSharpen();
+      if (ImGui::SliderFloat("Sharpen", &sharpen, 0.0f, 1.5f, "%.2f"))
+      {
+        HPCOS::SetEnhancedSharpen(sharpen);
+        changed = true;
+      }
+      float bloom = HPCOS::EnhancedBloom();
+      if (ImGui::SliderFloat("Bloom", &bloom, 0.0f, 1.0f, "%.2f"))
+      {
+        HPCOS::SetEnhancedBloom(bloom);
+        changed = true;
+      }
+      float vignette = HPCOS::EnhancedVignette();
+      if (ImGui::SliderFloat("Vignette", &vignette, 0.0f, 1.0f, "%.2f"))
+      {
+        HPCOS::SetEnhancedVignette(vignette);
+        changed = true;
+      }
+      float grain = HPCOS::EnhancedGrain();
+      if (ImGui::SliderFloat("Film grain", &grain, 0.0f, 0.25f, "%.3f"))
+      {
+        HPCOS::SetEnhancedGrain(grain);
+        changed = true;
+      }
+
+      if (ImGui::Button("Reset graphics to neutral"))
+      {
+        ApplyHpcosEnhancedPreset(0);
+        changed = true;
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Apply remaster preset"))
+      {
+        ApplyHpcosEnhancedPreset(1);
+        HPCOS::SetEnhancedGraphicsEnabled(true);
+        changed = true;
+      }
+
+      ImGui::SeparatorText("HD Texture Pack");
+      bool hd_textures = Config::Get(Config::GFX_HIRES_TEXTURES);
+      if (ImGui::Checkbox("Load custom / HD textures", &hd_textures))
+      {
+        Config::SetCurrent(Config::GFX_HIRES_TEXTURES, hd_textures);
+        changed = true;
+      }
+      bool cache_hd = Config::Get(Config::GFX_CACHE_HIRES_TEXTURES);
+      if (ImGui::Checkbox("Preload HD textures in RAM", &cache_hd))
+      {
+        Config::SetCurrent(Config::GFX_CACHE_HIRES_TEXTURES, cache_hd);
+        changed = true;
+      }
+
+      const std::string hd_path = HpcosHdTexturePath();
+      ImGui::TextWrapped("Texture pack folder: %s", hd_path.c_str());
+      ImGui::TextDisabled("Drop Dolphin-format PNG/DDS replacements here (tex1_*.png / tex1_*.dds). Game ID: GHSE69.");
+
+      if (ImGui::Button("Enable & load HD textures"))
+      {
+        File::CreateFullPath(hd_path);
+        Config::SetCurrent(Config::GFX_HIRES_TEXTURES, true);
+        changed = true;
+        OSD::AddMessage("HPCOS: HD textures enabled. Loading GHSE69 texture pack.",
+                        OSD::Duration::NORMAL);
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Reload HD textures now"))
+      {
+        File::CreateFullPath(hd_path);
+        if (g_ActiveConfig.bHiresTextures)
+        {
+          HiresTexture::Clear();
+          HiresTexture::Update();
+          if (g_texture_cache)
+            g_texture_cache->Invalidate();
+          OSD::AddMessage("HPCOS: HD texture pack reloaded.", OSD::Duration::NORMAL);
+        }
+        else
+        {
+          Config::SetCurrent(Config::GFX_HIRES_TEXTURES, true);
+          OSD::AddMessage("HPCOS: HD textures enabled; reload starts on the next video frame.",
+                          OSD::Duration::NORMAL);
+        }
+        changed = true;
+      }
       ImGui::EndTabItem();
     }
 
