@@ -242,10 +242,32 @@ static void emit_psq_load(FILE* out, const PPCInst* inst, bool indexed,
         emit_dform_ea(out, inst->rA, inst->simm, update);
     }
     fprintf(out, ";\n");
-    fprintf(out, "        ppc_psq_load(ctx, %uu, ea, %s, %uu, %s, 0x%08Xu);\n",
+
+    /*
+     * The overwhelmingly hot PSQ format on GameCube is GQR type 0 (plain
+     * float). Keep that path inside the generated chunk so it uses the
+     * chunk's fastmem base instead of leaving for cpu.c, whose mem_read32()
+     * intentionally stays on the generic bounds-checked ABI path. All
+     * quantized/invalid formats still use the bit-exact shared helper.
+     */
+    fprintf(out, "        const u32 psq_gqr = ctx->gqr[%uu];\n", inst->i & 7u);
+    if (indexed) {
+        fprintf(out, "        if (DOLRECOMP_LIKELY(((psq_gqr >> 16) & 7u) == 0u)) {\n");
+    } else {
+        fprintf(out, "        if (DOLRECOMP_LIKELY((ctx->hid2 & PPC_HID2_LSQE) != 0u && ((psq_gqr >> 16) & 7u) == 0u)) {\n");
+    }
+    fprintf(out, "            ctx->fpr[%u] = f64_value(convert_to_double(mem_read32(ctx, ea)));\n", inst->rD);
+    if (inst->w) {
+        fprintf(out, "            ctx->ps1[%u] = 1.0;\n", inst->rD);
+    } else {
+        fprintf(out, "            ctx->ps1[%u] = f64_value(convert_to_double(mem_read32(ctx, ea + 4u)));\n", inst->rD);
+    }
+    fprintf(out, "        } else {\n");
+    fprintf(out, "            ppc_psq_load(ctx, %uu, ea, %s, %uu, %s, 0x%08Xu);\n",
             inst->rD, inst->w ? "true" : "false", inst->i,
             indexed ? "true" : "false", inst->address);
-    fprintf(out, "        if (ctx->exception) return;\n");
+    fprintf(out, "        }\n");
+    fprintf(out, "        if (DOLRECOMP_UNLIKELY(ctx->exception)) return;\n");
     if (update) {
         fprintf(out, "        ctx->gpr[%u] = ea;\n", inst->rA);
     }
@@ -262,10 +284,23 @@ static void emit_psq_store(FILE* out, const PPCInst* inst, bool indexed,
         emit_dform_ea(out, inst->rA, inst->simm, update);
     }
     fprintf(out, ";\n");
-    fprintf(out, "        ppc_psq_store(ctx, %uu, ea, %s, %uu, %s, 0x%08Xu);\n",
+
+    fprintf(out, "        const u32 psq_gqr = ctx->gqr[%uu];\n", inst->i & 7u);
+    if (indexed) {
+        fprintf(out, "        if (DOLRECOMP_LIKELY((psq_gqr & 7u) == 0u)) {\n");
+    } else {
+        fprintf(out, "        if (DOLRECOMP_LIKELY((ctx->hid2 & PPC_HID2_LSQE) != 0u && (psq_gqr & 7u) == 0u)) {\n");
+    }
+    fprintf(out, "            mem_write32(ctx, ea, convert_to_single_ftz(f64_bits(ctx->fpr[%u])));\n", inst->rS);
+    if (!inst->w) {
+        fprintf(out, "            mem_write32(ctx, ea + 4u, convert_to_single_ftz(f64_bits(ctx->ps1[%u])));\n", inst->rS);
+    }
+    fprintf(out, "        } else {\n");
+    fprintf(out, "            ppc_psq_store(ctx, %uu, ea, %s, %uu, %s, 0x%08Xu);\n",
             inst->rS, inst->w ? "true" : "false", inst->i,
             indexed ? "true" : "false", inst->address);
-    fprintf(out, "        if (ctx->exception) return;\n");
+    fprintf(out, "        }\n");
+    fprintf(out, "        if (DOLRECOMP_UNLIKELY(ctx->exception)) return;\n");
     if (update) {
         fprintf(out, "        ctx->gpr[%u] = ea;\n", inst->rA);
     }
@@ -331,11 +366,11 @@ static void emit_direct_branch(FILE* out, const PPCInst* inst,
              * replacements/host calls. If the callee returns to our next
              * instruction, resume locally and avoid a second chassis trip.
              */
-            fprintf(out, "            if (ctx->downcount <= -(s64)DOLRECOMP_C_LOOP_CYCLE_BUDGET) {\n");
+            fprintf(out, "            if (DOLRECOMP_UNLIKELY(ctx->downcount <= -(s64)DOLRECOMP_C_LOOP_CYCLE_BUDGET)) {\n");
             fprintf(out, "                ctx->pc = 0x%08Xu;\n", inst->branch_target);
             fprintf(out, "                return;\n");
             fprintf(out, "            }\n");
-            fprintf(out, "            if (!dolrecomp_call(ctx, 0x%08Xu) || ctx->exception) return;\n",
+            fprintf(out, "            if (DOLRECOMP_UNLIKELY(!dolrecomp_call(ctx, 0x%08Xu) || ctx->exception)) return;\n",
                     inst->branch_target);
             if (return_address < func_end) {
                 fprintf(out, "            if (ctx->pc == 0x%08Xu) goto label_%08X;\n",
@@ -444,6 +479,14 @@ void emit_header_for_cpu(FILE* out, DolRecompCPU cpu) {
         "\n"
         "#ifndef DOLRECOMP_C_LOOP_CYCLE_BUDGET\n"
         "#define DOLRECOMP_C_LOOP_CYCLE_BUDGET 256\n"
+        "#endif\n"
+        "\n"
+        "#if defined(__GNUC__) || defined(__clang__)\n"
+        "#define DOLRECOMP_LIKELY(x)   __builtin_expect(!!(x), 1)\n"
+        "#define DOLRECOMP_UNLIKELY(x) __builtin_expect(!!(x), 0)\n"
+        "#else\n"
+        "#define DOLRECOMP_LIKELY(x)   (x)\n"
+        "#define DOLRECOMP_UNLIKELY(x) (x)\n"
         "#endif\n"
         "\n"
         "/* Fastmem: route guest accesses through the arena base that each\n"
@@ -1901,6 +1944,18 @@ bool emit_function(FILE* out, const PPCInst* insts, u32 count, u32 func_addr) {
 
     fprintf(out, "void func_%08X(CPUState* ctx) {\n", func_addr);
     fprintf(out, "    GXRUNTIME_FASTMEM_PROLOGUE\n");
+    /*
+     * Large C chunks otherwise make LLVM spill the CPUState pointer and reload
+     * it from the stack throughout the hot function. On x86-64, r15 is
+     * callee-saved, so pin the pointer there across helper calls. The empty
+     * asm is required to make both Clang and GCC honour the explicit register
+     * variable. Define DOLRECOMP_DISABLE_PINNED_CTX to A/B this independently.
+     */
+    fprintf(out, "#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__)) && !defined(_MSC_VER) && !defined(DOLRECOMP_DISABLE_PINNED_CTX)\n");
+    fprintf(out, "    register CPUState* dolrecomp_ctx_r15 __asm__(\"r15\") = ctx;\n");
+    fprintf(out, "    __asm__ volatile(\"\" : \"+r\"(dolrecomp_ctx_r15));\n");
+    fprintf(out, "#define ctx dolrecomp_ctx_r15\n");
+    fprintf(out, "#endif\n");
     fprintf(out, "    switch (ctx->pc) {\n");
     for (u32 i = 0; i < count; i++) {
         fprintf(out, "    case 0x%08Xu: goto label_%08X;\n",
@@ -1946,6 +2001,9 @@ bool emit_function(FILE* out, const PPCInst* insts, u32 count, u32 func_addr) {
         fprintf(out, "    default: return;\n");
         fprintf(out, "    }\n");
     }
+    fprintf(out, "#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__)) && !defined(_MSC_VER) && !defined(DOLRECOMP_DISABLE_PINNED_CTX)\n");
+    fprintf(out, "#undef ctx\n");
+    fprintf(out, "#endif\n");
     fprintf(out, "}\n\n");
     c_function_cfg_destroy(&cfg);
     return true;
