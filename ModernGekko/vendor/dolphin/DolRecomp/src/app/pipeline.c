@@ -31,6 +31,7 @@
 #endif
 
 #define DOLC_DEFAULT_CHUNK_INSTRUCTIONS 4096u
+#define DOLC_HOT_CHUNK_INSTRUCTIONS 2048u
 
 static u32 c_chunk_instructions(void) {
     const char* configured = getenv("DOLRECOMP_C_CHUNK_INSTRUCTIONS");
@@ -48,6 +49,48 @@ static u32 c_chunk_instructions(void) {
         return DOLC_DEFAULT_CHUNK_INSTRUCTIONS;
     }
     return (u32)value;
+}
+
+/*
+ * GHSE69 profile-guided hot chunk splitting.  Keep the proven 4K global
+ * layout, but halve only the handful of chunks that dominate perf so LLVM
+ * sees smaller CFGs and fewer live temporaries where the stack spills occur.
+ * DOLRECOMP_C_HOT_SPLIT=0 disables this for A/B testing.  An explicit global
+ * DOLRECOMP_C_CHUNK_INSTRUCTIONS value also disables this profile override.
+ */
+typedef struct {
+    u32 start;
+    u32 end;
+} CHotChunkRange;
+
+static int c_hot_chunk_split_enabled(void) {
+    const char* configured = getenv("DOLRECOMP_C_HOT_SPLIT");
+    if (!configured || !configured[0])
+        return 1;
+    return strcmp(configured, "0") != 0 &&
+           strcmp(configured, "off") != 0 &&
+           strcmp(configured, "false") != 0;
+}
+
+static u32 c_chunk_instructions_at(u32 address, u32 configured_chunk) {
+    static const CHotChunkRange hot_ranges[] = {
+        {0x800032C0u, 0x800072C0u},
+        {0x8000B2C0u, 0x800132C0u},
+        {0x8003F2C0u, 0x800472C0u},
+        {0x801632C0u, 0x8016B2C0u},
+        {0x801972C0u, 0x8019F2C0u},
+        {0x801C72C0u, 0x801CB2C0u},
+    };
+    const char* explicit_chunk = getenv("DOLRECOMP_C_CHUNK_INSTRUCTIONS");
+    if ((explicit_chunk && explicit_chunk[0]) ||
+        configured_chunk != DOLC_DEFAULT_CHUNK_INSTRUCTIONS ||
+        !c_hot_chunk_split_enabled())
+        return configured_chunk;
+    for (u32 i = 0; i < (u32)(sizeof(hot_ranges) / sizeof(hot_ranges[0])); ++i) {
+        if (address >= hot_ranges[i].start && address < hot_ranges[i].end)
+            return DOLC_HOT_CHUNK_INSTRUCTIONS;
+    }
+    return configured_chunk;
 }
 
 #ifdef DOLRECOMP_ENABLE_LLVM
@@ -1005,9 +1048,12 @@ int emit_code_sections_split(const LoadedCodeSection* sections,
             }
         }
 
-        u32 section_job_count =
-            (num_insts + chunk_instructions - 1u) / chunk_instructions;
-        ChunkJob* chunk_jobs = (ChunkJob*)calloc(section_job_count, sizeof(ChunkJob));
+        const u32 minimum_chunk_instructions =
+            chunk_instructions < DOLC_HOT_CHUNK_INSTRUCTIONS ?
+                chunk_instructions : DOLC_HOT_CHUNK_INSTRUCTIONS;
+        const u32 section_job_capacity =
+            (num_insts + minimum_chunk_instructions - 1u) / minimum_chunk_instructions;
+        ChunkJob* chunk_jobs = (ChunkJob*)calloc(section_job_capacity, sizeof(ChunkJob));
         if (!chunk_jobs) {
             fprintf(stderr, "error: out of memory\n");
             smc_analysis_free(&smc);
@@ -1018,14 +1064,17 @@ int emit_code_sections_split(const LoadedCodeSection* sections,
             return 0;
         }
 
-        for (u32 start = 0; start < num_insts; start += chunk_instructions) {
+        u32 section_job_count = 0;
+        for (u32 start = 0; start < num_insts;) {
             u32 chunk_count = num_insts - start;
             u32 func_addr = base_addr + start * 4u;
             char chunk_name[128];
-            u32 job_index = start / chunk_instructions;
+            const u32 current_chunk_instructions =
+                c_chunk_instructions_at(func_addr, chunk_instructions);
+            const u32 job_index = section_job_count++;
 
-            if (chunk_count > chunk_instructions)
-                chunk_count = chunk_instructions;
+            if (chunk_count > current_chunk_instructions)
+                chunk_count = current_chunk_instructions;
 
             if (snprintf(chunk_name, sizeof(chunk_name),
                          "chunk_%04u_%s%u_%08X.c", file_count,
@@ -1081,6 +1130,7 @@ int emit_code_sections_split(const LoadedCodeSection* sections,
             }
             fprintf(manifest, "// %s/%s\n", chunks_label, chunk_name);
             file_count++;
+            start += chunk_count;
         }
 
         u32 active_jobs = effective_chunk_jobs(section_job_count, jobs);

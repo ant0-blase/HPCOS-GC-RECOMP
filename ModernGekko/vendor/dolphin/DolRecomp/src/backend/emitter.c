@@ -472,6 +472,10 @@ void emit_header_for_cpu(FILE* out, DolRecompCPU cpu) {
         "\n"
         "#include <string.h>\n"
         "#include <math.h>\n"
+        "#if defined(__SSE2__) && (defined(__x86_64__) || defined(_M_X64))\n"
+        "#include <immintrin.h>\n"
+        "#endif\n"
+        "\n"
         "#ifndef DOLRECOMP_CPU_HEADER\n"
         "#define DOLRECOMP_CPU_HEADER \"cpu/cpu.h\"\n"
         "#endif\n"
@@ -545,6 +549,58 @@ void emit_header_for_cpu(FILE* out, DolRecompCPU cpu) {
         "static inline u32 dolrecomp_ps_to_bits(f64 value) {\n"
         "    return dolrecomp_f32_to_bits((f32)value);\n"
         "}\n"
+        "\n"
+        "/* Paired-single SIMD: process PS0/PS1 together on x86-64. */\n"
+        "#if defined(__SSE2__) && (defined(__x86_64__) || defined(_M_X64))\n"
+        "#define DOLRECOMP_PS_SIMD 1\n"
+        "static inline __m128 dolrecomp_ps_simd_load(const CPUState* ctx, u32 r) {\n"
+        "    __m128d lanes = _mm_load_sd(&ctx->fpr[r]);\n"
+        "    lanes = _mm_loadh_pd(lanes, &ctx->ps1[r]);\n"
+        "    return _mm_cvtpd_ps(lanes);\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_store(CPUState* ctx, u32 r, __m128 value) {\n"
+        "    const __m128d lanes = _mm_cvtps_pd(value);\n"
+        "    _mm_store_sd(&ctx->fpr[r], lanes);\n"
+        "    _mm_storeh_pd(&ctx->ps1[r], lanes);\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_add(CPUState* ctx, u32 d, u32 a, u32 b) {\n"
+        "    dolrecomp_ps_simd_store(ctx, d, _mm_add_ps(dolrecomp_ps_simd_load(ctx, a), dolrecomp_ps_simd_load(ctx, b)));\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_sub(CPUState* ctx, u32 d, u32 a, u32 b) {\n"
+        "    dolrecomp_ps_simd_store(ctx, d, _mm_sub_ps(dolrecomp_ps_simd_load(ctx, a), dolrecomp_ps_simd_load(ctx, b)));\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_mul(CPUState* ctx, u32 d, u32 a, u32 c) {\n"
+        "    dolrecomp_ps_simd_store(ctx, d, _mm_mul_ps(dolrecomp_ps_simd_load(ctx, a), dolrecomp_ps_simd_load(ctx, c)));\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_div(CPUState* ctx, u32 d, u32 a, u32 b) {\n"
+        "    dolrecomp_ps_simd_store(ctx, d, _mm_div_ps(dolrecomp_ps_simd_load(ctx, a), dolrecomp_ps_simd_load(ctx, b)));\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_muls(CPUState* ctx, u32 d, u32 a, u32 c, bool lane1) {\n"
+        "    const f32 scalar = (f32)(lane1 ? ctx->ps1[c] : ctx->fpr[c]);\n"
+        "    dolrecomp_ps_simd_store(ctx, d, _mm_mul_ps(dolrecomp_ps_simd_load(ctx, a), _mm_set1_ps(scalar)));\n"
+        "}\n"
+        "static inline void dolrecomp_ps_simd_madd(CPUState* ctx, u32 d, u32 a, u32 c, u32 b, bool subtract, bool negative) {\n"
+        "    const __m128 va = dolrecomp_ps_simd_load(ctx, a);\n"
+        "    const __m128 vc = dolrecomp_ps_simd_load(ctx, c);\n"
+        "    const __m128 vb = dolrecomp_ps_simd_load(ctx, b);\n"
+        "    __m128 result = _mm_mul_ps(va, vc);\n"
+        "    result = subtract ? _mm_sub_ps(result, vb) : _mm_add_ps(result, vb);\n"
+        "    if (DOLRECOMP_UNLIKELY((_mm_movemask_ps(_mm_cmpunord_ps(result, result)) & 3) != 0)) {\n"
+        "        f32 ps0 = (f32)ctx->fpr[a] * (f32)ctx->fpr[c];\n"
+        "        f32 ps1 = (f32)ctx->ps1[a] * (f32)ctx->ps1[c];\n"
+        "        if (subtract) { ps0 -= (f32)ctx->fpr[b]; ps1 -= (f32)ctx->ps1[b]; }\n"
+        "        else          { ps0 += (f32)ctx->fpr[b]; ps1 += (f32)ctx->ps1[b]; }\n"
+        "        if (negative) { ps0 = -ps0; ps1 = -ps1; }\n"
+        "        ctx->fpr[d] = dolrecomp_ps_round(ps0);\n"
+        "        ctx->ps1[d] = dolrecomp_ps_round(ps1);\n"
+        "        return;\n"
+        "    }\n"
+        "    if (negative) result = _mm_xor_ps(result, _mm_set1_ps(-0.0f));\n"
+        "    dolrecomp_ps_simd_store(ctx, d, result);\n"
+        "}\n"
+        "#else\n"
+        "#define DOLRECOMP_PS_SIMD 0\n"
+        "#endif\n"
         "\n"
         ,
         emit_cpu_label(cpu),
@@ -1225,40 +1281,56 @@ static void emit_instruction_with_range(FILE* out, const PPCInst* inst,
 
     case PPC_OP_PS_ADD:
         fprintf(out, "    {\n");
+        fprintf(out, "#if DOLRECOMP_PS_SIMD\n");
+        fprintf(out, "        dolrecomp_ps_simd_add(ctx, %uu, %uu, %uu);\n", inst->rD, inst->rA, inst->rB);
+        fprintf(out, "#else\n");
         fprintf(out, "        ctx->fpr[%u] = dolrecomp_ps_round((f32)ctx->fpr[%u] + (f32)ctx->fpr[%u]);\n",
                 inst->rD, inst->rA, inst->rB);
         fprintf(out, "        ctx->ps1[%u] = dolrecomp_ps_round((f32)ctx->ps1[%u] + (f32)ctx->ps1[%u]);\n",
                 inst->rD, inst->rA, inst->rB);
+        fprintf(out, "#endif\n");
         if (inst->rc) emit_set_cr1_from_fpscr(out);
         fprintf(out, "    }\n");
         break;
 
     case PPC_OP_PS_SUB:
         fprintf(out, "    {\n");
+        fprintf(out, "#if DOLRECOMP_PS_SIMD\n");
+        fprintf(out, "        dolrecomp_ps_simd_sub(ctx, %uu, %uu, %uu);\n", inst->rD, inst->rA, inst->rB);
+        fprintf(out, "#else\n");
         fprintf(out, "        ctx->fpr[%u] = dolrecomp_ps_round((f32)ctx->fpr[%u] - (f32)ctx->fpr[%u]);\n",
                 inst->rD, inst->rA, inst->rB);
         fprintf(out, "        ctx->ps1[%u] = dolrecomp_ps_round((f32)ctx->ps1[%u] - (f32)ctx->ps1[%u]);\n",
                 inst->rD, inst->rA, inst->rB);
+        fprintf(out, "#endif\n");
         if (inst->rc) emit_set_cr1_from_fpscr(out);
         fprintf(out, "    }\n");
         break;
 
     case PPC_OP_PS_MUL:
         fprintf(out, "    {\n");
+        fprintf(out, "#if DOLRECOMP_PS_SIMD\n");
+        fprintf(out, "        dolrecomp_ps_simd_mul(ctx, %uu, %uu, %uu);\n", inst->rD, inst->rA, inst->rC);
+        fprintf(out, "#else\n");
         fprintf(out, "        ctx->fpr[%u] = dolrecomp_ps_round((f32)ctx->fpr[%u] * (f32)ctx->fpr[%u]);\n",
                 inst->rD, inst->rA, inst->rC);
         fprintf(out, "        ctx->ps1[%u] = dolrecomp_ps_round((f32)ctx->ps1[%u] * (f32)ctx->ps1[%u]);\n",
                 inst->rD, inst->rA, inst->rC);
+        fprintf(out, "#endif\n");
         if (inst->rc) emit_set_cr1_from_fpscr(out);
         fprintf(out, "    }\n");
         break;
 
     case PPC_OP_PS_DIV:
         fprintf(out, "    {\n");
+        fprintf(out, "#if DOLRECOMP_PS_SIMD\n");
+        fprintf(out, "        dolrecomp_ps_simd_div(ctx, %uu, %uu, %uu);\n", inst->rD, inst->rA, inst->rB);
+        fprintf(out, "#else\n");
         fprintf(out, "        ctx->fpr[%u] = dolrecomp_ps_round((f32)ctx->fpr[%u] / (f32)ctx->fpr[%u]);\n",
                 inst->rD, inst->rA, inst->rB);
         fprintf(out, "        ctx->ps1[%u] = dolrecomp_ps_round((f32)ctx->ps1[%u] / (f32)ctx->ps1[%u]);\n",
                 inst->rD, inst->rA, inst->rB);
+        fprintf(out, "#endif\n");
         if (inst->rc) emit_set_cr1_from_fpscr(out);
         fprintf(out, "    }\n");
         break;
@@ -1280,6 +1352,12 @@ static void emit_instruction_with_range(FILE* out, const PPCInst* inst,
     case PPC_OP_PS_NMADD:
     case PPC_OP_PS_NMSUB:
         fprintf(out, "    {\n");
+        fprintf(out, "#if DOLRECOMP_PS_SIMD\n");
+        fprintf(out, "        dolrecomp_ps_simd_madd(ctx, %uu, %uu, %uu, %uu, %s, %s);\n",
+                inst->rD, inst->rA, inst->rC, inst->rB,
+                (inst->op == PPC_OP_PS_MSUB || inst->op == PPC_OP_PS_NMSUB) ? "true" : "false",
+                (inst->op == PPC_OP_PS_NMADD || inst->op == PPC_OP_PS_NMSUB) ? "true" : "false");
+        fprintf(out, "#else\n");
         fprintf(out, "        f32 ps0 = (f32)ctx->fpr[%u] * (f32)ctx->fpr[%u];\n",
                 inst->rA, inst->rC);
         fprintf(out, "        f32 ps1 = (f32)ctx->ps1[%u] * (f32)ctx->ps1[%u];\n",
@@ -1297,6 +1375,7 @@ static void emit_instruction_with_range(FILE* out, const PPCInst* inst,
         }
         fprintf(out, "        ctx->fpr[%u] = dolrecomp_ps_round(ps0);\n", inst->rD);
         fprintf(out, "        ctx->ps1[%u] = dolrecomp_ps_round(ps1);\n", inst->rD);
+        fprintf(out, "#endif\n");
         if (inst->rc) emit_set_cr1_from_fpscr(out);
         fprintf(out, "    }\n");
         break;
@@ -1348,18 +1427,26 @@ static void emit_instruction_with_range(FILE* out, const PPCInst* inst,
         break;
 
     case PPC_OP_PS_MULS0:
+        fprintf(out, "#if DOLRECOMP_PS_SIMD\n");
+        fprintf(out, "    dolrecomp_ps_simd_muls(ctx, %uu, %uu, %uu, false);\n", inst->rD, inst->rA, inst->rC);
+        fprintf(out, "#else\n");
         fprintf(out, "    ctx->fpr[%u] = dolrecomp_ps_round((f32)ctx->fpr[%u] * (f32)ctx->fpr[%u]);\n",
                 inst->rD, inst->rA, inst->rC);
         fprintf(out, "    ctx->ps1[%u] = dolrecomp_ps_round((f32)ctx->ps1[%u] * (f32)ctx->fpr[%u]);\n",
                 inst->rD, inst->rA, inst->rC);
+        fprintf(out, "#endif\n");
         if (inst->rc) emit_set_cr1_from_fpscr(out);
         break;
 
     case PPC_OP_PS_MULS1:
+        fprintf(out, "#if DOLRECOMP_PS_SIMD\n");
+        fprintf(out, "    dolrecomp_ps_simd_muls(ctx, %uu, %uu, %uu, true);\n", inst->rD, inst->rA, inst->rC);
+        fprintf(out, "#else\n");
         fprintf(out, "    ctx->fpr[%u] = dolrecomp_ps_round((f32)ctx->fpr[%u] * (f32)ctx->ps1[%u]);\n",
                 inst->rD, inst->rA, inst->rC);
         fprintf(out, "    ctx->ps1[%u] = dolrecomp_ps_round((f32)ctx->ps1[%u] * (f32)ctx->ps1[%u]);\n",
                 inst->rD, inst->rA, inst->rC);
+        fprintf(out, "#endif\n");
         if (inst->rc) emit_set_cr1_from_fpscr(out);
         break;
 
