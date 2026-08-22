@@ -9,7 +9,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$BuildId = "HPCOS-WINDOWS-MSVC-FINAL-20260822"
+$BuildId = "HPCOS-WINDOWS-MSVC-FINAL-20260822-R2"
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $Root
@@ -238,6 +238,46 @@ function Ensure-ModernGekkoWindowsLinkFix {
     Write-Host "[HPCOS/FINAL] Applied DX11/DX12 + LTCG source fix."
 }
 
+
+function Ensure-FZeroAXFunctionalInclude {
+    param([string]$SourceFile)
+
+    if (-not (Test-Path -LiteralPath $SourceFile)) {
+        throw ("FZeroAX.cpp not found: {0}" -f $SourceFile)
+    }
+
+    $text = [System.IO.File]::ReadAllText($SourceFile)
+
+    if ($text -match '(?m)^\s*#include\s*<functional>\s*$') {
+        Write-Host "[HPCOS/FINAL] FZeroAX <functional> include already present."
+        return
+    }
+
+    # std::bit_xor is declared in <functional>. Dolphin's FZeroAX.cpp currently
+    # includes <numeric> but relies on transitive headers on some toolchains.
+    # MSVC correctly rejects std::bit_xor without the owning standard header.
+    $needle = "#include <numeric>"
+    $pos = $text.IndexOf($needle, [System.StringComparison]::Ordinal)
+
+    if ($pos -lt 0) {
+        throw "Could not locate #include <numeric> in FZeroAX.cpp. No source file was changed."
+    }
+
+    $insertAt = $pos + $needle.Length
+    $text = $text.Insert(
+        $insertAt,
+        [Environment]::NewLine + "#include <functional>"
+    )
+
+    [System.IO.File]::WriteAllText(
+        $SourceFile,
+        $text,
+        [System.Text.UTF8Encoding]::new($false)
+    )
+
+    Write-Host "[HPCOS/FINAL] Patched FZeroAX.cpp: added <functional> for std::bit_xor."
+}
+
 # ---------------------------------------------------------------------------
 # 1. Bootstrap / toolchain
 # ---------------------------------------------------------------------------
@@ -323,6 +363,7 @@ Write-Host ""
 $ModernGekko = Join-Path $Root "ModernGekko"
 $ModernGekkoCMake = Join-Path $ModernGekko "CMakeLists.txt"
 $DolphinPchCMake = Join-Path $ModernGekko "vendor\dolphin\Source\PCH\CMakeLists.txt"
+$FZeroAXSource = Join-Path $ModernGekko "vendor\dolphin\Source\Core\Core\HW\Triforce\FZeroAX.cpp"
 $Dol = Join-Path $Root "extracted\sys\main.dol"
 
 if (-not (Test-Path -LiteralPath $ModernGekkoCMake)) {
@@ -346,6 +387,7 @@ Write-Host "[HPCOS/FINAL] GHSE69 main.dol verified."
 # 3. Permanent Windows source fixes, idempotent
 # ---------------------------------------------------------------------------
 Ensure-DolphinPchDisabled -PchCmake $DolphinPchCMake
+Ensure-FZeroAXFunctionalInclude -SourceFile $FZeroAXSource
 Ensure-ModernGekkoWindowsLinkFix -CMakeFile $ModernGekkoCMake
 
 # ---------------------------------------------------------------------------
