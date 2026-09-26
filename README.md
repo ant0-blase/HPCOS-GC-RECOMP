@@ -1,18 +1,88 @@
-# Harry Potter and the Chamber of Secrets — GameCube Static Recompilation
+<div align="center">
+
+# Harry Potter and the Chamber of Secrets
+
+### GameCube Static Recompilation
+
+**HPCOS GC** — experimental native PC recompilation of the North American GameCube release (`GHSE69`).
+
+PowerPC → native code · DolRecomp + ModernGekko · Vulkan · Dynamic widescreen
+
+</div>
 
 <p align="center">
-  <img src="docs/screenshots/01-title-screen.png" alt="Harry Potter and the Chamber of Secrets running through HPCOS GC" width="900">
+  <a href="#visual-comparison">GC vs enhanced recompilation</a> ·
+  <a href="#in-game-pc-settings-menu">Live PC settings</a> ·
+  <a href="#building">Build</a> ·
+  <a href="#running">Run</a>
 </p>
 
 <p align="center">
-  <strong>HPCOS GC</strong> — an experimental native static-recompilation project for
-  <em>Harry Potter and the Chamber of Secrets</em> on Nintendo GameCube.
+  <a href="docs/screenshots/enhanced/burrow-gameplay.png"><img src="docs/screenshots/enhanced/burrow-gameplay.png" alt="HPCOS enhanced widescreen gameplay in the Burrow courtyard" width="100%"></a>
+  <br>
+  <em>1920×1200 gameplay capture · Dynamic widescreen · 110° FOV · 8× internal resolution · 16× AF</em>
 </p>
 
 > [!IMPORTANT]
-> **Work in progress.** No original disc image or extracted copyrighted game data is
-> distributed by this repository. You must supply your own legally obtained copy of
-> the game.
+> **Work in progress.** No original disc image or extracted copyrighted game data is distributed by this repository. You must supply your own legally obtained copy of the game. The custom/HD texture options shown below do not include a texture pack; any separately used pack must be supplied locally under its own terms.
+
+## Visual comparison
+
+**Original GC presentation → enhanced native recompilation.** The older project captures show the original 4:3 presentation; the new captures showcase dynamic widescreen, a wider field of view and the HPCOS Remaster post-processing controls.
+
+<table>
+  <tr>
+    <th width="50%">GC — original presentation</th>
+    <th width="50%">Recompilation — PC enhancements</th>
+  </tr>
+  <tr>
+    <td><a href="docs/screenshots/05-castle-yard.png"><img src="docs/screenshots/05-castle-yard.png" alt="Earlier GameCube presentation in the castle yard at 4:3" width="100%"></a></td>
+    <td><a href="docs/screenshots/enhanced/burrow-gameplay.png"><img src="docs/screenshots/enhanced/burrow-gameplay.png" alt="Enhanced widescreen presentation in the Burrow courtyard" width="100%"></a></td>
+  </tr>
+  <tr>
+    <td>Original 4:3 presentation, before the showcased widescreen and remaster settings.</td>
+    <td>Dynamic widescreen, 110° horizontal FOV, 8× internal resolution, 16× AF and remaster post-processing.</td>
+  </tr>
+</table>
+
+These captures show **different locations and viewpoints**. They illustrate the overall presentation, not a frame-matched before/after test of textures or lighting. Click any screenshot to view the original image.
+
+### Showcased settings
+
+The supplied graphics-menu captures show the following configuration. The full gameplay image is **1920×1200 (16:10)**; the two menu images have different capture dimensions.
+
+| Setting | Showcased configuration |
+|---|---|
+| Aspect ratio | **Auto / window** — dynamic widescreen |
+| Horizontal FOV | **110°** |
+| Internal resolution | **8× (~5K)** |
+| Anisotropic filtering | **16×** |
+| Texture filtering | Original texture filtering |
+| Color / copy filter | Force 24-bit color; original copy filter disabled |
+| Post-processing | **HPCOS Remaster enabled · Remaster balanced** |
+| Color grading | Saturation **1.08×**, vibrance **+0.12**, contrast **1.06×** |
+| Exposure / gamma / temperature | **+0.03 EV / 1.00 / +0.02** |
+| Sharpening / bloom | **0.28 / 0.10** |
+| Vignette / film grain | **0.06 / 0.000** |
+| Custom / HD textures | Loading and RAM preloading enabled in the menu |
+| Timing | Original game timing; uncapped host presentation; V-Sync off |
+
+Enabling custom texture loading does not by itself confirm that a texture pack is installed. The screenshots document the menu settings without attributing the result to a specific pack.
+
+### Graphics menu gallery
+
+Open or close the live PC settings with **Ctrl+F10**.
+
+<table>
+  <tr>
+    <th width="50%">Graphics — resolution, aspect & FOV</th>
+    <th width="50%">Enhanced Graphics — remaster look & textures</th>
+  </tr>
+  <tr>
+    <td><a href="docs/screenshots/enhanced/pc-graphics.png"><img src="docs/screenshots/enhanced/pc-graphics.png" alt="HPCOS Graphics menu showing 8x resolution, automatic aspect and 110 degree FOV" width="100%"></a></td>
+    <td><a href="docs/screenshots/enhanced/pc-enhanced-graphics.png"><img src="docs/screenshots/enhanced/pc-enhanced-graphics.png" alt="HPCOS Enhanced Graphics menu showing 16x AF, remaster grading, bloom, sharpening and HD texture controls" width="100%"></a></td>
+  </tr>
+</table>
 
 ## Overview
 
@@ -51,6 +121,9 @@ overlay. The normal **F10** Dolphin pause hotkey is kept separate.
 The overlay currently exposes live controls for:
 
 - internal rendering resolution from native 1x through 12x
+- 16× anisotropic filtering, texture filtering, 24-bit color and copy-filter controls
+- HPCOS Remaster post-processing with color grading, sharpening, bloom, vignette and film grain
+- custom/HD texture loading and RAM preloading
 - V-Sync and the FPS performance overlay
 - original 4:3, automatic host aspect, 16:9, 16:10, 21:9 and 32:9 modes
 - horizontal FOV override, synchronized with the GHSE69 guest camera/frustum
@@ -97,7 +170,7 @@ stretching the original 4:3 image.
 Enable it with:
 
 ```bash
-./run.sh --widescreen
+./run-linux.sh --widescreen
 ```
 
 ### Configurable FOV
@@ -105,7 +178,7 @@ Enable it with:
 A horizontal FOV can be selected at launch:
 
 ```bash
-./run.sh --widescreen --fov 110
+./run-linux.sh --widescreen --fov 110
 ```
 
 `--fov` represents the requested **horizontal** field of view.
@@ -152,7 +225,7 @@ Project-specific work currently includes:
 The focus is to keep the recompiled execution path as native and lightweight as
 possible while retaining compatibility with the original GameCube software.
 
-## Screenshots
+## Original presentation gallery
 
 <table>
 <tr>
@@ -176,9 +249,9 @@ current port:
 
 ```text
 .
-├── build.sh                  # configures/builds ModernGekko + DolRecomp + the GHSE69 module
-├── run.sh                    # launches the published runtime/module
-├── ModernGekko/              # source tree consumed by build.sh
+├── build-linux.sh                  # configures/builds ModernGekko + DolRecomp + the GHSE69 module
+├── run-linux.sh                    # launches the published runtime/module
+├── ModernGekko/              # source tree consumed by build-linux.sh
 ├── DolRecomp/                # recompilation source/tooling
 ├── recomp/                   # HPCOS recompilation source/output
 ├── runtime/                  # published moderngekko-run + Sys runtime data
@@ -190,11 +263,11 @@ current port:
 └── user/                     # local runtime profile/saves/configuration — ignored
 ```
 
-`build.sh` validates the `GHSE69` `main.dol`, configures ModernGekko with CMake/Ninja,
+`build-linux.sh` validates the `GHSE69` `main.dol`, configures ModernGekko with CMake/Ninja,
 builds `moderngekko-run`, `moderngekko-port` and `dolrecomp`, builds the recompilation
 module, then publishes the runnable outputs into `runtime/` and `module/`.
 
-`run.sh` launches:
+`run-linux.sh` launches:
 
 - `runtime/moderngekko-run`
 - `module/gGHSE69_recomp.so`
@@ -210,14 +283,14 @@ The current build script supports the `c` and `llvm` recompilation backends and
 `clang`, `gcc` or automatic toolchain selection.
 
 ```bash
-./build.sh
+./build-linux.sh
 ```
 
 Examples:
 
 ```bash
-BACKEND=c TOOLCHAIN=clang ./build.sh
-BACKEND=llvm TOOLCHAIN=clang ./build.sh
+BACKEND=c TOOLCHAIN=clang ./build-linux.sh
+BACKEND=llvm TOOLCHAIN=clang ./build-linux.sh
 ```
 
 The build expects your legally obtained game extraction at:
@@ -226,32 +299,36 @@ The build expects your legally obtained game extraction at:
 extracted/sys/main.dol
 ```
 
-The expected target is `GHSE69`; `build.sh` verifies the DOL before building.
+The expected target is `GHSE69`; `build-linux.sh` verifies the DOL before building.
 
 ## Running
 
 Basic launch:
 
 ```bash
-./run.sh
+./run-linux.sh
 ```
 
 Dynamic widescreen:
 
 ```bash
-./run.sh --widescreen
+./run-linux.sh --widescreen
 ```
 
-Dynamic widescreen with a custom horizontal FOV:
+Showcased widescreen and **110° horizontal FOV**:
 
 ```bash
-./run.sh --widescreen --fov 110
+./run-linux.sh --widescreen --fov 110
 ```
+
+Open **Ctrl+F10 → Graphics** to select **8× internal resolution** and **Auto / window** aspect. Use a **1920×1200** output/window for the showcased 16:10 presentation. Under **Enhanced Graphics**, enable HPCOS Remaster, select **Remaster balanced** and **16× AF**, then match the [showcased settings](#showcased-settings). Internal rendering resolution and output size are separate settings.
+
+For an original-style comparison, select **Original 4:3**, disable **Custom FOV**, disable remaster post-processing and custom/HD textures, and restore native resolution and original filtering in the PC menu. Settings persist between sessions, so a plain launch may retain previous enhancements.
 
 Experimental 120 FPS VBI target:
 
 ```bash
-./run.sh --widescreen --fov 110 --fps 120
+./run-linux.sh --widescreen --fov 110 --fps 120
 ```
 
 The current launcher uses Vulkan and Wayland.
@@ -263,8 +340,7 @@ HPCOS GC is still under active development.
 Rendering, recompilation accuracy, performance and game compatibility may change as
 the static recompilation runtime continues to be investigated and optimized.
 
-The project does **not** currently provide an unlocked-framerate implementation; the
-original NTSC game timing is intentionally preserved.
+The runtime offers higher VI/render targets and uncapped host presentation while preserving native ~59.94 Hz gameplay/physics timing. True motion interpolation between simulation updates remains a separate refinement.
 
 ## What is intentionally ignored
 
@@ -304,7 +380,7 @@ This is an unofficial research/fan project and is not affiliated with or endorse
 Electronic Arts, Warner Bros., Nintendo, ExpansionPak, or the original developers.
 
 No original disc image or extracted copyrighted game assets are distributed by this
-repository. Users must provide their own legally obtained game data.
+repository. Users must provide their own legally obtained game data. Optional third-party HD texture packs must be obtained separately and used under their respective terms; the settings screenshots do not distribute those packs.
 
 ## License
 
