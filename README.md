@@ -1,5 +1,26 @@
-> [!IMPORTANT]
-> **LEGACY PROJECT — NO LONGER MAINTAINED.** This repository is kept as a historical snapshot; it will not receive further fixes, compatibility updates, or new enhancements. Development has moved to **[GekkoAOT](https://github.com/ant0-blase/GekkoAOT)**, the successor GameCube recompilation project. For the latest runtime, graphics, performance and compatibility improvements—and to try running this game through the current project—please use GekkoAOT instead. Game compatibility is still evolving; check its [compatibility list](https://github.com/ant0-blase/GekkoAOT#compatibility) before expecting a complete playthrough.
+<div align="center">
+
+<a href="https://github.com/ant0-blase/GekkoAOT">
+  <img src="https://raw.githubusercontent.com/ant0-blase/GekkoAOT/main/assets/gekkoaot-logo.png" alt="GekkoAOT — GameCube native recompilation" width="520">
+</a>
+
+# 🚀 THIS PROJECT HAS MOVED TO GEKKOAOT
+
+### **This repository is archived in spirit and no longer maintained.**
+
+No more fixes, compatibility updates or new enhancements will be developed here.
+
+<a href="https://github.com/ant0-blase/GekkoAOT"><strong>➡️ GO TO GEKKOAOT — THE NEW PROJECT</strong></a>
+
+**One modern GameCube recompilation project. New runtime, graphics, performance improvements and ongoing compatibility work.**
+
+<a href="https://github.com/ant0-blase/GekkoAOT#compatibility">Check game compatibility</a> · <a href="https://github.com/ant0-blase/GekkoAOT/releases">Releases</a> · <a href="https://github.com/ant0-blase/GekkoAOT">Source code</a>
+
+<sub>GekkoAOT is pre-alpha: compatibility varies by game, and full playthroughs are not guaranteed.</sub>
+
+</div>
+
+---
 
 <div align="center">
 
